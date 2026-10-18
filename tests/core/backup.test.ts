@@ -39,7 +39,7 @@ describe("backupFromUpdates", () => {
     const file = openSample();
     const backup = backupOf(ydocFromJson(CHANGED_DOCUMENT));
     expect(backup).not.toBe(file.ydoc);
-    expect(jsonFromYdoc(file.ydoc)).toEqual(SAMPLE_DOCUMENT);
+    expect(jsonFromYdoc(file.ydoc)).toEqual(jsonFromYdoc(ydocFromJson(SAMPLE_DOCUMENT)));
     expect(jsonFromYdoc(backup)).toEqual(CHANGED_DOCUMENT);
   });
 
