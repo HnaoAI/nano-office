@@ -1,6 +1,6 @@
 # T0a : Outillage et format de fichier `.nano`
 
-**Statut** : à valider par le product owner
+**Statut** : validé
 **Dépend de** : aucun
 **Taille estimée** : M
 **Branche** : `ticket/T0a-format-outillage`

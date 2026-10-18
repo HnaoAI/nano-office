@@ -1,6 +1,6 @@
 # T0b : Éditeur de texte relié à Yjs
 
-**Statut** : à valider par le product owner
+**Statut** : validé
 **Dépend de** : T0a
 **Taille estimée** : M
 **Branche** : `ticket/T0b-editeur`

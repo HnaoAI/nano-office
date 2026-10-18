@@ -1,6 +1,6 @@
 # T0e : Application installable et hors ligne
 
-**Statut** : à valider par le product owner
+**Statut** : validé
 **Dépend de** : T0b
 **Taille estimée** : S
 **Branche** : `ticket/T0e-pwa-hors-ligne`

@@ -1,6 +1,6 @@
 # T0c : Ouvrir et enregistrer
 
-**Statut** : à valider par le product owner
+**Statut** : validé
 **Dépend de** : T0b
 **Taille estimée** : M
 **Branche** : `ticket/T0c-ouvrir-enregistrer`
