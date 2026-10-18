@@ -1,5 +1,6 @@
 // Hook React du document affiché (T0c) : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Ctrl/Cmd+S,
-// titre de la fenêtre et messages. La logique vient de src/core/documentFile.ts, les fichiers de src/storage/.
+// titre de la fenêtre et messages, puis restauration et question de la copie de secours (T0d).
+// La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
 import {
   useCallback,
   useEffect,
@@ -8,6 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { compareWithBackup, recoveredDocument, restoredDocument } from "../core/backup";
 import {
   contentSnapshot,
   createNewDocument,
@@ -19,7 +21,10 @@ import {
 } from "../core/documentFile";
 import { serializeDocument } from "../core/fileFormat";
 import type { OpenDocument } from "../core/types";
+import type * as Y from "yjs";
+import { createBackupStore } from "../storage/backupStore";
 import { createFileStore, type SaveResult } from "../storage/fileStore";
+import { useBackup } from "./useBackup";
 
 /** Message affiché sous la barre de menus : information (`status`) ou erreur (`alert`). */
 export interface FileMessage {
@@ -30,6 +35,7 @@ export interface FileMessage {
 const DISCARD_QUESTION =
   "Les modifications non enregistrées de ce document seront perdues. Voulez-vous continuer ?";
 const READ_ERROR = "Le fichier n'a pas pu être lu. Le document en cours n'a pas changé.";
+const RECOVERED_MESSAGE = "Ce document a été récupéré depuis la copie de secours de ce navigateur.";
 const SAVE_ERROR =
   "Le document n'a pas pu être enregistré. Réessayez, ou choisissez un autre emplacement avec « Enregistrer sous… ».";
 
@@ -54,40 +60,108 @@ function isSaveShortcut(event: KeyboardEvent): boolean {
   );
 }
 
+/** Fichier ouvert dont la copie de secours diffère, en attente du choix de l'utilisateur (T0d, critère 8). */
+export interface PendingBackup {
+  file: OpenDocument;
+  backup: Y.Doc;
+}
+
 /**
  * Document affiché et actions sur les fichiers.
  * INVARIANT : « Nouveau » et « Ouvrir » remplacent le document par un autre, avec un Y.Doc neuf ;
  * l'éditeur doit être recréé pour ce Y.Doc (clé `document.ydoc.guid`), avec un historique vide (critère 10).
+ * `document` vaut null pendant la lecture de la copie de secours, au chargement de la page.
  */
 export function useDocumentFile() {
   const [store] = useState(createFileStore);
-  const [document, setDocument] = useState(createNewDocument);
+  const [backups] = useState(createBackupStore);
+  const [document, setDocument] = useState<OpenDocument | null>(null);
+  const [pending, setPending] = useState<PendingBackup | null>(null);
   const [message, setMessage] = useState<FileMessage | null>(null);
   const saving = useRef(false);
+  const choosing = useRef(false);
 
   const subscribe = useCallback(
     (onChange: () => void) => {
-      document.ydoc.on("update", onChange);
-      return () => document.ydoc.off("update", onChange);
+      document?.ydoc.on("update", onChange);
+      return () => document?.ydoc.off("update", onChange);
     },
-    [document.ydoc],
+    [document?.ydoc],
   );
-  const unsaved = useSyncExternalStore(subscribe, () => hasUnsavedChanges(document));
+  const unsaved = useSyncExternalStore(
+    subscribe,
+    () => document !== null && hasUnsavedChanges(document),
+  );
+  useBackup(backups, document, unsaved);
 
   useEffect(() => {
-    window.document.title = windowTitle(document.fileName, unsaved);
-  }, [document.fileName, unsaved]);
+    window.document.title = windowTitle(document?.fileName ?? null, unsaved);
+  }, [document?.fileName, unsaved]);
+
+  // Au chargement, le dernier document modifié est restauré depuis sa copie de secours (T0d, critère 4).
+  useEffect(() => {
+    let cancelled = false;
+    const id = backups.lastModifiedId();
+    void (id ? backups.read(id) : Promise.resolve(null)).then((backup) => {
+      if (cancelled) return;
+      const restored = id ? restoredDocument(id, backup) : null;
+      setDocument(restored ?? createNewDocument());
+      if (restored) setMessage({ kind: "status", text: RECOVERED_MESSAGE });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [backups]);
 
   /** Demande confirmation avant d'abandonner des modifications non enregistrées (critère 1). */
   function canDiscard(): boolean {
-    return !hasUnsavedChanges(document) || window.confirm(DISCARD_QUESTION);
+    return !unsaved || window.confirm(DISCARD_QUESTION);
+  }
+
+  /** Affiche un autre document. INVARIANT : sa copie de secours est absente, identique ou effacée. */
+  function show(next: OpenDocument) {
+    setPending(null);
+    setMessage(null);
+    setDocument(next);
   }
 
   function newDocument() {
     if (!canDiscard()) return;
     store.forget();
-    setMessage(null);
-    setDocument(createNewDocument());
+    show(createNewDocument());
+  }
+
+  /**
+   * Affiche un fichier ouvert après l'avoir comparé à sa copie de secours (T0d) : la copie n'est jamais
+   * appliquée sur le fichier (critère 6). Identique, elle est effacée puis recréée à partir du fichier,
+   * car deux historiques Yjs au même contenu s'additionneraient (critère 7). Différente, on demande (critère 8).
+   */
+  async function showOpenedFile(file: OpenDocument) {
+    const backup = await backups.read(file.id);
+    const comparison = compareWithBackup(file, backup);
+    if (comparison === "different" && backup) {
+      setMessage(null);
+      setPending({ file, backup });
+      return;
+    }
+    if (comparison === "same") await backups.remove(file.id);
+    show(file);
+  }
+
+  /** Réponse à la question de la copie de secours (critères 9 et 10). Un seul choix est pris en compte. */
+  async function resolvePending(recover: boolean) {
+    if (!pending || choosing.current) return;
+    choosing.current = true;
+    try {
+      if (recover) {
+        show(recoveredDocument(pending.file, pending.backup));
+      } else {
+        await backups.remove(pending.file.id);
+        show(pending.file);
+      }
+    } finally {
+      choosing.current = false;
+    }
   }
 
   async function open() {
@@ -107,15 +181,14 @@ export function useDocumentFile() {
       error = READ_ERROR;
     }
     if (opened) {
-      setMessage(null);
-      setDocument(opened);
+      await showOpenedFile(opened);
     } else if (error) {
       setMessage({ kind: "alert", text: error });
     }
   }
 
   async function save(asNew: boolean) {
-    if (saving.current) return;
+    if (saving.current || !document) return;
     saving.current = true;
     const saved = document;
     try {
@@ -153,6 +226,9 @@ export function useDocumentFile() {
     document,
     unsaved,
     message,
+    pending,
+    recover: () => void resolvePending(true),
+    openAsIs: () => void resolvePending(false),
     newDocument,
     open: () => void open(),
     save: () => void save(false),
