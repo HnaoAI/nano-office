@@ -136,6 +136,18 @@ describe("openDocumentText", () => {
   });
 });
 
+describe("openDocumentText : fichier abîmé dont l'état Yjs contient du texte", () => {
+  it("critères 14 et 15 : un content abîmé avec un ydoc plein de texte est refusé avec le message rassurant", () => {
+    const file = JSON.parse(sampleFileText()) as Record<string, unknown>;
+    for (const content of [undefined, "abîmé", { type: "inconnu" }]) {
+      expect(openDocumentText("x.nano", JSON.stringify({ ...file, content }))).toEqual({
+        ok: false,
+        message: CORRUPTED_FILE_MESSAGE,
+      });
+    }
+  });
+});
+
 describe("hasUnsavedChanges et markSaved", () => {
   it("critère 1 : un nouveau document sans texte n'a pas de modifications à enregistrer", () => {
     const doc = createNewDocument();

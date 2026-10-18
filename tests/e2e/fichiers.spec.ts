@@ -1,7 +1,6 @@
 // Tests d'interface du ticket T0c (ouvrir et enregistrer), dans Chromium.
 // L'accès aux fichiers est remplacé par une fausse implémentation de FileStore (fakeFileStore.ts).
 import { expect, test, type Page } from "@playwright/test";
-import * as Y from "yjs";
 import { serializeDocument } from "../../src/core/fileFormat";
 import type { DocumentJson } from "../../src/core/types";
 import { paragraph, SAMPLE_DOCUMENT, ydocFromJson } from "../core/helpers";
@@ -107,7 +106,8 @@ test("critère 1 : « Nouveau » sans modification ne demande rien", async ({ pa
 
 test("critère 2 : après « Nouveau », « Enregistrer » demande un emplacement", async ({ page }) => {
   await start(page);
-  await openFile(page, "ancien.nano", nanoFile(SAMPLE_DOCUMENT));
+  const original = nanoFile(SAMPLE_DOCUMENT);
+  await openFile(page, "ancien.nano", original);
   await button(page, "Nouveau").click();
   await editor(page).click();
   await page.keyboard.type("Nouveau texte");
@@ -119,9 +119,7 @@ test("critère 2 : après « Nouveau », « Enregistrer » demande un emplacemen
   expect((await savedFile(page, "neuf.nano")).content.content?.[0]?.content?.[0]?.text).toBe(
     "Nouveau texte",
   );
-  expect(JSON.parse((await fakeFiles(page)).files["ancien.nano"] ?? "")).toEqual(
-    JSON.parse(nanoFile(SAMPLE_DOCUMENT, (await savedFile(page, "ancien.nano")).id)),
-  );
+  expect((await fakeFiles(page)).files["ancien.nano"]).toBe(original);
 });
 
 test("critère 3 : « Enregistrer sous » propose document.nano et laisse choisir l'emplacement", async ({
@@ -356,14 +354,8 @@ test("critère 15 : un fichier abîmé affiche le message rassurant, n'est jamai
   await start(page);
   await page.keyboard.type("Document en cours");
   const before = await ydocJson(page);
-  const emptyYdoc = (
-    JSON.parse(serializeDocument({ id: "x", ydoc: new Y.Doc() })) as { ydoc: string }
-  ).ydoc;
-  const damaged = JSON.stringify({
-    ...JSON.parse(nanoFile(SAMPLE_DOCUMENT)),
-    content: "abîmé",
-    ydoc: emptyYdoc,
-  });
+  // Depuis la PR n° 16, le fichier est refusé même si son état Yjs contient du texte (critère 14).
+  const damaged = JSON.stringify({ ...JSON.parse(nanoFile(SAMPLE_DOCUMENT)), content: "abîmé" });
   page.on("dialog", (dialog) => void dialog.accept());
 
   await openFile(page, "abime.nano", damaged);
