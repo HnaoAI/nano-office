@@ -103,3 +103,4 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - 2026-10-18 : T0 découpé en T0a à T0e, car il dépassait la limite d'une journée ou de 400 lignes.
 - 2026-10-18 : Le critère réseau porte sur les données de document, pas sur toute requête : la PWA doit pouvoir télécharger ses mises à jour.
 - 2026-10-18 : Règles générales importées depuis `docs/regles-de-travail.md`, car les sessions Claude Code dans le cloud ne voient pas `~/.claude/CLAUDE.md`.
+- 2026-10-18 : À la réouverture d'un fichier dont la copie de secours diffère, on demande à l'utilisateur s'il veut récupérer les modifications non enregistrées, plutôt que d'effacer la copie : ne jamais perdre un travail.
