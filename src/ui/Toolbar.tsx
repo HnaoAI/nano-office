@@ -2,10 +2,7 @@
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les boutons à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
-
-/** Nom de la touche de commande affiché dans les infobulles. */
-const MOD =
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent) ? "Cmd" : "Ctrl";
+import { MOD } from "./shortcuts";
 
 /**
  * Barre d'outils simple. Les boutons Gras et Italique indiquent leur état avec `aria-pressed`.

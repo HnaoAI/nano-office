@@ -17,8 +17,8 @@ export function createDocumentId(): string {
   return crypto.randomUUID();
 }
 
-/** Contenu du fragment du document d'un Y.Doc, au format JSON de Tiptap. */
-function contentOf(ydoc: Y.Doc): DocumentJson {
+/** Contenu du fragment du document d'un Y.Doc, au format JSON de Tiptap (celui écrit dans `content`). */
+export function contentOf(ydoc: Y.Doc): DocumentJson {
   return yXmlFragmentToProsemirrorJSON(ydoc.getXmlFragment(YJS_FRAGMENT_NAME)) as DocumentJson;
 }
 
