@@ -1,0 +1,8 @@
+dist
+dev-dist
+coverage
+test-results
+playwright-report
+package-lock.json
+# Documents du cadrage, rédigés à la main : Prettier ne les reformate pas.
+*.md
