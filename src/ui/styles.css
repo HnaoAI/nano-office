@@ -54,3 +54,16 @@ body {
 .nano-editor:focus-visible {
   border-color: #4a78b8;
 }
+
+.nano-message {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  background: #eef3fb;
+  border: 1px solid #b7c9e6;
+}
+
+.nano-message-alert {
+  background: #fdf0ee;
+  border-color: #e3b1a8;
+}
