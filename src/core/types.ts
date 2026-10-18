@@ -36,7 +36,7 @@ export interface NanoFileV1 {
  * - `invalid-json` : le texte n'est pas du JSON ;
  * - `not-nano` : JSON valide, mais pas un fichier Nano Office (format, version ou `id` absent ou invalide) ;
  * - `unsupported-version` : fichier Nano Office d'une version que cette application ne sait pas lire ;
- * - `corrupted` : ni `ydoc` ni `content` ne sont utilisables.
+ * - `corrupted` : `content` est absent ou abîmé (même si `ydoc` se lit), donc le document ne peut pas être vérifié.
  */
 export type ParseError = "invalid-json" | "not-nano" | "unsupported-version" | "corrupted";
 

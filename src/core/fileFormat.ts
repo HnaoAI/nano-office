@@ -46,6 +46,7 @@ export function serializeDocument(doc: { id: string; ydoc: Y.Doc }): string {
  * `ydoc` est la source de vérité. Comme un `ydoc` abîmé peut s'appliquer sans erreur et donner
  * un document vide ou partiel, son contenu relu est comparé au `content` enregistré :
  * s'ils diffèrent, le document est reconstruit à partir de `content` (T0a, critères 7 et 8).
+ * Si `content` est absent ou abîmé, le fichier est refusé avec `corrupted`.
  *
  * INVARIANT : crée toujours un nouveau Y.Doc. Appliquer un état sur un Y.Doc déjà rempli
  * additionnerait les deux contenus au lieu de les remplacer (voir CLAUDE.md).
@@ -74,27 +75,21 @@ export function parseDocument(text: string): ParseResult {
   const fromYdoc = readYdoc(data.ydoc);
   const content = readContent(data.content);
 
-  if (fromYdoc && content && isSameJson(contentOf(fromYdoc), content)) {
+  // INVARIANT : un `content` abîmé ou absent renvoie toujours `corrupted`, même si le `ydoc` se lit.
+  // Sans `content`, rien ne prouve que le `ydoc` est complet, et l'ouvrir permettrait d'enregistrer
+  // un document incomplet par-dessus le fichier d'origine (décision du product owner, revue de T0a).
+  if (!content) {
+    return { ok: false, error: "corrupted" };
+  }
+  if (fromYdoc && isSameJson(contentOf(fromYdoc), content)) {
     return { ok: true, id, ydoc: fromYdoc, version };
   }
-  // Si `content` est inutilisable, on ne peut rien comparer : on garde le `ydoc`, source de vérité,
-  // seulement s'il contient du texte.
-  // INVARIANT : un `ydoc` sans texte avec un `content` abîmé renvoie `corrupted`. L'ouvrir comme un
-  // document vide permettrait de l'enregistrer par-dessus le fichier d'origine (revue de T0a).
-  if (fromYdoc && !content) {
-    return hasText(contentOf(fromYdoc))
-      ? { ok: true, id, ydoc: fromYdoc, version }
-      : { ok: false, error: "corrupted" };
-  }
-  if (content) {
-    return {
-      ok: true,
-      id,
-      ydoc: prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME),
-      version,
-    };
-  }
-  return { ok: false, error: "corrupted" };
+  return {
+    ok: true,
+    id,
+    ydoc: prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME),
+    version,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -126,11 +121,6 @@ function readContent(content: unknown): DocumentJson | null {
   } catch {
     return null;
   }
-}
-
-/** Indique si un document contient au moins un caractère de texte, à n'importe quelle profondeur. */
-function hasText(node: DocumentJson): boolean {
-  return Boolean(node.text) || (node.content ?? []).some(hasText);
 }
 
 /** Compare deux valeurs JSON en profondeur, sans dépendre de l'ordre des clés des objets. */
