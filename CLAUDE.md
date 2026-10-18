@@ -30,6 +30,11 @@ mais l'architecture doit la rendre possible sans réécriture.
 
 Certaines extensions Tiptap sont payantes (« Pro ») : ne pas les utiliser sans validation.
 
+Polices : seules des polices sous licence SIL Open Font License 1.1 (OFL) sont intégrées à l'application,
+livrées avec elle et jamais chargées depuis un service en ligne. Cette licence est acceptée pour les polices
+uniquement, en plus des licences des règles générales. Les polices du système (Arial, Corbel…) ne sont pas proposées :
+elles ne s'affichent pas de la même façon sur Mac et sur Windows.
+
 ## Règles produit (non négociables)
 
 1. Aucune publicité, bannière, bouton IA ou invitation à payer.
@@ -131,3 +136,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-18 : `FileStore.open()` ne retient un fichier comme fichier courant que s'il est lisible, pour qu'Enregistrer ne puisse jamais réécrire un fichier refusé.
 - 2026-10-18 : À l'ouverture, une copie de secours identique au fichier est effacée puis recréée à partir du fichier, car deux historiques Yjs au même contenu s'additionneraient.
 - 2026-10-18 : Quand l'utilisateur accepte d'abandonner des modifications (Nouveau ou Ouvrir), le document n'est plus restauré au rechargement, mais sa copie de secours est gardée dans le navigateur : pas de retour surprise, et rien n'est perdu.
+- 2026-10-18 : Polices libres intégrées à l'application (IBM Plex Sans, Serif et Mono, Source Sans 3) au lieu des polices du système, pour qu'un document s'affiche à l'identique sur Mac et sur Windows, et hors ligne. La licence SIL Open Font License est acceptée pour les polices. Corbel est écartée : sa licence interdit de l'intégrer, et elle manque sur Mac.
