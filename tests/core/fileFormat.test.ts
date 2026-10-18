@@ -169,10 +169,10 @@ describe("parseDocument : ydoc abîmé, repli sur content", () => {
     );
   });
 
-  it("garde le ydoc lisible si content est absent : ydoc est la source de vérité", () => {
-    const result = parseDocument(JSON.stringify({ ...validFile(), content: undefined }));
-    expect(result.ok).toBe(true);
-    if (result.ok) expect(jsonFromYdoc(result.ydoc)).toEqual(expected);
+  it("renvoie corrupted si content est abîmé ou absent, même si le ydoc contient du texte (décision du product owner)", () => {
+    for (const content of [undefined, { type: "inconnu" }, "abîmé"]) {
+      expectError(parseDocument(JSON.stringify({ ...validFile(), content })), "corrupted");
+    }
   });
 
   it("renvoie corrupted si content est abîmé et que le ydoc est vide, pour ne jamais écraser le fichier par un document vide", () => {
