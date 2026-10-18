@@ -17,6 +17,8 @@ Ce ticket pose les fondations, sans interface : le projet, l'outillage et la log
 - Projet Vite + React + TypeScript strict
 - Outillage : ESLint, Prettier, Vitest, Playwright (installé, sans test d'interface pour l'instant)
 - Scripts npm attendus par la CI : `dev`, `build`, `typecheck`, `lint`, `test`, `test:e2e`
+- `test:e2e` vaut `playwright test --pass-with-no-tests` : sans cette option, Playwright échoue quand il ne trouve
+  aucun test, et la CI serait rouge. Option vérifiée avec `@playwright/test` 1.64.1. T0b la retire en ajoutant les premiers tests.
 - Format de fichier `.nano` version 1 dans `src/core/`, sans accès au navigateur
 
 ## Interfaces attendues
@@ -33,7 +35,7 @@ Dans `src/core/fileFormat.ts` :
 
 ## Critères d'acceptation
 
-1. `npm run typecheck`, `npm run lint` et `npm test` passent, et la CI GitHub les exécute.
+1. `npm run typecheck`, `npm run lint`, `npm test` et `npm run test:e2e` passent, et la CI GitHub les exécute.
 2. Un document sérialisé contient `format`, `version` (1), `id`, `content` et `ydoc`.
 3. Sérialiser puis relire redonne le même `id` et le même contenu : texte, gras, italique, paragraphes, accents et emojis.
 4. Les identifiants de paragraphes sont conservés après l'aller-retour.

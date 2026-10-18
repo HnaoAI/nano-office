@@ -37,6 +37,7 @@ pour les identifiants de blocs : si elle est payante, écrire un petit plugin et
 
 ## Tests attendus
 
+- Le script `test:e2e` redevient `playwright test`, sans `--pass-with-no-tests`, puisque des tests existent désormais.
 - Playwright (Chromium) : saisie, gras, italique, annuler et rétablir, absence de mise en forme automatique,
   identifiants sans doublon après Entrée.
 

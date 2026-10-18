@@ -2,8 +2,8 @@
 
 Lis ce fichier entièrement avant toute action.
 
-Les règles générales de travail (méthode, tests, Git, dépendances, commentaires,
-format de réponse) sont dans la mémoire utilisateur `~/.claude/CLAUDE.md`.
+Règles générales de travail (méthode, tests, Git, dépendances, commentaires,
+format de réponse) : @docs/regles-de-travail.md
 Ce fichier ne contient que ce qui est propre à Nano Office.
 En cas de contradiction, ce fichier l'emporte.
 
@@ -102,3 +102,4 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - 2026-10-18 : Champ `id` ajouté au format `.nano` v1, pour ranger la copie de secours par document et éviter que Yjs fusionne deux documents.
 - 2026-10-18 : T0 découpé en T0a à T0e, car il dépassait la limite d'une journée ou de 400 lignes.
 - 2026-10-18 : Le critère réseau porte sur les données de document, pas sur toute requête : la PWA doit pouvoir télécharger ses mises à jour.
+- 2026-10-18 : Règles générales importées depuis `docs/regles-de-travail.md`, car les sessions Claude Code dans le cloud ne voient pas `~/.claude/CLAUDE.md`.
