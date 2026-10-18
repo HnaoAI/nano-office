@@ -23,10 +23,9 @@ export const BLOCK_TYPES_WITH_ID = ["paragraph"];
 
 /**
  * Extension d'identifiant de bloc : ajoute l'attribut `id` aux paragraphes (règle produit 5).
- * Elle ne génère pas les identifiants : l'éditeur s'en charge.
+ * Elle ne génère pas les identifiants : `src/editor/blockIds.ts` s'en charge dans l'éditeur.
  * L'attribut est rendu en HTML sous la forme `data-id`.
  */
-// TODO(T0b) : générer un identifiant pour chaque nouveau paragraphe dans l'éditeur.
 export const BlockId = Extension.create({
   name: "blockId",
   addGlobalAttributes() {
@@ -36,6 +35,10 @@ export const BlockId = Extension.create({
         attributes: {
           [BLOCK_ID_ATTRIBUTE]: {
             default: null,
+            // Entrée en fin de paragraphe crée un paragraphe sans identifiant, au lieu d'une copie
+            // (T0b, critère 6 ; relecture de la PR n° 14). Tiptap copie quand même les attributs
+            // si l'on coupe au milieu : src/editor/blockIds.ts corrige alors le doublon.
+            keepOnSplit: false,
             parseHTML: (element) => element.getAttribute("data-id"),
             renderHTML: (attributes) => {
               const id: unknown = attributes[BLOCK_ID_ATTRIBUTE];
