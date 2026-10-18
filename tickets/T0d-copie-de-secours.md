@@ -1,6 +1,6 @@
 # T0d : Copie de secours et récupération
 
-**Statut** : validé
+**Suivi** : Issue [#5](https://github.com/HnaoAI/nano-office/issues/5), le statut se lit sur le tableau Kanban
 **Dépend de** : T0c
 **Taille estimée** : S
 **Branche** : `ticket/T0d-copie-de-secours`

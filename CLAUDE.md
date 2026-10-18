@@ -56,7 +56,9 @@ Fichier JSON en UTF-8 :
 - `content` : le document au format JSON de Tiptap (lisible, sert de secours)
 - `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`)
 
-À l'ouverture, `ydoc` est la source de vérité. Si `ydoc` est illisible, utiliser `content`.
+À l'ouverture, `ydoc` est la source de vérité, vérifiée par `content` : s'ils diffèrent, utiliser `content`.
+Si `content` est inutilisable, le fichier est refusé (`corrupted`), même si `ydoc` contient du texte :
+rien ne permet plus de vérifier que `ydoc` est complet, et l'enregistrer écraserait l'original.
 Une version inconnue ou un fichier invalide affiche un message clair, sans plantage.
 Tout changement de format incrémente `version` et ajoute une migration testée.
 
@@ -88,6 +90,25 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - Les tests d'interface remplacent l'accès aux fichiers par une fausse implémentation de `FileStore`.
 - Les vérifications manuelles se font sur un Mac avec Chrome et sur un PC Windows avec Edge.
 
+## Suivi des tickets
+
+- Chaque ticket a un fichier dans `tickets/` (la spécification, qui fait foi) et une Issue GitHub (le suivi), citée en tête du fichier.
+- Le statut d'un ticket se lit sur le tableau Kanban du projet GitHub, pas dans le fichier.
+- Un ticket n'est traité que lorsque le product owner le demande explicitement : le lancer vaut validation.
+- La description de la PR qui livre un ticket contient `Closes #<numéro de l'Issue>`, pour fermer l'Issue à la fusion.
+- Si un ticket est découpé ou créé, créer aussi son Issue, avec l'étiquette de tranche (`T0 squelette`, `T1 écrire au quotidien`…) et de taille (`taille S`, `taille M`).
+
+## Relecture et échanges sur la PR
+
+La PR est le lieu d'échange entre le développeur, le relecteur et le product owner.
+Tout ce qui concerne un ticket y est écrit, pour que la session suivante le retrouve.
+
+- **Au début d'une session sur une PR existante**, lire ses commentaires et ses relectures avant de toucher au code.
+- **Répondre à chaque commentaire de relecture**, dans son fil : « Corrigé dans `<commit>` », ou la raison pour laquelle ce n'est pas fait.
+- **Quand une série de corrections est poussée**, publier un commentaire de synthèse sur la PR : ce qui a été fait, résultat des tests, ce qui reste.
+- **Mettre à jour la description de la PR** si le rapport de fin de ticket change (fichiers, tests, critères non satisfaits).
+- Une question pour le product owner va dans un commentaire de la PR, pas seulement dans le fil de discussion de la session.
+
 ## Journal des décisions
 
 - 2026-10-17 : Nom du produit : Nano Office (vérification INPI et EUIPO à faire).
@@ -105,3 +126,5 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - 2026-10-18 : Règles générales importées depuis `docs/regles-de-travail.md`, car les sessions Claude Code dans le cloud ne voient pas `~/.claude/CLAUDE.md`.
 - 2026-10-18 : À la réouverture d'un fichier dont la copie de secours diffère, on demande à l'utilisateur s'il veut récupérer les modifications non enregistrées, plutôt que d'effacer la copie : ne jamais perdre un travail.
 - 2026-10-18 : Raccourcis de titres : Cmd+Option+chiffre sur Mac, Ctrl+Shift+chiffre sur Windows, car Ctrl+Alt équivaut à AltGr sur un clavier AZERTY. Raccourcis reconnus à la touche physique (`event.code`).
+- 2026-10-18 : Une Issue GitHub par ticket, suivie sur un tableau Kanban. Le fichier du ticket reste la spécification ; l'Issue porte le statut, pour n'avoir qu'une seule source pour chacun.
+- 2026-10-18 : Un fichier au `content` inutilisable est refusé, même si son état Yjs contient du texte. Ouvrir un état Yjs non vérifiable risquerait d'écraser le fichier complet par une version partielle. Un futur mode récupération permettra de relire ces fichiers sans réécrire l'original.

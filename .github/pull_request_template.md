@@ -1,6 +1,8 @@
 ## Ticket
 
-<!-- Identifiant et titre, par exemple T0 : Squelette de bout en bout -->
+<!-- Identifiant et titre, par exemple T0a : Outillage et format de fichier .nano -->
+
+Closes #<!-- numéro de l'Issue du ticket -->
 
 ## Fichiers créés ou modifiés
 

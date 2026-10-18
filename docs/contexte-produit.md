@@ -29,7 +29,7 @@ PWA (application web installable, hors ligne), TypeScript, React, Tiptap, Yjs. V
 | T2 : partager | Export PDF via l'impression du navigateur, impression, import `.docx` | À écrire |
 | T3 : confort | Tableaux, couleur et surlignage, rechercher et remplacer, nombre de mots | À écrire |
 | T4 : mise en page | Marges, orientation, en-têtes, pieds de page, affichage en pages | À écrire (risque technique : Tiptap n'affiche pas les pages nativement) |
-| Plus tard | Module tableur, historique des versions, synchronisation, collaboration en ligne, traduction locale | Non planifié |
+| Plus tard | Module tableur, historique des versions, synchronisation, collaboration en ligne, traduction locale, mode récupération des fichiers abîmés (PL1) | Non planifié |
 
 Ordre conseillé : T0a à T0e dans l'ordre, puis T1.6 (sauvegarde automatique), puis le reste de T1. Quelques jours d'usage en famille entre chaque tranche, et l'ordre peut changer selon leurs retours.
 
