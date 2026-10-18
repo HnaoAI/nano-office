@@ -7,6 +7,9 @@ export const NANO_FORMAT = "nano-office";
 /** Version actuelle du format `.nano`. Tout changement de format l'incrémente (voir CLAUDE.md). */
 export const NANO_FORMAT_VERSION = 1;
 
+/** Nom proposé pour un document jamais enregistré (T0c, critère 3). */
+export const DEFAULT_FILE_NAME = "document.nano";
+
 /** Document au format JSON de Tiptap / ProseMirror (nœud racine `doc`). */
 export interface DocumentJson {
   type: string;
@@ -40,3 +43,18 @@ export type ParseError = "invalid-json" | "not-nano" | "unsupported-version" | "
 /** Résultat de `parseDocument` : jamais d'exception, un succès ou une erreur nommée. */
 export type ParseResult =
   { ok: true; id: string; ydoc: Y.Doc; version: number } | { ok: false; error: ParseError };
+
+/**
+ * Document affiché dans l'éditeur (T0c), avec ce qu'il faut pour l'enregistrer.
+ * INVARIANT : un `ydoc` n'appartient qu'à un seul document ; « Nouveau » et « Ouvrir » en créent un neuf.
+ */
+export interface OpenDocument {
+  /** Identifiant du document, conservé à chaque enregistrement. */
+  id: string;
+  /** Contenu du document, relié à l'éditeur. */
+  ydoc: Y.Doc;
+  /** Nom du fichier ouvert ou enregistré, ou null pour un document jamais enregistré. */
+  fileName: string | null;
+  /** Contenu au dernier enregistrement ou à l'ouverture (voir `contentSnapshot`), ou null si jamais enregistré. */
+  savedSnapshot: string | null;
+}
