@@ -9,4 +9,5 @@ PWA en TypeScript, React, Tiptap et Yjs. Commandes : `npm run dev`, `npm run bui
 - `docs/analyse-2026-10-18.md` : analyse du cadrage et points à régler avant T0
 - `tickets/` : un fichier par ticket
 - `src/` : code de l'application (voir `src/README.md`)
+- `public/icons/` : icônes provisoires de l'application installable (T0e)
 - `tests/` : tests Vitest et Playwright (voir `tests/README.md`)
