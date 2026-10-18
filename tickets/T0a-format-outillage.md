@@ -19,19 +19,32 @@ Ce ticket pose les fondations, sans interface : le projet, l'outillage et la log
 - Scripts npm attendus par la CI : `dev`, `build`, `typecheck`, `lint`, `test`, `test:e2e`
 - `test:e2e` vaut `playwright test --pass-with-no-tests` : sans cette option, Playwright échoue quand il ne trouve
   aucun test, et la CI serait rouge. Option vérifiée avec `@playwright/test` 1.64.1. T0b la retire en ajoutant les premiers tests.
+- Schéma du document partagé dans `src/core/schema.ts`, réutilisé tel quel par l'éditeur (T0b)
 - Format de fichier `.nano` version 1 dans `src/core/`, sans accès au navigateur
 
 ## Interfaces attendues
 
+Dans `src/core/schema.ts`, source unique du schéma, que T0b réutilise sans le redéfinir :
+
+- `documentExtensions` : la liste des extensions Tiptap du document (paragraphes, gras, italique, identifiant de bloc)
+- l'extension d'identifiant de bloc, qui ajoute l'attribut d'identifiant aux paragraphes
+- `documentSchema` : le schéma ProseMirror obtenu à partir de `documentExtensions` (`getSchema`)
+- `YJS_FRAGMENT_NAME` : le nom du fragment Yjs qui contient le document, utilisé aussi par l'extension de collaboration de T0b
+
 Dans `src/core/fileFormat.ts` :
 
 - `createDocumentId(): string` (UUID)
-- `serializeDocument(doc: { id: string; ydoc: Y.Doc; content: JSONContent }): string`
+- `serializeDocument(doc: { id: string; ydoc: Y.Doc }): string`
+  - calcule lui-même `content` à partir du fragment `YJS_FRAGMENT_NAME` du `ydoc`, pour que `content` et `ydoc` ne puissent pas diverger
 - `parseDocument(text: string): ParseResult`
   - succès : `{ ok: true, id: string, ydoc: Y.Doc, version: number }`
   - échec : `{ ok: false, error: "invalid-json" | "not-nano" | "unsupported-version" | "corrupted" }`
 
 `parseDocument` crée toujours un nouveau `Y.Doc`. Il n'applique jamais un état sur un `Y.Doc` existant.
+Le repli sur `content` reconstruit le `Y.Doc` avec `documentSchema` et `YJS_FRAGMENT_NAME`.
+
+Piste technique : y-prosemirror fournit les conversions entre un fragment Yjs et le JSON ProseMirror,
+sans éditeur ni navigateur. Les tests Vitest tournent sans DOM : si une extension en exige un, le signaler.
 
 ## Critères d'acceptation
 
@@ -39,14 +52,16 @@ Dans `src/core/fileFormat.ts` :
 2. Un document sérialisé contient `format`, `version` (1), `id`, `content` et `ydoc`.
 3. Sérialiser puis relire redonne le même `id` et le même contenu : texte, gras, italique, paragraphes, accents et emojis.
 4. Les identifiants de paragraphes sont conservés après l'aller-retour.
-5. Si `ydoc` est illisible, le document est reconstruit à partir de `content`.
-6. Un JSON invalide, un fichier qui n'est pas un `.nano` ou une version inconnue renvoie l'erreur correspondante, sans exception.
-7. Un fichier sans `id` ou avec un `id` vide est refusé avec l'erreur `not-nano`.
-8. Deux appels à `createDocumentId` ne renvoient jamais la même valeur.
+5. Le `content` enregistré correspond toujours au `ydoc` enregistré : il est calculé à partir de lui, jamais fourni par l'appelant.
+6. Un document construit avec `documentSchema` (gras, italique, identifiants) est relu sans éditeur.
+7. Si `ydoc` est illisible, le document est reconstruit à partir de `content`.
+8. Un JSON invalide, un fichier qui n'est pas un `.nano` ou une version inconnue renvoie l'erreur correspondante, sans exception.
+9. Un fichier sans `id` ou avec un `id` vide est refusé avec l'erreur `not-nano`.
+10. Deux appels à `createDocumentId` ne renvoient jamais la même valeur.
 
 ## Tests attendus
 
-- Vitest : aller-retour, version inconnue, JSON invalide, fichier étranger, `ydoc` corrompu avec repli sur `content`,
+- Vitest : schéma partagé (gras, italique, identifiants), `content` calculé à partir du `ydoc`, aller-retour, version inconnue, JSON invalide, fichier étranger, `ydoc` corrompu avec repli sur `content`,
   `id` absent, document vide, texte très long, accents, emojis, identifiants de paragraphes.
 
 ## Hors périmètre

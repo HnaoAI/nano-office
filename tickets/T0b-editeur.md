@@ -23,13 +23,15 @@ mettre des mots en gras ou en italique, et annuler une erreur.
 2. Le bouton Gras et Ctrl/Cmd+B mettent la sélection en gras. Un second appui retire le gras.
 3. Le bouton Italique et Ctrl/Cmd+I font de même pour l'italique.
 4. Ctrl/Cmd+Z annule la dernière modification, Ctrl/Cmd+Shift+Z (et Ctrl+Y sous Windows) la rétablit.
-5. Le contenu de l'éditeur est stocké dans un `Y.Doc`.
+5. Le contenu de l'éditeur est stocké dans le fragment `YJS_FRAGMENT_NAME` d'un `Y.Doc`, avec le schéma de `src/core/schema.ts`.
 6. Chaque paragraphe porte un identifiant stable. Un paragraphe créé avec Entrée reçoit un nouvel identifiant, sans doublon.
 7. Le correcteur orthographique du navigateur est actif dans l'éditeur.
 8. Taper `# `, `1. `, `- ` ou `**texte**` ne crée aucune mise en forme.
 
 ## Note technique
 
+L'éditeur utilise `documentExtensions` et `YJS_FRAGMENT_NAME` de `src/core/schema.ts` (T0a), sans redéfinir
+le schéma ni l'identifiant de bloc : un fichier enregistré doit toujours correspondre à ce que l'éditeur affiche.
 Avec l'extension de collaboration, l'historique de StarterKit est désactivé et l'annulation passe par
 le gestionnaire d'annulation de Yjs. Les règles de saisie et de collage automatiques sont désactivées
 (`enableInputRules: false`, `enablePasteRules: false`). Vérifier la licence de toute extension utilisée
