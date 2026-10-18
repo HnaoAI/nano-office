@@ -131,3 +131,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-18 : `FileStore.open()` ne retient un fichier comme fichier courant que s'il est lisible, pour qu'Enregistrer ne puisse jamais réécrire un fichier refusé.
 - 2026-10-18 : À l'ouverture, une copie de secours identique au fichier est effacée puis recréée à partir du fichier, car deux historiques Yjs au même contenu s'additionneraient.
 - 2026-10-18 : Quand l'utilisateur accepte d'abandonner des modifications (Nouveau ou Ouvrir), le document n'est plus restauré au rechargement, mais sa copie de secours est gardée dans le navigateur : pas de retour surprise, et rien n'est perdu.
+- 2026-10-18 : Une mise à jour de la PWA s'applique au lancement suivant, une fois toutes ses fenêtres fermées, et jamais en pleine édition (`registerType: "prompt"` sans message). Un message « mise à jour disponible » pourra venir plus tard.
