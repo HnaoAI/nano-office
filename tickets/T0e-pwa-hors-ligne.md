@@ -1,6 +1,6 @@
 # T0e : Application installable et hors ligne
 
-**Statut** : validé
+**Suivi** : Issue [#6](https://github.com/HnaoAI/nano-office/issues/6), le statut se lit sur le tableau Kanban
 **Dépend de** : T0b
 **Taille estimée** : S
 **Branche** : `ticket/T0e-pwa-hors-ligne`

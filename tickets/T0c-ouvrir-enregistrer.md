@@ -1,6 +1,6 @@
 # T0c : Ouvrir et enregistrer
 
-**Statut** : validé
+**Suivi** : Issue [#4](https://github.com/HnaoAI/nano-office/issues/4), le statut se lit sur le tableau Kanban
 **Dépend de** : T0b
 **Taille estimée** : M
 **Branche** : `ticket/T0c-ouvrir-enregistrer`

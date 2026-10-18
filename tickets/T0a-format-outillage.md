@@ -1,6 +1,6 @@
 # T0a : Outillage et format de fichier `.nano`
 
-**Statut** : validé
+**Suivi** : Issue [#2](https://github.com/HnaoAI/nano-office/issues/2), le statut se lit sur le tableau Kanban
 **Dépend de** : aucun
 **Taille estimée** : M
 **Branche** : `ticket/T0a-format-outillage`

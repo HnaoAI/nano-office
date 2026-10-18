@@ -88,6 +88,14 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - Les tests d'interface remplacent l'accès aux fichiers par une fausse implémentation de `FileStore`.
 - Les vérifications manuelles se font sur un Mac avec Chrome et sur un PC Windows avec Edge.
 
+## Suivi des tickets
+
+- Chaque ticket a un fichier dans `tickets/` (la spécification, qui fait foi) et une Issue GitHub (le suivi), citée en tête du fichier.
+- Le statut d'un ticket se lit sur le tableau Kanban du projet GitHub, pas dans le fichier.
+- Un ticket n'est traité que lorsque le product owner le demande explicitement : le lancer vaut validation.
+- La description de la PR qui livre un ticket contient `Closes #<numéro de l'Issue>`, pour fermer l'Issue à la fusion.
+- Si un ticket est découpé ou créé, créer aussi son Issue, avec l'étiquette de tranche (`T0 squelette`, `T1 écrire au quotidien`…) et de taille (`taille S`, `taille M`).
+
 ## Journal des décisions
 
 - 2026-10-17 : Nom du produit : Nano Office (vérification INPI et EUIPO à faire).
@@ -105,3 +113,4 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - 2026-10-18 : Règles générales importées depuis `docs/regles-de-travail.md`, car les sessions Claude Code dans le cloud ne voient pas `~/.claude/CLAUDE.md`.
 - 2026-10-18 : À la réouverture d'un fichier dont la copie de secours diffère, on demande à l'utilisateur s'il veut récupérer les modifications non enregistrées, plutôt que d'effacer la copie : ne jamais perdre un travail.
 - 2026-10-18 : Raccourcis de titres : Cmd+Option+chiffre sur Mac, Ctrl+Shift+chiffre sur Windows, car Ctrl+Alt équivaut à AltGr sur un clavier AZERTY. Raccourcis reconnus à la touche physique (`event.code`).
+- 2026-10-18 : Une Issue GitHub par ticket, suivie sur un tableau Kanban. Le fichier du ticket reste la spécification ; l'Issue porte le statut, pour n'avoir qu'une seule source pour chacun.

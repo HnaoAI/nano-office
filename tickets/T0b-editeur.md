@@ -1,6 +1,6 @@
 # T0b : Éditeur de texte relié à Yjs
 
-**Statut** : validé
+**Suivi** : Issue [#3](https://github.com/HnaoAI/nano-office/issues/3), le statut se lit sur le tableau Kanban
 **Dépend de** : T0a
 **Taille estimée** : M
 **Branche** : `ticket/T0b-editeur`
