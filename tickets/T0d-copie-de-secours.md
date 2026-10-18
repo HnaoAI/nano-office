@@ -1,6 +1,6 @@
 # T0d : Copie de secours et récupération
 
-**Statut** : à valider par le product owner
+**Statut** : validé
 **Dépend de** : T0c
 **Taille estimée** : S
 **Branche** : `ticket/T0d-copie-de-secours`
