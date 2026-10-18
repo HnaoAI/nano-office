@@ -67,3 +67,10 @@ body {
   background: #fdf0ee;
   border-color: #e3b1a8;
 }
+
+.nano-choice {
+  padding: 1rem;
+  background: #fff8e6;
+  border: 1px solid #e3c98a;
+  border-radius: 4px;
+}

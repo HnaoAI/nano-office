@@ -225,7 +225,8 @@ test("critère 9 : « Ouvrir » charge un fichier .nano, puis un second sans mé
   page.on("dialog", (dialog) => void dialog.accept());
 
   await openFile(page, "premier.nano", nanoFile(SAMPLE_DOCUMENT));
-  expect(await ydocJson(page)).toEqual(JSON.parse(nanoFile(SAMPLE_DOCUMENT)).content);
+  // L'ouverture lit d'abord la copie de secours (T0d), de façon asynchrone : on attend le résultat.
+  await expect.poll(() => ydocJson(page)).toEqual(JSON.parse(nanoFile(SAMPLE_DOCUMENT)).content);
 
   const second: DocumentJson = {
     type: "doc",

@@ -129,3 +129,5 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-18 : Une Issue GitHub par ticket, suivie sur un tableau Kanban. Le fichier du ticket reste la spécification ; l'Issue porte le statut, pour n'avoir qu'une seule source pour chacun.
 - 2026-10-18 : Un fichier au `content` inutilisable est refusé, même si son état Yjs contient du texte. Ouvrir un état Yjs non vérifiable risquerait d'écraser le fichier complet par une version partielle. Un futur mode récupération permettra de relire ces fichiers sans réécrire l'original.
 - 2026-10-18 : `FileStore.open()` ne retient un fichier comme fichier courant que s'il est lisible, pour qu'Enregistrer ne puisse jamais réécrire un fichier refusé.
+- 2026-10-18 : À l'ouverture, une copie de secours identique au fichier est effacée puis recréée à partir du fichier, car deux historiques Yjs au même contenu s'additionneraient.
+- 2026-10-18 : Quand l'utilisateur accepte d'abandonner des modifications (Nouveau ou Ouvrir), le document n'est plus restauré au rechargement, mais sa copie de secours est gardée dans le navigateur : pas de retour surprise, et rien n'est perdu.
