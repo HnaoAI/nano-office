@@ -96,6 +96,17 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - La description de la PR qui livre un ticket contient `Closes #<numéro de l'Issue>`, pour fermer l'Issue à la fusion.
 - Si un ticket est découpé ou créé, créer aussi son Issue, avec l'étiquette de tranche (`T0 squelette`, `T1 écrire au quotidien`…) et de taille (`taille S`, `taille M`).
 
+## Relecture et échanges sur la PR
+
+La PR est le lieu d'échange entre le développeur, le relecteur et le product owner.
+Tout ce qui concerne un ticket y est écrit, pour que la session suivante le retrouve.
+
+- **Au début d'une session sur une PR existante**, lire ses commentaires et ses relectures avant de toucher au code.
+- **Répondre à chaque commentaire de relecture**, dans son fil : « Corrigé dans `<commit>` », ou la raison pour laquelle ce n'est pas fait.
+- **Quand une série de corrections est poussée**, publier un commentaire de synthèse sur la PR : ce qui a été fait, résultat des tests, ce qui reste.
+- **Mettre à jour la description de la PR** si le rapport de fin de ticket change (fichiers, tests, critères non satisfaits).
+- Une question pour le product owner va dans un commentaire de la PR, pas seulement dans le fil de discussion de la session.
+
 ## Journal des décisions
 
 - 2026-10-17 : Nom du produit : Nano Office (vérification INPI et EUIPO à faire).
