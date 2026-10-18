@@ -1,7 +1,7 @@
 # Nano Office
 
 Traitement de texte sobre, sans publicité ni assistant IA, pour un usage familial (projet pilote).
-PWA en TypeScript, React, Tiptap et Yjs. Aucun code pour l'instant : le travail commence avec le ticket T0.
+PWA en TypeScript, React, Tiptap et Yjs. Aucun code pour l'instant : le travail commence avec le ticket T0a.
 
 - `CLAUDE.md` : règles techniques et produit, à lire avant toute action
 - `docs/contexte-produit.md` : vision, feuille de route, organisation

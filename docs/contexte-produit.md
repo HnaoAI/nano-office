@@ -24,14 +24,14 @@ PWA (application web installable, hors ligne), TypeScript, React, Tiptap, Yjs. V
 
 | Tranche | Contenu | Statut |
 |---|---|---|
-| T0 : squelette | PWA, éditeur relié à Yjs, ouvrir et enregistrer, gras, italique, annuler, copie de secours | Ticket écrit |
+| T0 : squelette | Découpé en T0a format et outillage, T0b éditeur, T0c ouvrir et enregistrer, T0d copie de secours, T0e PWA hors ligne | Tickets écrits, corrections validées le 2026-10-18 |
 | T1 : écrire au quotidien | Titres, listes, alignement, police et taille, copier-coller propre, sauvegarde automatique | User stories écrites (T1.1 à T1.6) |
 | T2 : partager | Export PDF via l'impression du navigateur, impression, import `.docx` | À écrire |
 | T3 : confort | Tableaux, couleur et surlignage, rechercher et remplacer, nombre de mots | À écrire |
 | T4 : mise en page | Marges, orientation, en-têtes, pieds de page, affichage en pages | À écrire (risque technique : Tiptap n'affiche pas les pages nativement) |
 | Plus tard | Module tableur, historique des versions, synchronisation, collaboration en ligne, traduction locale | Non planifié |
 
-Ordre conseillé : T0, puis T1.6 (sauvegarde automatique), puis le reste de T1. Quelques jours d'usage en famille entre chaque tranche, et l'ordre peut changer selon leurs retours.
+Ordre conseillé : T0a à T0e dans l'ordre, puis T1.6 (sauvegarde automatique), puis le reste de T1. Quelques jours d'usage en famille entre chaque tranche, et l'ordre peut changer selon leurs retours.
 
 ## Organisation du travail
 

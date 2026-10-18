@@ -33,7 +33,7 @@ Certaines extensions Tiptap sont payantes (« Pro ») : ne pas les utiliser sans
 ## Règles produit (non négociables)
 
 1. Aucune publicité, bannière, bouton IA ou invitation à payer.
-2. Fonctionnement hors ligne. Aucune donnée de document n'est envoyée sur le réseau.
+2. Fonctionnement hors ligne. Aucune donnée de document n'est envoyée sur le réseau. Seuls les fichiers de l'application elle-même (mises à jour de la PWA) peuvent être téléchargés.
 3. **Ne jamais perdre un document** : écriture atomique, copie de secours, alerte avant fermeture si des modifications ne sont pas enregistrées.
 4. Le contenu du document vit dans un `Y.Doc` (Yjs).
 5. Chaque bloc (paragraphe, titre, élément de liste, cellule) porte un identifiant stable, conservé après enregistrement et réouverture.
@@ -52,12 +52,17 @@ Fichier JSON en UTF-8 :
 
 - `format` : toujours `"nano-office"`
 - `version` : entier, actuellement `1`
+- `id` : identifiant unique du document (UUID), créé avec le document et conservé à chaque enregistrement
 - `content` : le document au format JSON de Tiptap (lisible, sert de secours)
 - `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`)
 
 À l'ouverture, `ydoc` est la source de vérité. Si `ydoc` est illisible, utiliser `content`.
 Une version inconnue ou un fichier invalide affiche un message clair, sans plantage.
 Tout changement de format incrémente `version` et ajoute une migration testée.
+
+INVARIANT : la copie de secours est rangée sous l'`id` du document. Ouvrir un fichier crée
+un nouveau `Y.Doc` : on n'applique jamais l'état Yjs d'un fichier sur un `Y.Doc` déjà rempli,
+car Yjs additionnerait les deux contenus au lieu de remplacer.
 
 ## Architecture
 
@@ -94,3 +99,6 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - 2026-10-18 : Aucune mise en forme automatique pendant la saisie dans le pilote.
 - 2026-10-18 : Code versionné sur GitHub. Documents de la famille sur un dossier synchronisé (OneDrive, Dropbox ou Google Drive), pas sur GitHub.
 - 2026-10-18 : Règles générales de travail déplacées dans la mémoire utilisateur `~/.claude/CLAUDE.md`.
+- 2026-10-18 : Champ `id` ajouté au format `.nano` v1, pour ranger la copie de secours par document et éviter que Yjs fusionne deux documents.
+- 2026-10-18 : T0 découpé en T0a à T0e, car il dépassait la limite d'une journée ou de 400 lignes.
+- 2026-10-18 : Le critère réseau porte sur les données de document, pas sur toute requête : la PWA doit pouvoir télécharger ses mises à jour.
