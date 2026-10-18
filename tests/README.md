@@ -11,4 +11,7 @@ Même arborescence que `src/`.
   - `editeur.spec.ts` : saisie, gras, italique, annuler et rétablir, Y.Doc, identifiants (T0b)
   - `fichiers.spec.ts` : nouveau, ouvrir, enregistrer, Ctrl/Cmd+S, titre, fichiers invalides (T0c)
   - `secours.spec.ts` : copie de secours, récupération après rechargement, question à l'ouverture, alerte avant fermeture (T0d)
+  - `reseau.spec.ts` : aucune donnée de document sur le réseau pendant l'édition, l'ouverture et l'enregistrement (T0e)
+  - `hors-ligne.spec.ts` : version construite installable et hors ligne (T0e, projet Playwright « pwa », après `npm run build`)
+  - `networkWatch.ts` : journal des requêtes et messages envoyés par la page
   - `fakeFileStore.ts` : fausse implémentation de `FileStore`, installée avant le chargement de la page
