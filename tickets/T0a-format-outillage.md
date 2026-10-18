@@ -43,6 +43,11 @@ Dans `src/core/fileFormat.ts` :
 `parseDocument` crée toujours un nouveau `Y.Doc`. Il n'applique jamais un état sur un `Y.Doc` existant.
 Le repli sur `content` reconstruit le `Y.Doc` avec `documentSchema` et `YJS_FRAGMENT_NAME`.
 
+Un `ydoc` abîmé ne lève pas toujours d'exception : Yjs peut l'appliquer et produire un document vide ou partiel.
+Après avoir relu le `ydoc`, `parseDocument` recalcule donc son contenu et le compare au `content` enregistré.
+Comme `content` est calculé à partir du `ydoc` au moment de l'enregistrement, les deux doivent être identiques.
+S'ils diffèrent, le `ydoc` est considéré comme abîmé et le document est reconstruit à partir de `content`.
+
 Piste technique : y-prosemirror fournit les conversions entre un fragment Yjs et le JSON ProseMirror,
 sans éditeur ni navigateur. Les tests Vitest tournent sans DOM : si une extension en exige un, le signaler.
 
@@ -55,13 +60,14 @@ sans éditeur ni navigateur. Les tests Vitest tournent sans DOM : si une extensi
 5. Le `content` enregistré correspond toujours au `ydoc` enregistré : il est calculé à partir de lui, jamais fourni par l'appelant.
 6. Un document construit avec `documentSchema` (gras, italique, identifiants) est relu sans éditeur.
 7. Si `ydoc` est illisible, le document est reconstruit à partir de `content`.
-8. Un JSON invalide, un fichier qui n'est pas un `.nano` ou une version inconnue renvoie l'erreur correspondante, sans exception.
-9. Un fichier sans `id` ou avec un `id` vide est refusé avec l'erreur `not-nano`.
-10. Deux appels à `createDocumentId` ne renvoient jamais la même valeur.
+8. Si `ydoc` est lisible mais ne correspond pas à `content` (vide ou partiel), le document est reconstruit à partir de `content`.
+9. Un JSON invalide, un fichier qui n'est pas un `.nano` ou une version inconnue renvoie l'erreur correspondante, sans exception.
+10. Un fichier sans `id` ou avec un `id` vide est refusé avec l'erreur `not-nano`.
+11. Deux appels à `createDocumentId` ne renvoient jamais la même valeur.
 
 ## Tests attendus
 
-- Vitest : schéma partagé (gras, italique, identifiants), `content` calculé à partir du `ydoc`, aller-retour, version inconnue, JSON invalide, fichier étranger, `ydoc` corrompu avec repli sur `content`,
+- Vitest : schéma partagé (gras, italique, identifiants), `content` calculé à partir du `ydoc`, aller-retour, version inconnue, JSON invalide, fichier étranger, `ydoc` illisible avec repli sur `content`, `ydoc` lisible mais vide ou partiel avec repli sur `content`,
   `id` absent, document vide, texte très long, accents, emojis, identifiants de paragraphes.
 
 ## Hors périmètre
