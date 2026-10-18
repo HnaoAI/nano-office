@@ -174,6 +174,37 @@ describe("parseDocument : ydoc abîmé, repli sur content", () => {
     expect(result.ok).toBe(true);
     if (result.ok) expect(jsonFromYdoc(result.ydoc)).toEqual(expected);
   });
+
+  it("renvoie corrupted si content est abîmé et que le ydoc est vide, pour ne jamais écraser le fichier par un document vide", () => {
+    const emptyYdoc = bytesToBase64(Y.encodeStateAsUpdate(new Y.Doc()));
+    for (const content of [{ type: "inconnu" }, "abîmé", undefined]) {
+      expectError(
+        parseDocument(JSON.stringify({ ...validFile(), ydoc: emptyYdoc, content })),
+        "corrupted",
+      );
+    }
+  });
+
+  it("renvoie corrupted si content est abîmé et que le ydoc ne contient que des paragraphes vides", () => {
+    const blank = ydocFromJson({
+      type: "doc",
+      content: [
+        { type: "paragraph", attrs: { id: "a" } },
+        { type: "paragraph", attrs: { id: "b" } },
+      ],
+    });
+    const file = {
+      ...validFile(),
+      ydoc: bytesToBase64(Y.encodeStateAsUpdate(blank)),
+      content: { type: "inconnu" },
+    };
+    expectError(parseDocument(JSON.stringify(file)), "corrupted");
+  });
+
+  it("relit toujours un vrai document vide, dont content est intact", () => {
+    const result = parseDocument(serializeDocument({ id: "vide", ydoc: new Y.Doc() }));
+    expect(result.ok).toBe(true);
+  });
 });
 
 describe("parseDocument : fichiers refusés", () => {

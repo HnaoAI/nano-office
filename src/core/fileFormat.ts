@@ -74,10 +74,17 @@ export function parseDocument(text: string): ParseResult {
   const fromYdoc = readYdoc(data.ydoc);
   const content = readContent(data.content);
 
-  // Choix T0a : si `content` est inutilisable, on ne peut rien comparer ; on garde alors le `ydoc`
-  // s'il s'est appliqué sans erreur, puisqu'il est la source de vérité.
-  if (fromYdoc && (!content || isSameJson(contentOf(fromYdoc), content))) {
+  if (fromYdoc && content && isSameJson(contentOf(fromYdoc), content)) {
     return { ok: true, id, ydoc: fromYdoc, version };
+  }
+  // Si `content` est inutilisable, on ne peut rien comparer : on garde le `ydoc`, source de vérité,
+  // seulement s'il contient du texte.
+  // INVARIANT : un `ydoc` sans texte avec un `content` abîmé renvoie `corrupted`. L'ouvrir comme un
+  // document vide permettrait de l'enregistrer par-dessus le fichier d'origine (revue de T0a).
+  if (fromYdoc && !content) {
+    return hasText(contentOf(fromYdoc))
+      ? { ok: true, id, ydoc: fromYdoc, version }
+      : { ok: false, error: "corrupted" };
   }
   if (content) {
     return {
@@ -119,6 +126,11 @@ function readContent(content: unknown): DocumentJson | null {
   } catch {
     return null;
   }
+}
+
+/** Indique si un document contient au moins un caractère de texte, à n'importe quelle profondeur. */
+function hasText(node: DocumentJson): boolean {
+  return Boolean(node.text) || (node.content ?? []).some(hasText);
 }
 
 /** Compare deux valeurs JSON en profondeur, sans dépendre de l'ordre des clés des objets. */
