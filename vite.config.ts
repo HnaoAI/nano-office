@@ -1,9 +1,41 @@
-// Configuration de Vite (application) et de Vitest (tests de logique, sans navigateur).
+// Configuration de Vite (application et PWA) et de Vitest (tests de logique, sans navigateur).
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Application installable et hors ligne (T0e) : manifeste et service worker, générés au build
+    // seulement. Le service worker ne met en cache que les fichiers de l'application ; les documents
+    // ne passent jamais par le réseau.
+    VitePWA({
+      // « prompt » sans message : une nouvelle version attend la fermeture de toutes les fenêtres
+      // de l'application, puis s'applique au lancement suivant. « autoUpdate » rechargerait la page
+      // en pleine édition. Le message « mise à jour disponible » est hors périmètre de T0e.
+      registerType: "prompt",
+      injectRegister: "script-defer",
+      manifest: {
+        name: "Nano Office",
+        short_name: "Nano Office",
+        description: "Traitement de texte sobre, qui fonctionne sans connexion internet.",
+        lang: "fr",
+        display: "standalone",
+        start_url: "/",
+        background_color: "#ffffff",
+        theme_color: "#2b5797",
+        // Icônes provisoires : les icônes définitives sont hors périmètre de T0e.
+        icons: [
+          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icons/icon.svg", sizes: "any", type: "image/svg+xml" },
+        ],
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
+      },
+    }),
+  ],
   test: {
     // Les tests de logique tournent dans Node, sans DOM (ticket T0a).
     environment: "node",

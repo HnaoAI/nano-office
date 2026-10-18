@@ -1,0 +1,73 @@
+// Tests d'interface du ticket T0e (application installable et hors ligne), dans Chromium.
+// Ils tournent sur la version construite (`npm run build` puis `vite preview`, projet « pwa » de
+// playwright.config.ts), car le service worker n'existe pas sur le serveur de développement.
+import { expect, test, type Page } from "@playwright/test";
+import { suspiciousTraffic, watchNetwork } from "./networkWatch";
+
+function editor(page: Page) {
+  return page.getByRole("textbox", { name: "Document" });
+}
+
+/** Attend que le service worker soit actif, donc que les fichiers de l'application soient en cache. */
+async function waitForServiceWorker(page: Page) {
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+}
+
+test("critère 1 : npm run build produit une version installable (manifeste et service worker)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await waitForServiceWorker(page);
+
+  const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute("href");
+  expect(manifestUrl).not.toBeNull();
+  const manifest = (await (await page.request.get(manifestUrl ?? "")).json()) as {
+    name: string;
+    display: string;
+  };
+  expect(manifest.name).toBe("Nano Office");
+  expect(manifest.display).toBe("standalone");
+
+  // Chrome indique lui-même ce qui empêcherait l'installation (protocole DevTools).
+  // « in-incognito » est ignoré : Playwright ouvre toujours une fenêtre privée, où Chrome refuse
+  // toute installation, quelle que soit l'application.
+  const cdp = await page.context().newCDPSession(page);
+  const { installabilityErrors } = await cdp.send("Page.getInstallabilityErrors");
+  const errors = installabilityErrors.map((error) => error.errorId);
+  expect(errors.filter((id) => id !== "in-incognito")).toEqual([]);
+});
+
+test("critère 2 : après un premier chargement, l'application s'ouvre et fonctionne sans connexion internet", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/");
+  await waitForServiceWorker(page);
+
+  await context.setOffline(true);
+  await page.reload();
+  await editor(page).click();
+  await page.keyboard.type("Écrit sans internet 😀");
+  await page.keyboard.press("ControlOrMeta+B");
+  await page.keyboard.type(" en gras");
+
+  await expect(editor(page)).toContainText("Écrit sans internet 😀 en gras");
+  await expect(editor(page).locator("strong")).toHaveText(" en gras");
+});
+
+test("critère 3 : dans la version construite, aucune donnée de document n'est envoyée sur le réseau pendant l'édition", async ({
+  page,
+  baseURL,
+}) => {
+  const log = watchNetwork(page);
+  await page.goto("/");
+  await waitForServiceWorker(page);
+  await editor(page).click();
+  const text = "Journal intime de la famille, à ne pas partager 🔒";
+  await page.keyboard.type(text);
+  await expect(editor(page)).toContainText(text);
+
+  expect(suspiciousTraffic(log, new URL(baseURL ?? page.url()).origin, text)).toEqual([]);
+});
