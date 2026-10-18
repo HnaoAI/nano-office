@@ -27,12 +27,13 @@ export function useBackup(
   }, [backups, id, ydoc]);
 
   // Le dernier document non enregistré est restauré au chargement (critère 4) ; un document
-  // enregistré ne l'est pas, puisque le fichier est à jour.
+  // enregistré ne l'est pas, puisque le fichier est à jour. `ydoc` est suivi aussi : « Récupérer »
+  // remplace le Y.Doc d'un document au même id, après que `useDocumentFile` a oublié l'ancien.
   useEffect(() => {
     if (!id) return;
     if (unsaved) backups.setLastModifiedId(id);
     else if (backups.lastModifiedId() === id) backups.setLastModifiedId(null);
-  }, [backups, id, unsaved]);
+  }, [backups, id, ydoc, unsaved]);
 
   // Alerte du navigateur à la fermeture de l'onglet (critère 5). Le texte est imposé par le navigateur.
   const onBeforeUnload = useEffectEvent((event: BeforeUnloadEvent) => {

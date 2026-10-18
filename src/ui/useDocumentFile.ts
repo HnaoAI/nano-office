@@ -35,7 +35,8 @@ export interface FileMessage {
 const DISCARD_QUESTION =
   "Les modifications non enregistrées de ce document seront perdues. Voulez-vous continuer ?";
 const READ_ERROR = "Le fichier n'a pas pu être lu. Le document en cours n'a pas changé.";
-const RECOVERED_MESSAGE = "Ce document a été récupéré depuis la copie de secours de ce navigateur.";
+const RECOVERED_MESSAGE =
+  "Ce document a été récupéré depuis la copie de secours de ce navigateur. Enregistrez-le pour le garder dans un fichier.";
 const SAVE_ERROR =
   "Le document n'a pas pu être enregistré. Réessayez, ou choisissez un autre emplacement avec « Enregistrer sous… ».";
 
@@ -120,6 +121,11 @@ export function useDocumentFile() {
 
   /** Affiche un autre document. INVARIANT : sa copie de secours est absente, identique ou effacée. */
   function show(next: OpenDocument) {
+    // L'utilisateur a accepté de perdre ces modifications : elles ne reviennent plus au chargement.
+    // Leur copie reste dans IndexedDB, pour le futur mode récupération (#15). Décision de relecture de T0d.
+    if (document && unsaved && backups.lastModifiedId() === document.id) {
+      backups.setLastModifiedId(null);
+    }
     setPending(null);
     setMessage(null);
     setDocument(next);

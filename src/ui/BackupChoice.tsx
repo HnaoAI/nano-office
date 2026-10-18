@@ -3,7 +3,7 @@ import { useState } from "react";
 
 /** Question affichée à la place de l'éditeur. */
 export const BACKUP_QUESTION =
-  "Ce fichier a des modifications non enregistrées, gardées dans la copie de secours.";
+  "Ce fichier a des modifications non enregistrées, gardées dans la copie de secours de ce navigateur.";
 
 /** Choix possibles, fournis par `useDocumentFile`. */
 export interface BackupChoiceActions {

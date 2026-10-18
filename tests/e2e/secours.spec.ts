@@ -9,9 +9,10 @@ import { paragraph, ydocFromJson } from "../core/helpers";
 import { fakeFiles, installFakeFileStore, setFakeFiles } from "./fakeFileStore";
 
 const BACKUP_PREFIX = "nano-office-backup:";
-const RECOVERED_MESSAGE = "Ce document a été récupéré depuis la copie de secours de ce navigateur.";
+const RECOVERED_MESSAGE =
+  "Ce document a été récupéré depuis la copie de secours de ce navigateur. Enregistrez-le pour le garder dans un fichier.";
 const QUESTION =
-  "Ce fichier a des modifications non enregistrées, gardées dans la copie de secours.";
+  "Ce fichier a des modifications non enregistrées, gardées dans la copie de secours de ce navigateur.";
 const RECOVER = "Récupérer les modifications non enregistrées";
 const OPEN_AS_IS = "Ouvrir le fichier tel quel";
 
@@ -280,10 +281,24 @@ test("critère 11 : fermer l'onglet avant de choisir garde la copie de secours i
 
   await page.reload();
   acceptConfirms(page);
-  // Le dernier document modifié est restauré avec la modification.
-  await expect(editor(page)).toHaveText(`${FILE_TEXT} ajout`);
+  await expect(editor(page)).toBeVisible();
   await openFile(page, "lettre.nano", nanoFile(FILE_TEXT, FILE_ID));
   await expect(page.getByRole("alertdialog")).toContainText(QUESTION);
   await button(page, RECOVER).click();
   await expect(editor(page)).toHaveText(`${FILE_TEXT} ajout`);
+});
+
+test("critère 4 : après « Nouveau » qui abandonne des modifications, l'ancien document ne revient pas au rechargement, mais sa copie reste", async ({
+  page,
+}) => {
+  await start(page);
+  await leaveUnsavedChanges(page);
+  await flushBackups(page);
+  await page.reload();
+  await expect(editor(page)).toHaveText("");
+  await expect(page.getByRole("status")).toHaveCount(0);
+
+  // La copie abandonnée n'est pas effacée : rouvrir le fichier la propose encore.
+  await openFile(page, "lettre.nano", nanoFile(FILE_TEXT, FILE_ID));
+  await expect(page.getByRole("alertdialog")).toContainText(QUESTION);
 });
