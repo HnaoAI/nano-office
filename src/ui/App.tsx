@@ -1,7 +1,13 @@
-// Composant racine. Simple titre pour l'instant : l'éditeur arrive avec T0b.
+// Composant racine : titre de l'application et éditeur d'un document neuf.
+import { DocumentEditor } from "./DocumentEditor";
+import "./styles.css";
 
 /** Composant racine de l'application. */
 export function App() {
-  // TODO(T0b) : afficher l'éditeur.
-  return <h1>Nano Office</h1>;
+  return (
+    <main className="nano-app">
+      <h1>Nano Office</h1>
+      <DocumentEditor />
+    </main>
+  );
 }
