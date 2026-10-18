@@ -56,7 +56,9 @@ Fichier JSON en UTF-8 :
 - `content` : le document au format JSON de Tiptap (lisible, sert de secours)
 - `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`)
 
-À l'ouverture, `ydoc` est la source de vérité. Si `ydoc` est illisible, utiliser `content`.
+À l'ouverture, `ydoc` est la source de vérité, vérifiée par `content` : s'ils diffèrent, utiliser `content`.
+Si `content` est inutilisable, le fichier est refusé (`corrupted`), même si `ydoc` contient du texte :
+rien ne permet plus de vérifier que `ydoc` est complet, et l'enregistrer écraserait l'original.
 Une version inconnue ou un fichier invalide affiche un message clair, sans plantage.
 Tout changement de format incrémente `version` et ajoute une migration testée.
 
@@ -125,3 +127,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-18 : À la réouverture d'un fichier dont la copie de secours diffère, on demande à l'utilisateur s'il veut récupérer les modifications non enregistrées, plutôt que d'effacer la copie : ne jamais perdre un travail.
 - 2026-10-18 : Raccourcis de titres : Cmd+Option+chiffre sur Mac, Ctrl+Shift+chiffre sur Windows, car Ctrl+Alt équivaut à AltGr sur un clavier AZERTY. Raccourcis reconnus à la touche physique (`event.code`).
 - 2026-10-18 : Une Issue GitHub par ticket, suivie sur un tableau Kanban. Le fichier du ticket reste la spécification ; l'Issue porte le statut, pour n'avoir qu'une seule source pour chacun.
+- 2026-10-18 : Un fichier au `content` inutilisable est refusé, même si son état Yjs contient du texte. Ouvrir un état Yjs non vérifiable risquerait d'écraser le fichier complet par une version partielle. Un futur mode récupération permettra de relire ces fichiers sans réécrire l'original.
