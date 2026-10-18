@@ -1,0 +1,38 @@
+# Vérifications automatiques de chaque PR : types, lint, tests unitaires et tests d'interface.
+# Les étapes sont ignorées tant que package.json n'existe pas (avant T0).
+# T0 doit définir les scripts npm : typecheck, lint, test, test:e2e.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verifications:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        if: hashFiles('package.json') != ''
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Installation
+        if: hashFiles('package.json') != ''
+        run: npm ci
+      - name: Vérification des types
+        if: hashFiles('package.json') != ''
+        run: npm run typecheck
+      - name: Lint
+        if: hashFiles('package.json') != ''
+        run: npm run lint
+      - name: Tests unitaires (Vitest)
+        if: hashFiles('package.json') != ''
+        run: npm test
+      - name: Navigateur Chromium pour Playwright
+        if: hashFiles('package.json') != ''
+        run: npx playwright install --with-deps chromium
+      - name: Tests d'interface (Playwright)
+        if: hashFiles('package.json') != ''
+        run: npm run test:e2e

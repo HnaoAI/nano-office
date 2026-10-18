@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f package.json ] && [ ! -d node_modules ]; then npm ci; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
