@@ -1,13 +1,13 @@
 // Tests du schéma partagé (src/core/schema.ts) : gras, italique, identifiants de bloc, sans éditeur.
 import { describe, expect, it } from "vitest";
-import { getSchema } from "@tiptap/core";
+import { Editor, getSchema } from "@tiptap/core";
 import {
   BlockId,
   documentExtensions,
   documentSchema,
   YJS_FRAGMENT_NAME,
 } from "../../src/core/schema";
-import { jsonFromYdoc, SAMPLE_DOCUMENT, ydocFromJson } from "./helpers";
+import { jsonFromYdoc, paragraph, SAMPLE_DOCUMENT, ydocFromJson } from "./helpers";
 
 describe("schéma partagé", () => {
   it("contient paragraphes, texte, gras et italique", () => {
@@ -41,5 +41,20 @@ describe("schéma partagé", () => {
     const reread = documentSchema.nodeFromJSON(jsonFromYdoc(ydoc));
     expect(reread.eq(node)).toBe(true);
     expect(reread.firstChild?.attrs.id).toBe("p-1");
+  });
+
+  it("critère 6 de T0b : Entrée en fin de paragraphe ne copie pas son identifiant (keepOnSplit)", () => {
+    // Éditeur sans affichage : seul le schéma partagé, sans le générateur d'identifiants de T0b.
+    // Tiptap n'applique keepOnSplit qu'en fin de bloc ; au milieu, c'est le générateur qui corrige.
+    const editor = new Editor({
+      element: null,
+      extensions: documentExtensions,
+      content: { type: "doc", content: [paragraph("p-1", { text: "abcd" })] },
+    });
+    editor.commands.setTextSelection(5);
+    editor.commands.splitBlock();
+    const ids = editor.getJSON().content?.map((node) => node.attrs?.id);
+    expect(ids).toEqual(["p-1", null]);
+    editor.destroy();
   });
 });

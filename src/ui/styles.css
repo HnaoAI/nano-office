@@ -1,0 +1,56 @@
+/* Mise en page minimale de l'éditeur (T0b). Le design soigné viendra dans un ticket dédié. */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f4f4f4;
+  color: #1a1a1a;
+}
+
+.nano-app {
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.nano-app h1 {
+  font-size: 1.25rem;
+}
+
+.nano-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.nano-toolbar button {
+  font: inherit;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.nano-toolbar button[aria-pressed="true"] {
+  background: #dbe7f7;
+  border-color: #4a78b8;
+}
+
+.nano-toolbar button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.nano-editor {
+  min-height: 60vh;
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  line-height: 1.5;
+  outline: none;
+}
+
+.nano-editor:focus-visible {
+  border-color: #4a78b8;
+}

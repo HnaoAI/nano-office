@@ -1,4 +1,4 @@
-// Configuration des tests d'interface Playwright (Chromium). Premiers tests ajoutés par T0b.
+// Configuration des tests d'interface Playwright (Chromium). Tests dans tests/e2e/.
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({

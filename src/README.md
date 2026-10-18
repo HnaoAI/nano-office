@@ -4,4 +4,5 @@ Code de l'application. Règles d'import et rôle de chaque dossier : voir `CLAUD
 
 - `main.tsx` : point d'entrée, monte le composant racine dans `index.html`
 - `core/` : logique pure (schéma du document, format `.nano`, types partagés)
+- `editor/` : configuration de Tiptap (collaboration Yjs, identifiants de bloc)
 - `ui/` : composants React, sans logique métier
