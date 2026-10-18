@@ -302,3 +302,17 @@ test("critère 4 : après « Nouveau » qui abandonne des modifications, l'ancie
   await openFile(page, "lettre.nano", nanoFile(FILE_TEXT, FILE_ID));
   await expect(page.getByRole("alertdialog")).toContainText(QUESTION);
 });
+
+test("critère 4 : après « Ouvrir » qui abandonne des modifications, l'ancien document ne revient pas au rechargement", async ({
+  page,
+}) => {
+  await start(page);
+  await page.keyboard.type("Brouillon abandonné");
+  acceptConfirms(page);
+  await openFile(page, "autre.nano", nanoFile("Autre fichier"));
+  await expect(editor(page)).toHaveText("Autre fichier");
+  await flushBackups(page);
+  await page.reload();
+  await expect(editor(page)).toHaveText("");
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
