@@ -1,4 +1,4 @@
-// Configuration de l'éditeur Tiptap de Nano Office (T0b) : schéma partagé, identifiants de bloc,
+// Configuration de l'éditeur Tiptap de Nano Buro (T0b) : schéma partagé, identifiants de bloc,
 // et extension de collaboration qui range le contenu dans un Y.Doc. Sans React.
 import type { EditorOptions } from "@tiptap/core";
 import Collaboration from "@tiptap/extension-collaboration";

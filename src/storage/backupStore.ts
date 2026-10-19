@@ -4,7 +4,11 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import type * as Y from "yjs";
 import { backupFromUpdates } from "../core/backup";
 
-/** Préfixe des bases IndexedDB de copie de secours, suivi de l'`id` du document. */
+/**
+ * Préfixe des bases IndexedDB de copie de secours, suivi de l'`id` du document.
+ * INVARIANT : ce préfixe et `LAST_MODIFIED_KEY` gardent « nano-office » malgré le renommage en
+ * Nano Buro (R1), pour que les copies déjà présentes dans le navigateur restent récupérables.
+ */
 export const BACKUP_DB_PREFIX = "nano-office-backup:";
 /** Clé localStorage du dernier document modifié, restauré au chargement de la page (critère 4). */
 const LAST_MODIFIED_KEY = "nano-office:last-modified-document";

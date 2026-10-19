@@ -16,8 +16,8 @@ export default defineConfig({
       registerType: "prompt",
       injectRegister: "script-defer",
       manifest: {
-        name: "Nano Office",
-        short_name: "Nano Office",
+        name: "Nano Buro",
+        short_name: "Nano Buro",
         description: "Traitement de texte sobre, qui fonctionne sans connexion internet.",
         lang: "fr",
         display: "standalone",
