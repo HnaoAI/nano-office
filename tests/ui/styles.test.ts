@@ -8,6 +8,42 @@ const css = readFileSync(new URL("../../src/ui/styles.css", import.meta.url), "u
   "",
 );
 
+/** Variables de la charte posées par U1a ; U1b ne doit en ajouter aucune (critère 9). */
+const U1A_VARIABLES = [
+  "--nano-app-bg",
+  "--nano-surface",
+  "--nano-surface-muted",
+  "--nano-group-bg",
+  "--nano-separator-strong",
+  "--nano-ink",
+  "--nano-on-ink",
+  "--nano-on-ink-muted",
+  "--nano-document-text",
+  "--nano-text-secondary",
+  "--nano-text-quiet",
+  "--nano-text-disabled",
+  "--nano-icon-chip-on-ink",
+  "--nano-font-sans",
+  "--nano-font-mono",
+  "--nano-radius-page",
+  "--nano-radius-button",
+  "--nano-radius-logo",
+  "--nano-radius-group",
+  "--nano-radius-message",
+  "--nano-radius-bar",
+  "--nano-radius-dialog",
+  "--nano-radius-pill",
+  "--nano-shadow-page",
+  "--nano-shadow-bar",
+  "--nano-shadow-primary",
+  "--nano-shadow-logo",
+  "--nano-shadow-info",
+  "--nano-shadow-alert",
+  "--nano-shadow-dialog",
+  "--nano-shadow-pill",
+  "--nano-focus-ring",
+];
+
 /** Contenu du bloc `:root { … }`, seul endroit où les valeurs de la charte sont écrites. */
 function rootBlock(): string {
   const match = /:root\s*\{([^}]*)\}/.exec(css);
@@ -36,6 +72,11 @@ describe("styles.css (U1a)", () => {
     const defined = new Set([...rootBlock().matchAll(/(--nano-[\w-]+)\s*:/g)].map((m) => m[1]));
     const used = [...css.matchAll(/var\((--nano-[\w-]+)\)/g)].map((match) => match[1]);
     expect(used.filter((name) => !defined.has(name))).toEqual([]);
+  });
+
+  it("U1b, critère 9 : aucune nouvelle couleur, aucun nouveau rayon ni aucune nouvelle ombre après U1a", () => {
+    const names = [...rootBlock().matchAll(/(--nano-[\w-]+)\s*:/g)].map((match) => match[1]);
+    expect(names.sort()).toEqual([...U1A_VARIABLES].sort());
   });
 
   it("critère 6 : aucune police n'est chargée depuis un autre site", () => {
