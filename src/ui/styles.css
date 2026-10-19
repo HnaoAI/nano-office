@@ -289,16 +289,58 @@ button:focus-visible {
   color: var(--nano-text-quiet);
 }
 
-/* Messages et question de la copie de secours : style provisoire, la charte vient avec U1b. */
-.nano-message,
-.nano-choice {
-  margin: 0 28px 12px;
-  padding: 14px 18px;
+/* Indicateur d'enregistrement (U1b) : pastille blanche, noire quand le document n'est pas enregistré. */
+.nano-save-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-pill);
+  color: var(--nano-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.nano-save-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-ink);
+}
+
+.nano-save-state-saving .nano-save-dot {
+  border: 1.5px solid var(--nano-ink);
+  background: transparent;
+}
+
+.nano-save-state-unsaved {
+  background: var(--nano-ink);
+  box-shadow: none;
+  color: var(--nano-on-ink);
+}
+
+.nano-save-state-unsaved .nano-save-dot {
+  background: var(--nano-on-ink);
+}
+
+/* Messages (U1b) : information sur fond blanc, alerte sur fond noir, avec puce d'icône,
+   action éventuelle à droite et bouton de fermeture. Alignés sur la largeur de la page. */
+.nano-message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% - 56px);
+  max-width: 794px;
+  margin: 0 auto 12px;
+  padding: 14px 16px;
   border-radius: var(--nano-radius-message);
   background: var(--nano-surface);
   box-shadow: var(--nano-shadow-info);
-  font-size: 14px;
-  overflow-wrap: anywhere;
+  color: var(--nano-document-text);
 }
 
 .nano-message-alert {
@@ -307,19 +349,189 @@ button:focus-visible {
   box-shadow: var(--nano-shadow-alert);
 }
 
-.nano-choice .nano-toolbar {
+.nano-message-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+}
+
+.nano-message-alert .nano-message-icon {
+  background: var(--nano-icon-chip-on-ink);
+  color: var(--nano-on-ink);
+}
+
+.nano-message-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.nano-message button {
+  flex: none;
+  height: 36px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nano-message-action {
+  margin-left: auto;
+  padding: 0 14px;
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 500;
+}
+
+.nano-message-alert .nano-message-action {
+  background: var(--nano-surface);
+  color: var(--nano-ink);
+}
+
+.nano-message .nano-message-close {
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--nano-text-quiet);
+}
+
+.nano-message-alert .nano-message-close {
+  color: var(--nano-separator-strong);
+}
+
+/* Le focus clavier reste visible sur le fond noir des alertes. */
+.nano-message-alert button:focus-visible {
+  box-shadow: 0 0 0 2px var(--nano-on-ink);
+}
+
+/* Question de la copie de secours (U1b) : boîte de dialogue centrée au-dessus de la page estompée.
+   L'estompage reprend la maquette (fond de l'application à 55 %) sans nouvelle couleur. */
+.nano-page-faded {
+  opacity: 0.55;
+}
+
+.nano-dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.nano-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--nano-app-bg);
+  opacity: 0.55;
+}
+
+.nano-dialog {
+  position: relative;
+  width: 500px;
+  max-width: 100%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px;
+  border-radius: var(--nano-radius-dialog);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-dialog);
+  overflow-wrap: anywhere;
+}
+
+.nano-dialog-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+}
+
+.nano-dialog-text {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.nano-choice button {
-  min-height: 36px;
-  padding: 0 14px;
+.nano-dialog h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.nano-dialog p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--nano-text-secondary);
+}
+
+.nano-dialog-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-text-quiet);
+  font-family: var(--nano-font-mono);
+  font-size: 13px;
+}
+
+.nano-dialog-file svg {
+  flex: none;
+}
+
+.nano-dialog-file span {
+  min-width: 0;
+  color: var(--nano-text-secondary);
+}
+
+.nano-dialog-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nano-dialog-buttons button {
+  min-height: 48px;
+  padding: 6px 16px;
   border: 0;
   border-radius: var(--nano-radius-button);
   background: var(--nano-surface-muted);
+  font-size: 15px;
   cursor: pointer;
+}
+
+.nano-dialog-buttons .nano-dialog-primary {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 500;
+  box-shadow: var(--nano-shadow-primary);
+}
+
+.nano-dialog-buttons .nano-dialog-primary:focus-visible {
+  box-shadow: var(--nano-shadow-primary), var(--nano-focus-ring);
 }
 
 /* Écran étroit : la page occupe toute la largeur, avec des marges réduites. */
@@ -343,5 +555,13 @@ button:focus-visible {
 
   .nano-footer {
     padding: 0 16px 16px;
+  }
+
+  .nano-message {
+    width: calc(100% - 32px);
+  }
+
+  .nano-dialog {
+    padding: 24px 20px;
   }
 }

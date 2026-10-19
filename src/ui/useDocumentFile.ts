@@ -1,6 +1,7 @@
 // Hook React du document affiché (T0c) : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Ctrl/Cmd+S,
 // titre de la fenêtre et messages, puis restauration et question de la copie de secours (T0d).
-// Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6).
+// Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6),
+// et donne l'état de l'indicateur d'enregistrement et les actions des messages (U1b).
 // La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
 import {
   useCallback,
@@ -32,7 +33,14 @@ import { useBackup } from "./useBackup";
 export interface FileMessage {
   kind: "status" | "alert";
   text: string;
+  /** Icône de la puce, selon la maquette Messages.dc.html (U1b). */
+  icon: "recovered" | "downloaded" | "unreadable" | "save-failed";
+  /** Vrai si le message propose « Enregistrer sous… » (U1b, critère 4). */
+  offersSaveAs?: boolean;
 }
+
+/** État affiché par l'indicateur d'enregistrement de l'en-tête (U1b, critère 2). */
+export type SaveState = "saved" | "saving" | "unsaved";
 
 const DISCARD_QUESTION =
   "Les modifications non enregistrées de ce document seront perdues. Voulez-vous continuer ?";
@@ -47,10 +55,13 @@ function saveMessage(result: SaveResult): FileMessage | null {
   if (result.status === "downloaded") {
     return {
       kind: "status",
+      icon: "downloaded",
       text: `Le fichier « ${result.name} » a été téléchargé dans votre dossier de téléchargements. Pour enregistrer directement dans le dossier de votre choix, utilisez Chrome ou Edge.`,
     };
   }
-  return result.status === "failed" ? { kind: "alert", text: SAVE_ERROR } : null;
+  return result.status === "failed"
+    ? { kind: "alert", icon: "save-failed", text: SAVE_ERROR, offersSaveAs: true }
+    : null;
 }
 
 /** Vrai pour Ctrl+S (Windows) ou Cmd+S (Mac), sans autre touche de modification. */
@@ -83,6 +94,8 @@ export function useDocumentFile() {
   const [message, setMessage] = useState<FileMessage | null>(null);
   const [activity, setActivity] = useState<LaunchActivity>(NO_ACTIVITY);
   const saving = useRef(false);
+  // Copie lisible de `saving` pour l'indicateur (U1b) ; la référence reste le seul verrou d'enregistrement.
+  const [writing, setWriting] = useState(false);
   const choosing = useRef(false);
 
   /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
@@ -117,7 +130,12 @@ export function useDocumentFile() {
       setDocument(restored ?? createNewDocument());
       if (restored) {
         noteActivity("restoredFromBackup");
-        setMessage({ kind: "status", text: RECOVERED_MESSAGE });
+        setMessage({
+          kind: "status",
+          icon: "recovered",
+          text: RECOVERED_MESSAGE,
+          offersSaveAs: true,
+        });
       }
     });
     return () => {
@@ -203,13 +221,14 @@ export function useDocumentFile() {
     if (opened) {
       await showOpenedFile(opened);
     } else if (error) {
-      setMessage({ kind: "alert", text: error });
+      setMessage({ kind: "alert", icon: "unreadable", text: error });
     }
   }
 
   async function save(asNew: boolean) {
     if (saving.current || !document) return;
     saving.current = true;
+    setWriting(true);
     // Un sélecteur d'enregistrement ouvert ne doit pas disparaître dans un rechargement (H1).
     noteActivity("fileAction");
     const saved = document;
@@ -229,6 +248,7 @@ export function useDocumentFile() {
       if (result.status !== "cancelled") setMessage(saveMessage(result));
     } finally {
       saving.current = false;
+      setWriting(false);
     }
   }
 
@@ -244,9 +264,12 @@ export function useDocumentFile() {
     return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
   }, []);
 
+  const saveState: SaveState = writing ? "saving" : unsaved ? "unsaved" : "saved";
+
   return {
     document,
     unsaved,
+    saveState,
     backupLinked,
     message,
     pending,
@@ -255,6 +278,8 @@ export function useDocumentFile() {
     noteEdit: () => noteActivity("edited"),
     recover: () => void resolvePending(true),
     openAsIs: () => void resolvePending(false),
+    /** Ferme le message affiché (U1b, critère 4). */
+    dismissMessage: () => setMessage(null),
     newDocument,
     open: () => void open(),
     save: () => void save(false),

@@ -1,19 +1,24 @@
-// En-tête de l'application (U1a) : logo, nom et version (H1), nom du document et du fichier, groupe Fichier.
-// L'indicateur d'enregistrement, avant le groupe Fichier, viendra avec U1b.
+// En-tête de l'application (U1a) : logo, nom et version (H1), nom du document et du fichier,
+// indicateur d'enregistrement (U1b), groupe Fichier.
 import { documentTitle } from "../core/documentFile";
 import { APP_VERSION } from "./appVersion";
 import { FileMenu, type FileMenuActions } from "./FileMenu";
+import { SaveIndicator } from "./SaveIndicator";
+import type { SaveState } from "./useDocumentFile";
 
 /**
  * En-tête de l'application.
  * @param fileName nom du fichier du document affiché, null s'il n'a jamais été enregistré
- * @param actions boutons du groupe Fichier ; absents pendant le chargement de la copie de secours
+ * @param saveState état de l'indicateur d'enregistrement (U1b)
+ * @param actions boutons du groupe Fichier ; absents, avec l'indicateur, pendant le chargement de la copie de secours
  */
 export function AppHeader({
   fileName,
+  saveState,
   actions,
 }: {
   fileName: string | null;
+  saveState: SaveState;
   actions: FileMenuActions | null;
 }) {
   return (
@@ -38,6 +43,7 @@ export function AppHeader({
             {fileName && <span className="nano-file-name">{fileName}</span>}
           </div>
           <div className="nano-header-spacer" />
+          <SaveIndicator state={saveState} />
           <FileMenu {...actions} />
         </>
       )}

@@ -3,6 +3,7 @@
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
+import { MessageBar } from "./MessageBar";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
 import "./fonts";
@@ -14,6 +15,8 @@ export function App() {
     document,
     backupLinked,
     message,
+    saveState,
+    dismissMessage,
     pending,
     activity,
     noteEdit,
@@ -33,20 +36,17 @@ export function App() {
   if (!document) {
     return (
       <div className="nano-app">
-        <AppHeader fileName={null} actions={null} />
+        <AppHeader fileName={null} saveState={saveState} actions={null} />
       </div>
     );
   }
   return (
     <div className="nano-app">
-      <AppHeader fileName={document.fileName} actions={actions} />
-      {message && (
-        <p role={message.kind} className={`nano-message nano-message-${message.kind}`}>
-          {message.text}
-        </p>
-      )}
+      <AppHeader fileName={document.fileName} saveState={saveState} actions={actions} />
+      {message && <MessageBar message={message} onSaveAs={file.saveAs} onClose={dismissMessage} />}
       {pending ? (
-        // L'éditeur est masqué tant que l'utilisateur n'a pas choisi (T0d, critère 8).
+        // L'éditeur est masqué tant que l'utilisateur n'a pas choisi (T0d, critère 8) ; une page estompée
+        // le remplace, sous la boîte de dialogue (U1b, critère 5).
         <BackupChoice
           key={pending.backup.guid}
           fileName={pending.file.fileName}
