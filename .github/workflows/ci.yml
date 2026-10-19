@@ -35,4 +35,4 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Tests d'interface (Playwright)
         if: hashFiles('package.json') != ''
-        run: npm run test:e2e
+        run: npm run test:e2e -- --reporter=github,line
