@@ -1,5 +1,6 @@
 // Hook React du document affiché (T0c) : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Ctrl/Cmd+S,
 // titre de la fenêtre et messages, puis restauration et question de la copie de secours (T0d).
+// Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6).
 // La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
 import {
   useCallback,
@@ -9,6 +10,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { NO_ACTIVITY, type LaunchActivity } from "../core/appUpdate";
 import { compareWithBackup, recoveredDocument, restoredDocument } from "../core/backup";
 import {
   contentSnapshot,
@@ -79,8 +81,14 @@ export function useDocumentFile() {
   const [document, setDocument] = useState<OpenDocument | null>(null);
   const [pending, setPending] = useState<PendingBackup | null>(null);
   const [message, setMessage] = useState<FileMessage | null>(null);
+  const [activity, setActivity] = useState<LaunchActivity>(NO_ACTIVITY);
   const saving = useRef(false);
   const choosing = useRef(false);
+
+  /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
+  const noteActivity = useCallback((sign: keyof LaunchActivity) => {
+    setActivity((current) => (current[sign] ? current : { ...current, [sign]: true }));
+  }, []);
 
   const subscribe = useCallback(
     (onChange: () => void) => {
@@ -107,12 +115,15 @@ export function useDocumentFile() {
       if (cancelled) return;
       const restored = id ? restoredDocument(id, backup) : null;
       setDocument(restored ?? createNewDocument());
-      if (restored) setMessage({ kind: "status", text: RECOVERED_MESSAGE });
+      if (restored) {
+        noteActivity("restoredFromBackup");
+        setMessage({ kind: "status", text: RECOVERED_MESSAGE });
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, [backups]);
+  }, [backups, noteActivity]);
 
   /** Demande confirmation avant d'abandonner des modifications non enregistrées (critère 1). */
   function canDiscard(): boolean {
@@ -146,6 +157,7 @@ export function useDocumentFile() {
     const backup = await backups.read(file.id);
     const comparison = compareWithBackup(file, backup);
     if (comparison === "different" && backup) {
+      noteActivity("backupQuestion");
       setMessage(null);
       setPending({ file, backup });
       return;
@@ -172,6 +184,8 @@ export function useDocumentFile() {
 
   async function open() {
     if (!canDiscard()) return;
+    // Compte dès l'ouverture du sélecteur, même si l'utilisateur annule (H1, critère 6).
+    noteActivity("fileAction");
     let opened: OpenDocument | null = null;
     let error: string | null = null;
     try {
@@ -196,6 +210,8 @@ export function useDocumentFile() {
   async function save(asNew: boolean) {
     if (saving.current || !document) return;
     saving.current = true;
+    // Un sélecteur d'enregistrement ouvert ne doit pas disparaître dans un rechargement (H1).
+    noteActivity("fileAction");
     const saved = document;
     try {
       // Empreinte prise avant l'écriture : une saisie pendant l'enregistrement reste « non enregistrée ».
@@ -234,6 +250,9 @@ export function useDocumentFile() {
     backupLinked,
     message,
     pending,
+    activity,
+    /** À appeler à chaque modification faite par l'utilisateur dans l'éditeur (H1, critère 6). */
+    noteEdit: () => noteActivity("edited"),
     recover: () => void resolvePending(true),
     openAsIs: () => void resolvePending(false),
     newDocument,

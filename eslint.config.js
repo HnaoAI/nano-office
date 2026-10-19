@@ -7,7 +7,7 @@ import globals from "globals";
 import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
-  { ignores: ["dist", "dev-dist", "coverage", "test-results", "playwright-report"] },
+  { ignores: ["dist", "dist-pages", "dev-dist", "coverage", "test-results", "playwright-report"] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {

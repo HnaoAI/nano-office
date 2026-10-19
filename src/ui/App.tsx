@@ -3,14 +3,26 @@
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
+import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
 import "./fonts";
 import "./styles.css";
 
 /** Composant racine de l'application. */
 export function App() {
-  const { document, backupLinked, message, pending, recover, openAsIs, ...file } =
-    useDocumentFile();
+  const {
+    document,
+    backupLinked,
+    message,
+    pending,
+    activity,
+    noteEdit,
+    recover,
+    openAsIs,
+    ...file
+  } = useDocumentFile();
+  // Une nouvelle version s'applique au démarrage si rien n'est commencé (H1).
+  useAppUpdate(activity, document !== null);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
@@ -43,7 +55,7 @@ export function App() {
         />
       ) : (
         // Une clé par Y.Doc : « Nouveau » et « Ouvrir » recréent l'éditeur (T0c, critère 10).
-        <DocumentEditor key={document.ydoc.guid} ydoc={document.ydoc} />
+        <DocumentEditor key={document.ydoc.guid} ydoc={document.ydoc} onEdit={noteEdit} />
       )}
       <footer className="nano-footer">
         <span>{backupLinked ? "Copie de secours à jour" : ""}</span>

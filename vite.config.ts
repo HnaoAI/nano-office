@@ -1,27 +1,58 @@
 // Configuration de Vite (application et PWA) et de Vitest (tests de logique, sans navigateur).
+import { execSync } from "node:child_process";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { DEV_VERSION, formatVersion } from "./src/core/appVersion.ts";
 
-export default defineConfig({
+/**
+ * Commit construit (H1, critère 10) : `APP_COMMIT` (fixé par l'Action de publication), sinon
+ * `GITHUB_SHA` (CI), sinon `git rev-parse` en local. Vide si aucun n'est disponible.
+ */
+function buildCommit(): string {
+  const fromEnv = process.env.APP_COMMIT ?? process.env.GITHUB_SHA;
+  if (fromEnv) return fromEnv;
+  try {
+    return execSync("git rev-parse HEAD", {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    return "";
+  }
+}
+
+export default defineConfig(({ command }) => ({
+  // Sous-dossier de publication (H1, critère 3) : `BASE_PATH=/nano-office/` pour GitHub Pages.
+  // Sans la variable, l'application reste à la racine (`npm run dev`, `npm run build`, tests).
+  base: process.env.BASE_PATH ?? "/",
+  define: {
+    // Version affichée sous le nom de l'application (H1, critères 10 à 12), lue par src/ui/appVersion.ts.
+    __APP_VERSION__: JSON.stringify(
+      command === "serve" ? DEV_VERSION : formatVersion(new Date(), buildCommit()),
+    ),
+  },
   plugins: [
     react(),
     // Application installable et hors ligne (T0e) : manifeste et service worker, générés au build
     // seulement. Le service worker ne met en cache que les fichiers de l'application ; les documents
     // ne passent jamais par le réseau.
     VitePWA({
-      // « prompt » sans message : une nouvelle version attend la fermeture de toutes les fenêtres
-      // de l'application, puis s'applique au lancement suivant. « autoUpdate » rechargerait la page
-      // en pleine édition. Le message « mise à jour disponible » est hors périmètre de T0e.
+      // « prompt » sans message : une nouvelle version n'est appliquée au lancement que si
+      // l'utilisateur n'a pas commencé à travailler (H1), sinon au lancement suivant. « autoUpdate »
+      // rechargerait la page en pleine édition. L'enregistrement du service worker est fait par
+      // src/ui/useAppUpdate.ts, qui prend cette décision.
       registerType: "prompt",
-      injectRegister: "script-defer",
+      injectRegister: false,
       manifest: {
         name: "Nano Buro",
         short_name: "Nano Buro",
         description: "Traitement de texte sobre, qui fonctionne sans connexion internet.",
         lang: "fr",
         display: "standalone",
-        start_url: "/",
+        // Chemins relatifs au manifeste : l'application s'installe aussi sous /nano-office/ (H1, critère 3).
+        start_url: "./",
+        scope: "./",
         background_color: "#ffffff",
         theme_color: "#2b5797",
         // Icônes provisoires : les icônes définitives sont hors périmètre de T0e.
@@ -44,4 +75,4 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     exclude: ["tests/e2e/**"],
   },
-});
+}));
