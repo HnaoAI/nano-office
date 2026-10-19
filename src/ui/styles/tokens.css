@@ -1,0 +1,38 @@
+/* Variables de la charte docs/design/README.md (U1a).
+   INVARIANT : couleurs, rayons et ombres ne sont écrits qu'ici, dans :root, en variables --nano-…,
+   réutilisées par les autres fichiers de src/ui/styles/ (vérifié par tests/ui/styles.test.ts). */
+:root {
+  --nano-app-bg: #ececea;
+  --nano-surface: #ffffff;
+  --nano-surface-muted: #f3f3f1;
+  --nano-group-bg: #e2e2df;
+  --nano-separator-strong: #d4d4d1;
+  --nano-ink: #121212;
+  --nano-on-ink: #ffffff;
+  --nano-on-ink-muted: #bdbdba;
+  --nano-document-text: #1b1b1a;
+  --nano-text-secondary: #3a3a38;
+  --nano-text-quiet: #5f5f5c;
+  --nano-text-disabled: #9a9a96;
+  --nano-icon-chip-on-ink: #2a2a29;
+  --nano-font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --nano-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --nano-radius-page: 6px;
+  --nano-radius-button: 10px;
+  --nano-radius-logo: 9px;
+  --nano-radius-group: 14px;
+  --nano-radius-message: 14px;
+  --nano-radius-bar: 16px;
+  --nano-radius-dialog: 20px;
+  --nano-radius-pill: 999px;
+  --nano-shadow-page:
+    0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08), 0 32px 64px rgba(0, 0, 0, 0.05);
+  --nano-shadow-bar: 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.07);
+  --nano-shadow-primary: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --nano-shadow-logo: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 4px 10px rgba(0, 0, 0, 0.18);
+  --nano-shadow-info: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --nano-shadow-alert: 0 12px 28px rgba(0, 0, 0, 0.2);
+  --nano-shadow-dialog: 0 1px 2px rgba(0, 0, 0, 0.06), 0 24px 64px rgba(0, 0, 0, 0.16);
+  --nano-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --nano-focus-ring: 0 0 0 2px var(--nano-ink);
+}

@@ -17,11 +17,17 @@ export interface FakeFilesState {
   nextSaveName: string | null;
   /** `download` simule Safari et Firefox : chaque enregistrement est un téléchargement. */
   mode: "file-system-access" | "download";
+  /** Vrai : le prochain enregistrement échoue (`failed`), sans rien écrire (U1b). */
+  nextSaveFails: boolean;
+  /** Vrai : chaque écriture attend `releaseWrites(page)`, pour observer « Enregistrement… » (U1b). */
+  holdWrites: boolean;
 }
 
 declare global {
   interface Window {
     __fakeFiles?: FakeFilesState;
+    /** Termine les écritures retenues par `holdWrites`. Hors de l'état, qui doit rester sérialisable. */
+    __fakeFilesRelease?: () => void;
   }
 }
 
@@ -39,10 +45,24 @@ export async function installFakeFileStore(
       nextOpen: null,
       nextSaveName: "document.nano",
       mode: initialMode,
+      nextSaveFails: false,
+      holdWrites: false,
     };
     window.__fakeFiles = state;
 
-    const write = (name: string, text: string): SaveResult => {
+    let held: (() => void)[] = [];
+    window.__fakeFilesRelease = () => {
+      const waiting = held;
+      held = [];
+      waiting.forEach((resolve) => resolve());
+    };
+
+    const write = async (name: string, text: string): Promise<SaveResult> => {
+      if (state.holdWrites) await new Promise<void>((resolve) => held.push(resolve));
+      if (state.nextSaveFails) {
+        state.nextSaveFails = false;
+        return { status: "failed" };
+      }
       state.files[name] = text;
       return state.mode === "download" ? { status: "downloaded", name } : { status: "saved", name };
     };
@@ -97,6 +117,11 @@ export async function setFakeFiles(page: Page, changes: Partial<FakeFilesState>)
     if (!window.__fakeFiles) throw new Error("installFakeFileStore n'a pas été appelé");
     Object.assign(window.__fakeFiles, values);
   }, changes);
+}
+
+/** Termine les écritures retenues par `holdWrites` (U1b). */
+export async function releaseWrites(page: Page) {
+  await page.evaluate(() => window.__fakeFilesRelease?.());
 }
 
 /** Vide le journal des appels. */

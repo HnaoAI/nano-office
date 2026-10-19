@@ -1,0 +1,133 @@
+/* Indicateur d'enregistrement et messages (U1b), selon la maquette Messages.dc.html. */
+/* Indicateur d'enregistrement (U1b) : pastille blanche, noire quand le document n'est pas enregistré. */
+.nano-save-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-pill);
+  color: var(--nano-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.nano-save-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-ink);
+}
+
+.nano-save-state-saving .nano-save-dot {
+  border: 1.5px solid var(--nano-ink);
+  background: transparent;
+}
+
+.nano-save-state-unsaved {
+  background: var(--nano-ink);
+  box-shadow: none;
+  color: var(--nano-on-ink);
+}
+
+.nano-save-state-unsaved .nano-save-dot {
+  background: var(--nano-on-ink);
+}
+
+/* Messages (U1b) : information sur fond blanc, alerte sur fond noir, avec puce d'icône,
+   action éventuelle à droite et bouton de fermeture. Alignés sur la largeur de la page. */
+.nano-message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% - 56px);
+  max-width: 794px;
+  margin: 0 auto 12px;
+  padding: 14px 16px;
+  border-radius: var(--nano-radius-message);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-info);
+  color: var(--nano-document-text);
+}
+
+.nano-message-alert {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  box-shadow: var(--nano-shadow-alert);
+}
+
+.nano-message-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+}
+
+.nano-message-alert .nano-message-icon {
+  background: var(--nano-icon-chip-on-ink);
+  color: var(--nano-on-ink);
+}
+
+.nano-message-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.nano-message button {
+  flex: none;
+  height: 36px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nano-message-action {
+  margin-left: auto;
+  padding: 0 14px;
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 500;
+}
+
+.nano-message-alert .nano-message-action {
+  background: var(--nano-surface);
+  color: var(--nano-ink);
+}
+
+.nano-message .nano-message-close {
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--nano-text-quiet);
+}
+
+.nano-message-alert .nano-message-close {
+  color: var(--nano-separator-strong);
+}
+
+/* Le focus clavier reste visible sur le fond noir des alertes. */
+.nano-message-alert button:focus-visible {
+  box-shadow: 0 0 0 2px var(--nano-on-ink);
+}
+
+/* Écran étroit (moins de 600 px) : marges réduites. */
+@media (max-width: 600px) {
+  .nano-message {
+    width: calc(100% - 32px);
+  }
+}

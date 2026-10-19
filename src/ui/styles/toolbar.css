@@ -1,0 +1,63 @@
+/* Barre de mise en forme flottante (U1a). */
+.nano-format-row {
+  display: flex;
+  justify-content: center;
+  padding: 4px 24px 0;
+}
+
+.nano-format-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: var(--nano-radius-bar);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-bar);
+}
+
+.nano-format-bar button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.nano-format-bar button:disabled {
+  color: var(--nano-text-disabled);
+  cursor: default;
+}
+
+.nano-format-bar button[aria-pressed="true"] {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+}
+
+.nano-format-bar .nano-bold {
+  font-weight: 600;
+}
+
+.nano-format-bar .nano-italic {
+  font-style: italic;
+}
+
+.nano-separator {
+  width: 1px;
+  height: 24px;
+  margin: 0 6px;
+  background: var(--nano-group-bg);
+}
+
+/* Écran étroit (moins de 600 px) : marges réduites. */
+@media (max-width: 600px) {
+  .nano-format-row {
+    padding: 4px 12px 0;
+  }
+}

@@ -1,42 +1,4 @@
-/* Styles de l'interface, selon la charte docs/design/README.md (U1a).
-   INVARIANT : couleurs, rayons et ombres ne sont écrits que dans :root, en variables --nano-…,
-   réutilisées par les tickets suivants (vérifié par tests/ui/styles.test.ts). */
-:root {
-  --nano-app-bg: #ececea;
-  --nano-surface: #ffffff;
-  --nano-surface-muted: #f3f3f1;
-  --nano-group-bg: #e2e2df;
-  --nano-separator-strong: #d4d4d1;
-  --nano-ink: #121212;
-  --nano-on-ink: #ffffff;
-  --nano-on-ink-muted: #bdbdba;
-  --nano-document-text: #1b1b1a;
-  --nano-text-secondary: #3a3a38;
-  --nano-text-quiet: #5f5f5c;
-  --nano-text-disabled: #9a9a96;
-  --nano-icon-chip-on-ink: #2a2a29;
-  --nano-font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --nano-font-mono: "IBM Plex Mono", ui-monospace, monospace;
-  --nano-radius-page: 6px;
-  --nano-radius-button: 10px;
-  --nano-radius-logo: 9px;
-  --nano-radius-group: 14px;
-  --nano-radius-message: 14px;
-  --nano-radius-bar: 16px;
-  --nano-radius-dialog: 20px;
-  --nano-radius-pill: 999px;
-  --nano-shadow-page:
-    0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08), 0 32px 64px rgba(0, 0, 0, 0.05);
-  --nano-shadow-bar: 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.07);
-  --nano-shadow-primary: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --nano-shadow-logo: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 4px 10px rgba(0, 0, 0, 0.18);
-  --nano-shadow-info: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
-  --nano-shadow-alert: 0 12px 28px rgba(0, 0, 0, 0.2);
-  --nano-shadow-dialog: 0 1px 2px rgba(0, 0, 0, 0.06), 0 24px 64px rgba(0, 0, 0, 0.16);
-  --nano-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --nano-focus-ring: 0 0 0 2px var(--nano-ink);
-}
-
+/* Mise en page (U1a) : bases, en-tête, groupe Fichier, page du document, pied de page. */
 *,
 *::before,
 *::after {
@@ -181,63 +143,6 @@ button:focus-visible {
   color: var(--nano-on-ink-muted);
 }
 
-/* Barre de mise en forme flottante, centrée sous l'en-tête. */
-.nano-format-row {
-  display: flex;
-  justify-content: center;
-  padding: 4px 24px 0;
-}
-
-.nano-format-bar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  padding: 6px;
-  border-radius: var(--nano-radius-bar);
-  background: var(--nano-surface);
-  box-shadow: var(--nano-shadow-bar);
-}
-
-.nano-format-bar button {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: var(--nano-radius-button);
-  background: transparent;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-.nano-format-bar button:disabled {
-  color: var(--nano-text-disabled);
-  cursor: default;
-}
-
-.nano-format-bar button[aria-pressed="true"] {
-  background: var(--nano-ink);
-  color: var(--nano-on-ink);
-}
-
-.nano-format-bar .nano-bold {
-  font-weight: 600;
-}
-
-.nano-format-bar .nano-italic {
-  font-style: italic;
-}
-
-.nano-separator {
-  width: 1px;
-  height: 24px;
-  margin: 0 6px;
-  background: var(--nano-group-bg);
-}
-
 /* Le document : une page blanche centrée sur le fond gris. */
 .nano-workspace {
   flex: 1;
@@ -289,47 +194,10 @@ button:focus-visible {
   color: var(--nano-text-quiet);
 }
 
-/* Messages et question de la copie de secours : style provisoire, la charte vient avec U1b. */
-.nano-message,
-.nano-choice {
-  margin: 0 28px 12px;
-  padding: 14px 18px;
-  border-radius: var(--nano-radius-message);
-  background: var(--nano-surface);
-  box-shadow: var(--nano-shadow-info);
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-
-.nano-message-alert {
-  background: var(--nano-ink);
-  color: var(--nano-on-ink);
-  box-shadow: var(--nano-shadow-alert);
-}
-
-.nano-choice .nano-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.nano-choice button {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: var(--nano-radius-button);
-  background: var(--nano-surface-muted);
-  cursor: pointer;
-}
-
-/* Écran étroit : la page occupe toute la largeur, avec des marges réduites. */
+/* Écran étroit (moins de 600 px) : marges réduites. */
 @media (max-width: 600px) {
   .nano-header {
     padding: 14px 16px;
-  }
-
-  .nano-format-row {
-    padding: 4px 12px 0;
   }
 
   .nano-workspace {
