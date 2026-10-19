@@ -13,10 +13,10 @@ export const CORRUPTED_FILE_MESSAGE =
 
 /** Message affiché pour chaque erreur de lecture (T0c, critère 12). */
 const PARSE_ERROR_MESSAGES: Record<ParseError, string> = {
-  "invalid-json": "Ce fichier n'est pas un document Nano Office.",
-  "not-nano": "Ce fichier n'est pas un document Nano Office.",
+  "invalid-json": "Ce fichier n'est pas un document Nano Buro.",
+  "not-nano": "Ce fichier n'est pas un document Nano Buro.",
   "unsupported-version":
-    "Ce document vient d'une version de Nano Office que cette application ne sait pas lire. Mettez Nano Office à jour pour l'ouvrir.",
+    "Ce document vient d'une version de Nano Buro que cette application ne sait pas lire. Mettez Nano Buro à jour pour l'ouvrir.",
   corrupted: CORRUPTED_FILE_MESSAGE,
 };
 
@@ -85,7 +85,7 @@ export function hasUnsavedChanges(document: OpenDocument): boolean {
 
 /** Titre de la fenêtre : nom du fichier, précédé de `•` s'il y a des modifications non enregistrées (critère 13). */
 export function windowTitle(fileName: string | null, unsaved: boolean): string {
-  return `${unsaved ? "• " : ""}${fileName ?? UNTITLED} - Nano Office`;
+  return `${unsaved ? "• " : ""}${fileName ?? UNTITLED} - Nano Buro`;
 }
 
 /**

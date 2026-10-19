@@ -25,9 +25,13 @@ test("critère 1 : npm run build produit une version installable (manifeste et s
   expect(manifestUrl).not.toBeNull();
   const manifest = (await (await page.request.get(manifestUrl ?? "")).json()) as {
     name: string;
+    short_name: string;
     display: string;
   };
-  expect(manifest.name).toBe("Nano Office");
+  expect(manifest.name).toBe("Nano Buro");
+  // R1 critère 3 : le nom court (Dock, Spotlight, barre des tâches) et le titre de index.html.
+  expect(manifest.short_name).toBe("Nano Buro");
+  expect(await (await page.request.get("/")).text()).toContain("<title>Nano Buro</title>");
   expect(manifest.display).toBe("standalone");
 
   // Chrome indique lui-même ce qui empêcherait l'installation (protocole DevTools).

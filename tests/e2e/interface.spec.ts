@@ -47,7 +47,7 @@ test("critère 1 : l'en-tête contient le logo et le nom, le nom du document, pu
 }) => {
   await page.goto("/");
   const header = page.getByRole("banner");
-  const brand = header.getByRole("heading", { name: "Nano Office" });
+  const brand = header.getByRole("heading", { name: "Nano Buro" });
   const title = header.getByText("Sans titre", { exact: true });
   const fileGroup = header.getByRole("toolbar", { name: "Fichier" });
   await expect(brand).toBeVisible();

@@ -5,7 +5,7 @@ import type { FileStore, OpenedFile, SaveResult } from "./fileStore";
 
 /** Types de fichiers proposés par les sélecteurs. */
 const NANO_FILE_TYPES = [
-  { description: "Document Nano Office", accept: { "application/json": [".nano"] } },
+  { description: "Document Nano Buro", accept: { "application/json": [".nano"] } },
 ];
 
 /**

@@ -22,7 +22,7 @@ export function AppHeader({
           N
         </span>
         {/* Seul titre de la page : les tests de T0c cliquent dessus pour sortir de l'éditeur. */}
-        <h1>Nano Office</h1>
+        <h1>Nano Buro</h1>
       </div>
       {actions && (
         <>

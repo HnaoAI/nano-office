@@ -132,7 +132,7 @@ test("critère 3 : « Enregistrer sous » propose document.nano et laisse choisi
   await expect
     .poll(async () => (await fakeFiles(page)).calls)
     .toEqual(["saveAs:document.nano", "picker"]);
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
 });
 
 test("critère 4 : après un premier enregistrement, « Enregistrer » et Ctrl/Cmd+S réécrivent le même fichier sans rien demander", async ({
@@ -142,15 +142,15 @@ test("critère 4 : après un premier enregistrement, « Enregistrer » et Ctrl/C
   await page.keyboard.type("Version 1");
   await setFakeFiles(page, { nextSaveName: "lettre.nano" });
   await page.keyboard.press("ControlOrMeta+s");
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
   await clearCalls(page);
 
   await page.keyboard.type(" et 2");
   await page.keyboard.press("ControlOrMeta+s");
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
   await page.keyboard.type(" et 3");
   await button(page, "Enregistrer").click();
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
 
   expect((await fakeFiles(page)).calls).toEqual(["save", "save"]);
   const text = (await savedFile(page, "lettre.nano")).content.content?.[0]?.content?.[0]?.text;
@@ -169,7 +169,7 @@ test("critère 5 : après « Ouvrir », Ctrl/Cmd+S réécrit directement le fich
   await clearCalls(page);
 
   await page.keyboard.press("ControlOrMeta+s");
-  await expect(page).toHaveTitle("ouvert.nano - Nano Office");
+  await expect(page).toHaveTitle("ouvert.nano - Nano Buro");
   expect((await fakeFiles(page)).calls).toEqual(["save"]);
   const saved = await savedFile(page, "ouvert.nano");
   expect(saved.id).toBe("id-ouvert");
@@ -287,7 +287,7 @@ test("critère 11 : enregistrer puis rouvrir redonne le même contenu (texte, gr
   const before = await ydocJson(page);
 
   await button(page, "Enregistrer").click();
-  await expect(page).toHaveTitle("document.nano - Nano Office");
+  await expect(page).toHaveTitle("document.nano - Nano Buro");
   await button(page, "Nouveau").click();
   await expect(editor(page)).toHaveText("");
   await openFile(page, "document.nano");
@@ -297,12 +297,12 @@ test("critère 11 : enregistrer puis rouvrir redonne le même contenu (texte, gr
 });
 
 const INVALID_FILES: [string, string, string][] = [
-  ["un JSON invalide", "{ pas du json", "Ce fichier n'est pas un document Nano Office."],
-  ["un fichier qui n'est pas un .nano", "Bonjour", "Ce fichier n'est pas un document Nano Office."],
+  ["un JSON invalide", "{ pas du json", "Ce fichier n'est pas un document Nano Buro."],
+  ["un fichier qui n'est pas un .nano", "Bonjour", "Ce fichier n'est pas un document Nano Buro."],
   [
     "un fichier d'une version inconnue",
     JSON.stringify({ ...JSON.parse(nanoFile(SAMPLE_DOCUMENT)), version: 99 }),
-    "Ce document vient d'une version de Nano Office que cette application ne sait pas lire.",
+    "Ce document vient d'une version de Nano Buro que cette application ne sait pas lire.",
   ],
 ];
 
@@ -313,21 +313,21 @@ for (const [label, text, message] of INVALID_FILES) {
     await start(page);
     await page.keyboard.type("Document en cours");
     await button(page, "Enregistrer").click();
-    await expect(page).toHaveTitle("document.nano - Nano Office");
+    await expect(page).toHaveTitle("document.nano - Nano Buro");
     const before = await ydocJson(page);
 
     await openFile(page, "mauvais.nano", text);
     await expect(page.getByRole("alert")).toContainText(message);
     await expect(editor(page)).toHaveText("Document en cours");
     expect(await ydocJson(page)).toEqual(before);
-    await expect(page).toHaveTitle("document.nano - Nano Office");
+    await expect(page).toHaveTitle("document.nano - Nano Buro");
 
     // Le fichier refusé ne devient pas le fichier courant : Ctrl/Cmd+S réécrit toujours document.nano.
     await clearCalls(page);
     await editor(page).click();
     await page.keyboard.type(" modifié");
     await page.keyboard.press("ControlOrMeta+s");
-    await expect(page).toHaveTitle("document.nano - Nano Office");
+    await expect(page).toHaveTitle("document.nano - Nano Buro");
     expect((await fakeFiles(page)).calls).toEqual(["save"]);
     expect((await fakeFiles(page)).files["mauvais.nano"]).toBe(text);
   });
@@ -337,16 +337,16 @@ test("critère 13 : le titre de la fenêtre indique le nom du fichier, avec • 
   page,
 }) => {
   await start(page);
-  await expect(page).toHaveTitle("Sans titre - Nano Office");
+  await expect(page).toHaveTitle("Sans titre - Nano Buro");
   await page.keyboard.type("A");
-  await expect(page).toHaveTitle("• Sans titre - Nano Office");
+  await expect(page).toHaveTitle("• Sans titre - Nano Buro");
   await setFakeFiles(page, { nextSaveName: "courses.nano" });
   await page.keyboard.press("ControlOrMeta+s");
-  await expect(page).toHaveTitle("courses.nano - Nano Office");
+  await expect(page).toHaveTitle("courses.nano - Nano Buro");
   await page.keyboard.type("B");
-  await expect(page).toHaveTitle("• courses.nano - Nano Office");
+  await expect(page).toHaveTitle("• courses.nano - Nano Buro");
   await page.keyboard.press("ControlOrMeta+s");
-  await expect(page).toHaveTitle("courses.nano - Nano Office");
+  await expect(page).toHaveTitle("courses.nano - Nano Buro");
 });
 
 test("critère 15 : un fichier abîmé affiche le message rassurant, n'est jamais réécrit, et le document en cours reste intact", async ({
@@ -362,12 +362,12 @@ test("critère 15 : un fichier abîmé affiche le message rassurant, n'est jamai
   await openFile(page, "abime.nano", damaged);
   await expect(page.getByRole("alert")).toHaveText(CORRUPTED_MESSAGE);
   expect(await ydocJson(page)).toEqual(before);
-  await expect(page).toHaveTitle("• Sans titre - Nano Office");
+  await expect(page).toHaveTitle("• Sans titre - Nano Buro");
 
   // Ctrl/Cmd+S ensuite ne doit pas viser le fichier abîmé.
   await setFakeFiles(page, { nextSaveName: "autre.nano" });
   await editor(page).click();
   await page.keyboard.press("ControlOrMeta+s");
-  await expect(page).toHaveTitle("autre.nano - Nano Office");
+  await expect(page).toHaveTitle("autre.nano - Nano Buro");
   expect((await fakeFiles(page)).files["abime.nano"]).toBe(damaged);
 });

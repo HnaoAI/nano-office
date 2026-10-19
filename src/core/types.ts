@@ -1,7 +1,11 @@
-// Types partagés de Nano Office. Aucune logique ici.
+// Types partagés de Nano Buro. Aucune logique ici.
 import type * as Y from "yjs";
 
-/** Valeur du champ `format` d'un fichier `.nano`. */
+/**
+ * Valeur du champ `format` d'un fichier `.nano`.
+ * INVARIANT : elle reste « nano-office » malgré le renommage en Nano Buro (R1). La changer rendrait
+ * illisibles tous les fichiers déjà enregistrés, ou imposerait une migration.
+ */
 export const NANO_FORMAT = "nano-office";
 
 /** Version actuelle du format `.nano`. Tout changement de format l'incrémente (voir CLAUDE.md). */
@@ -34,8 +38,8 @@ export interface NanoFileV1 {
 /**
  * Raison d'un échec de lecture d'un fichier `.nano` :
  * - `invalid-json` : le texte n'est pas du JSON ;
- * - `not-nano` : JSON valide, mais pas un fichier Nano Office (format, version ou `id` absent ou invalide) ;
- * - `unsupported-version` : fichier Nano Office d'une version que cette application ne sait pas lire ;
+ * - `not-nano` : JSON valide, mais pas un fichier Nano Buro (format, version ou `id` absent ou invalide) ;
+ * - `unsupported-version` : fichier Nano Buro d'une version que cette application ne sait pas lire ;
  * - `corrupted` : `content` est absent ou abîmé (même si `ydoc` se lit), donc le document ne peut pas être vérifié.
  */
 export type ParseError = "invalid-json" | "not-nano" | "unsupported-version" | "corrupted";

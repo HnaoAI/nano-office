@@ -1,15 +1,15 @@
-# CLAUDE.md : Nano Office
+# CLAUDE.md : Nano Buro
 
 Lis ce fichier entièrement avant toute action.
 
 Règles générales de travail (méthode, tests, Git, dépendances, commentaires,
 format de réponse) : @docs/regles-de-travail.md
-Ce fichier ne contient que ce qui est propre à Nano Office.
+Ce fichier ne contient que ce qui est propre à Nano Buro.
 En cas de contradiction, ce fichier l'emporte.
 
 ## Le projet
 
-Nano Office est un traitement de texte sobre, sans publicité ni assistant IA imposé.
+Nano Buro est un traitement de texte sobre, sans publicité ni assistant IA imposé.
 C'est un **projet pilote destiné à un usage familial**, sur des ordinateurs Mac et Windows.
 La collaboration en ligne viendra plus tard : elle n'est pas développée maintenant,
 mais l'architecture doit la rendre possible sans réécriture.
