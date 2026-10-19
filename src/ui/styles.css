@@ -1,76 +1,334 @@
-/* Mise en page minimale de l'éditeur (T0b). Le design soigné viendra dans un ticket dédié. */
+/* Styles de l'interface, selon la charte docs/design/README.md (U1a).
+   INVARIANT : couleurs, rayons et ombres ne sont écrits que dans :root, en variables --nano-…,
+   réutilisées par les tickets suivants (vérifié par tests/ui/styles.test.ts). */
+:root {
+  --nano-app-bg: #ececea;
+  --nano-surface: #ffffff;
+  --nano-surface-muted: #f3f3f1;
+  --nano-group-bg: #e2e2df;
+  --nano-separator-strong: #d4d4d1;
+  --nano-ink: #121212;
+  --nano-on-ink: #ffffff;
+  --nano-on-ink-muted: #bdbdba;
+  --nano-document-text: #1b1b1a;
+  --nano-text-secondary: #3a3a38;
+  --nano-text-quiet: #5f5f5c;
+  --nano-text-disabled: #9a9a96;
+  --nano-icon-chip-on-ink: #2a2a29;
+  --nano-font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --nano-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --nano-radius-page: 6px;
+  --nano-radius-button: 10px;
+  --nano-radius-logo: 9px;
+  --nano-radius-group: 14px;
+  --nano-radius-message: 14px;
+  --nano-radius-bar: 16px;
+  --nano-radius-dialog: 20px;
+  --nano-radius-pill: 999px;
+  --nano-shadow-page:
+    0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08), 0 32px 64px rgba(0, 0, 0, 0.05);
+  --nano-shadow-bar: 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.07);
+  --nano-shadow-primary: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --nano-shadow-logo: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 4px 10px rgba(0, 0, 0, 0.18);
+  --nano-shadow-info: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --nano-shadow-alert: 0 12px 28px rgba(0, 0, 0, 0.2);
+  --nano-shadow-dialog: 0 1px 2px rgba(0, 0, 0, 0.06), 0 24px 64px rgba(0, 0, 0, 0.16);
+  --nano-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --nano-focus-ring: 0 0 0 2px var(--nano-ink);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #f4f4f4;
-  color: #1a1a1a;
+  font-family: var(--nano-font-sans);
+  background: var(--nano-app-bg);
+  color: var(--nano-ink);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
 }
 
 .nano-app {
-  max-width: 50rem;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.nano-app h1 {
-  font-size: 1.25rem;
-}
-
-.nano-toolbar {
+  min-height: 100vh;
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  flex-direction: column;
 }
 
-.nano-toolbar button {
-  font: inherit;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  background: #fff;
+/* En-tête : logo, nom du document, groupe Fichier. Passe à la ligne sur un écran étroit. */
+.nano-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 28px;
+}
+
+.nano-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nano-brand h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.nano-logo {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nano-radius-logo);
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: var(--nano-shadow-logo);
+}
+
+.nano-header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--nano-separator-strong);
+}
+
+.nano-document-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.nano-document-title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.nano-file-name {
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-header-spacer {
+  flex: 1 1 24px;
+}
+
+.nano-file-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--nano-radius-group);
+  background: var(--nano-group-bg);
+}
+
+.nano-file-menu button {
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  font-size: 14px;
   cursor: pointer;
 }
 
-.nano-toolbar button[aria-pressed="true"] {
-  background: #dbe7f7;
-  border-color: #4a78b8;
+.nano-file-menu .nano-primary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 500;
+  box-shadow: var(--nano-shadow-primary);
 }
 
-.nano-toolbar button:disabled {
+.nano-shortcut {
+  font-family: var(--nano-font-mono);
+  font-size: 11px;
+  color: var(--nano-on-ink-muted);
+}
+
+/* Barre de mise en forme flottante, centrée sous l'en-tête. */
+.nano-format-row {
+  display: flex;
+  justify-content: center;
+  padding: 4px 24px 0;
+}
+
+.nano-format-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: var(--nano-radius-bar);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-bar);
+}
+
+.nano-format-bar button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.nano-format-bar button:disabled {
+  color: var(--nano-text-disabled);
   cursor: default;
-  opacity: 0.5;
+}
+
+.nano-format-bar button[aria-pressed="true"] {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+}
+
+.nano-format-bar .nano-bold {
+  font-weight: 600;
+}
+
+.nano-format-bar .nano-italic {
+  font-style: italic;
+}
+
+.nano-separator {
+  width: 1px;
+  height: 24px;
+  margin: 0 6px;
+  background: var(--nano-group-bg);
+}
+
+/* Le document : une page blanche centrée sur le fond gris. */
+.nano-workspace {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 36px 20px 40px;
+}
+
+.nano-page {
+  width: 100%;
+  max-width: 794px;
+  min-height: 1000px;
+  display: flex;
+  flex-direction: column;
+  padding: 88px 11%;
+  border-radius: var(--nano-radius-page);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-page);
+  color: var(--nano-document-text);
+}
+
+/* Le conteneur de Tiptap et l'éditeur occupent toute la page : un clic n'importe où y écrit. */
+.nano-page > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .nano-editor {
-  min-height: 60vh;
-  padding: 2rem;
-  background: #fff;
-  border: 1px solid #ddd;
-  font-size: 1rem;
-  line-height: 1.5;
+  flex: 1;
+  font-size: 16px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
   outline: none;
 }
 
-.nano-editor:focus-visible {
-  border-color: #4a78b8;
+.nano-editor p {
+  margin: 0 0 16px;
 }
 
-.nano-message {
-  margin: 0 0 0.5rem;
-  padding: 0.5rem 0.8rem;
-  border-radius: 4px;
-  background: #eef3fb;
-  border: 1px solid #b7c9e6;
+.nano-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 28px 22px;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+/* Messages et question de la copie de secours : style provisoire, la charte vient avec U1b. */
+.nano-message,
+.nano-choice {
+  margin: 0 28px 12px;
+  padding: 14px 18px;
+  border-radius: var(--nano-radius-message);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-info);
+  font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .nano-message-alert {
-  background: #fdf0ee;
-  border-color: #e3b1a8;
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  box-shadow: var(--nano-shadow-alert);
 }
 
-.nano-choice {
-  padding: 1rem;
-  background: #fff8e6;
-  border: 1px solid #e3c98a;
-  border-radius: 4px;
+.nano-choice .nano-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nano-choice button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  cursor: pointer;
+}
+
+/* Écran étroit : la page occupe toute la largeur, avec des marges réduites. */
+@media (max-width: 600px) {
+  .nano-header {
+    padding: 14px 16px;
+  }
+
+  .nano-format-row {
+    padding: 4px 12px 0;
+  }
+
+  .nano-workspace {
+    padding: 20px 8px 24px;
+  }
+
+  .nano-page {
+    min-height: 70vh;
+    padding: 32px 20px;
+  }
+
+  .nano-footer {
+    padding: 0 16px 16px;
+  }
 }

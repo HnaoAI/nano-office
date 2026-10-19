@@ -71,3 +71,22 @@ test("critère 3 : dans la version construite, aucune donnée de document n'est 
 
   expect(suspiciousTraffic(log, new URL(baseURL ?? page.url()).origin, text)).toEqual([]);
 });
+
+test("U1a, critère 6 : sans connexion internet, les polices IBM Plex intégrées s'affichent toujours", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/");
+  await waitForServiceWorker(page);
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(editor(page)).toBeVisible();
+  const loaded = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return [...document.fonts]
+      .filter((font) => font.status === "loaded")
+      .map((font) => font.family.replace(/"/g, ""));
+  });
+  expect(loaded).toEqual(expect.arrayContaining(["IBM Plex Sans", "IBM Plex Mono"]));
+});

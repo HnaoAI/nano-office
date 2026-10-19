@@ -93,7 +93,7 @@ export function useDocumentFile() {
     subscribe,
     () => document !== null && hasUnsavedChanges(document),
   );
-  useBackup(backups, document, unsaved);
+  const backupLinked = useBackup(backups, document, unsaved);
 
   useEffect(() => {
     window.document.title = windowTitle(document?.fileName ?? null, unsaved);
@@ -231,6 +231,7 @@ export function useDocumentFile() {
   return {
     document,
     unsaved,
+    backupLinked,
     message,
     pending,
     recover: () => void resolvePending(true),

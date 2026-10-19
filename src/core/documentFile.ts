@@ -1,5 +1,6 @@
 // Ouverture et enregistrement d'un document (T0c), sans accès au navigateur :
-// nouveau document, lecture d'un fichier avec un message clair, modifications non enregistrées, titre.
+// nouveau document, lecture d'un fichier avec un message clair, modifications non enregistrées,
+// titre de la fenêtre et nom du document affiché (U1a).
 import * as Y from "yjs";
 import { contentOf, createDocumentId, parseDocument } from "./fileFormat";
 import { DEFAULT_FILE_NAME, type DocumentJson, type OpenDocument, type ParseError } from "./types";
@@ -85,6 +86,16 @@ export function hasUnsavedChanges(document: OpenDocument): boolean {
 /** Titre de la fenêtre : nom du fichier, précédé de `•` s'il y a des modifications non enregistrées (critère 13). */
 export function windowTitle(fileName: string | null, unsaved: boolean): string {
   return `${unsaved ? "• " : ""}${fileName ?? UNTITLED} - Nano Office`;
+}
+
+/**
+ * Nom du document affiché dans l'en-tête (U1a, critères 1 et 2) : le nom du fichier sans l'extension
+ * `.nano`, ou « Sans titre » pour un document jamais enregistré.
+ * @param fileName nom du fichier, ou null
+ */
+export function documentTitle(fileName: string | null): string {
+  if (fileName === null) return UNTITLED;
+  return fileName.replace(/\.nano$/i, "") || fileName;
 }
 
 /** Indique si un document contient au moins un caractère de texte, à n'importe quelle profondeur. */

@@ -6,6 +6,7 @@ import {
   contentSnapshot,
   DEFAULT_FILE_NAME,
   createNewDocument,
+  documentTitle,
   hasUnsavedChanges,
   markSaved,
   openDocumentText,
@@ -204,5 +205,21 @@ describe("windowTitle", () => {
   it("critère 13 : un document jamais enregistré s'appelle « Sans titre »", () => {
     expect(windowTitle(null, false)).toBe("Sans titre - Nano Office");
     expect(windowTitle(null, true)).toBe("• Sans titre - Nano Office");
+  });
+});
+
+describe("documentTitle (U1a)", () => {
+  it("critère 2 : un document jamais enregistré s'appelle « Sans titre »", () => {
+    expect(documentTitle(null)).toBe("Sans titre");
+  });
+
+  it("critère 1 : le nom du document est le nom du fichier sans l'extension .nano", () => {
+    expect(documentTitle("lettre.nano")).toBe("lettre");
+    expect(documentTitle("Week-end à Annecy 🏔️.NANO")).toBe("Week-end à Annecy 🏔️");
+    expect(documentTitle("notes.txt")).toBe("notes.txt");
+  });
+
+  it("garde le nom complet quand il ne reste rien sans l'extension", () => {
+    expect(documentTitle(".nano")).toBe(".nano");
   });
 });
