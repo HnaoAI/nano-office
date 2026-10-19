@@ -1,26 +1,33 @@
-// Composant racine : boutons de fichier, messages, question de la copie de secours et éditeur du document affiché.
+// Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché
+// et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
-import { FileMenu } from "./FileMenu";
 import { useDocumentFile } from "./useDocumentFile";
+import "./fonts";
 import "./styles.css";
 
 /** Composant racine de l'application. */
 export function App() {
-  const { document, message, pending, recover, openAsIs, newDocument, open, save, saveAs } =
+  const { document, backupLinked, message, pending, recover, openAsIs, ...file } =
     useDocumentFile();
+  const actions = {
+    newDocument: file.newDocument,
+    open: file.open,
+    save: file.save,
+    saveAs: file.saveAs,
+  };
   // Pendant la lecture de la copie de secours, rien n'est modifiable (T0d, critère 4).
   if (!document) {
     return (
-      <main className="nano-app">
-        <h1>Nano Office</h1>
-      </main>
+      <div className="nano-app">
+        <AppHeader fileName={null} actions={null} />
+      </div>
     );
   }
   return (
-    <main className="nano-app">
-      <h1>Nano Office</h1>
-      <FileMenu newDocument={newDocument} open={open} save={save} saveAs={saveAs} />
+    <div className="nano-app">
+      <AppHeader fileName={document.fileName} actions={actions} />
       {message && (
         <p role={message.kind} className={`nano-message nano-message-${message.kind}`}>
           {message.text}
@@ -38,6 +45,10 @@ export function App() {
         // Une clé par Y.Doc : « Nouveau » et « Ouvrir » recréent l'éditeur (T0c, critère 10).
         <DocumentEditor key={document.ydoc.guid} ydoc={document.ydoc} />
       )}
-    </main>
+      <footer className="nano-footer">
+        <span>{backupLinked ? "Copie de secours à jour" : ""}</span>
+        <span>Fonctionne hors ligne</span>
+      </footer>
+    </div>
   );
 }

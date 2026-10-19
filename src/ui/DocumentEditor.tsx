@@ -1,4 +1,5 @@
-// Zone d'édition d'un document (T0b) : barre d'outils et éditeur Tiptap relié à un Y.Doc.
+// Zone d'édition d'un document (T0b) : barre de mise en forme et éditeur Tiptap relié à un Y.Doc,
+// affiché comme une page blanche centrée (U1a).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import { useEffect } from "react";
@@ -21,9 +22,15 @@ export function DocumentEditor({ ydoc }: { ydoc: Y.Doc }) {
   }, [ydoc]);
 
   return (
-    <div className="nano-document">
-      <Toolbar editor={editor} />
-      <EditorContent editor={editor} />
-    </div>
+    <>
+      <div className="nano-format-row">
+        <Toolbar editor={editor} />
+      </div>
+      <main className="nano-workspace">
+        <article className="nano-page">
+          <EditorContent editor={editor} />
+        </article>
+      </main>
+    </>
   );
 }
