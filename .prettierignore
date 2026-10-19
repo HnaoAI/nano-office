@@ -6,3 +6,6 @@ playwright-report
 package-lock.json
 # Documents du cadrage, rédigés à la main : Prettier ne les reformate pas.
 *.md
+
+# Maquettes de référence (docs/design) : documents de spécification, gardés tels que validés.
+docs/design/maquette/
