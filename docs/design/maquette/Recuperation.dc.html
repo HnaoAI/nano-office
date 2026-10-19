@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Nano Office – question de récupération</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#121212}a:hover{color:#000}
+</style>
+</helmet>
+<div style="width: 880px; height: 600px; box-sizing: border-box; position: relative; overflow: hidden; background: #ECECEA; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #121212; display: flex; align-items: center; justify-content: center">
+  <div aria-hidden="true" style="position: absolute; left: 50%; top: 64px; width: 560px; height: 640px; margin-left: -280px; background: #FFFFFF; border-radius: 6px; opacity: 0.55; box-shadow: 0 12px 32px rgba(0,0,0,0.06)"></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(236,236,234,0.55)"></div>
+
+  <section role="dialog" aria-labelledby="titre-recup" style="position: relative; width: 500px; box-sizing: border-box; padding: 32px; background: #FFFFFF; border-radius: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.16); display: flex; flex-direction: column; gap: 20px">
+    <div aria-hidden="true" style="width: 44px; height: 44px; border-radius: 12px; background: #F3F3F1; color: #121212; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 8v4l3 2"></path></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h2 id="titre-recup" style="margin: 0; font-size: 21px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em">Modifications non enregistrées</h2>
+      <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #3A3A38">Ce fichier a des modifications non enregistrées, gardées dans la copie de secours de ce navigateur.</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #F3F3F1">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5F5F5C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #3A3A38">annecy.nano</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <button type="button" style="height: 48px; border: 0; border-radius: 12px; background: #121212; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.2)">Récupérer les modifications non enregistrées</button>
+      <button type="button" style="height: 48px; border: 0; border-radius: 12px; background: #F3F3F1; color: #121212; font: inherit; font-size: 15px; cursor: pointer">Ouvrir le fichier tel quel</button>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

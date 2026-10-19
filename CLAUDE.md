@@ -35,6 +35,12 @@ livrées avec elle et jamais chargées depuis un service en ligne. Cette licence
 uniquement, en plus des licences des règles générales. Les polices du système (Arial, Corbel…) ne sont pas proposées :
 elles ne s'affichent pas de la même façon sur Mac et sur Windows.
 
+## Interface
+
+La charte graphique `docs/design/README.md` et la maquette `docs/design/maquette/` font foi pour toute
+l'interface. Tout ticket qui ajoute ou modifie un élément visible la respecte et réutilise les variables
+CSS `--nano-…`. Un écart à la charte est une question pour le product owner, pas un choix du développeur.
+
 ## Règles produit (non négociables)
 
 1. Aucune publicité, bannière, bouton IA ou invitation à payer.
@@ -138,3 +144,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-18 : Quand l'utilisateur accepte d'abandonner des modifications (Nouveau ou Ouvrir), le document n'est plus restauré au rechargement, mais sa copie de secours est gardée dans le navigateur : pas de retour surprise, et rien n'est perdu.
 - 2026-10-18 : Une mise à jour de la PWA s'applique au lancement suivant, une fois toutes ses fenêtres fermées, et jamais en pleine édition (`registerType: "prompt"` sans message). Un message « mise à jour disponible » pourra venir plus tard.
 - 2026-10-18 : Polices libres intégrées à l'application (IBM Plex Sans, Serif et Mono, Source Sans 3, EB Garamond) au lieu des polices du système, pour qu'un document s'affiche à l'identique sur Mac et sur Windows, et hors ligne. La licence SIL Open Font License est acceptée pour les polices. Corbel est écartée : sa licence interdit de l'intégrer, et elle manque sur Mac. Pour le Garamond, seule la version libre EB Garamond est retenue.
+- 2026-10-19 : Charte graphique monochrome validée (maquette dans `docs/design/`). Elle s'applique avant la tranche T1 (ticket U1), pour que chaque nouvelle fonction arrive directement au bon style. Pas d'hébergement ni de partage avant une interface aboutie.
