@@ -1,7 +1,7 @@
 # Nano Buro
 
 Traitement de texte sobre, sans publicité ni assistant IA, pour un usage familial (projet pilote).
-PWA en TypeScript, React, Tiptap et Yjs. Commandes : `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e`.
+PWA en TypeScript, React, Tiptap et Yjs, publiée à chaque fusion sur `main` à l'adresse https://hnaoai.github.io/nano-office/ (H1). Commandes : `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e`.
 
 - `CLAUDE.md` : règles techniques et produit, à lire avant toute action
 - `docs/contexte-produit.md` : vision, feuille de route, organisation
