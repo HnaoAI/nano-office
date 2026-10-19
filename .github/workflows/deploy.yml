@@ -1,0 +1,50 @@
+# Publication de l'application sur GitHub Pages (ticket H1) : https://hnaoai.github.io/nano-office/
+# Se lance quand la CI se termine sur main, après une fusion, et ne publie que si elle a réussi.
+# Réglage requis une fois sur GitHub : Settings › Pages › Build and deployment › Source : GitHub Actions.
+name: Publication
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une seule publication à la fois ; une publication en cours n'est pas interrompue.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publication:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Le commit publié est exactement celui que la CI a vérifié.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Installation
+        run: npm ci
+      - name: Construction sous /nano-office/
+        run: npm run build
+        env:
+          BASE_PATH: /nano-office/
+          APP_COMMIT: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

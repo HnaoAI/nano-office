@@ -1,6 +1,7 @@
-// En-tête de l'application (U1a) : logo et nom, nom du document et du fichier, groupe Fichier.
+// En-tête de l'application (U1a) : logo, nom et version (H1), nom du document et du fichier, groupe Fichier.
 // L'indicateur d'enregistrement, avant le groupe Fichier, viendra avec U1b.
 import { documentTitle } from "../core/documentFile";
+import { APP_VERSION } from "./appVersion";
 import { FileMenu, type FileMenuActions } from "./FileMenu";
 
 /**
@@ -21,8 +22,13 @@ export function AppHeader({
         <span className="nano-logo" aria-hidden="true">
           N
         </span>
-        {/* Seul titre de la page : les tests de T0c cliquent dessus pour sortir de l'éditeur. */}
-        <h1>Nano Buro</h1>
+        <div className="nano-app-name">
+          {/* Seul titre de la page : les tests de T0c cliquent dessus pour sortir de l'éditeur. */}
+          <h1>Nano Buro</h1>
+          <span className="nano-version" title={`Version de Nano Buro : ${APP_VERSION}`}>
+            {APP_VERSION}
+          </span>
+        </div>
       </div>
       {actions && (
         <>
