@@ -17,4 +17,4 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `fonts.ts` : polices IBM Plex Sans et Mono intégrées (U1a)
 - `DocumentEditor.tsx` : barre de mise en forme et éditeur d'un document, relié à un Y.Doc, sur une page centrée
 - `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, Gras, Italique)
-- `styles.css` : styles de la charte ; couleurs, rayons et ombres en variables `--nano-…` dans `:root`
+- `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

@@ -7,7 +7,12 @@ import { MessageBar } from "./MessageBar";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
 import "./fonts";
-import "./styles.css";
+// Ordre des feuilles : les variables d'abord, puis la mise en page, avant les composants qui la précisent.
+import "./styles/tokens.css";
+import "./styles/layout.css";
+import "./styles/toolbar.css";
+import "./styles/messages.css";
+import "./styles/dialog.css";
 
 /** Composant racine de l'application. */
 export function App() {

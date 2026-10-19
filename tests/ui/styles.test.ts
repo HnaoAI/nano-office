@@ -1,12 +1,15 @@
-// Vérifie que la feuille de style de l'interface (src/ui/styles.css) suit la charte (U1a, critère 10) :
+// Vérifie que les feuilles de style de l'interface (src/ui/styles/) suivent la charte (U1a, critère 10) :
 // couleurs, rayons et ombres sont des variables `--nano-…` définies une seule fois, dans `:root`.
+// Depuis U1b, l'ancienne feuille unique styles.css est découpée en fichiers, lus ici bout à bout.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const css = readFileSync(new URL("../../src/ui/styles.css", import.meta.url), "utf8").replace(
-  /\/\*[\s\S]*?\*\//g,
-  "",
-);
+const STYLE_FILES = ["tokens", "layout", "toolbar", "messages", "dialog"];
+const css = STYLE_FILES.map((name) =>
+  readFileSync(new URL(`../../src/ui/styles/${name}.css`, import.meta.url), "utf8"),
+)
+  .join("\n")
+  .replace(/\/\*[\s\S]*?\*\//g, "");
 
 /** Variables de la charte posées par U1a ; U1b ne doit en ajouter aucune (critère 9). */
 const U1A_VARIABLES = [
@@ -47,7 +50,7 @@ const U1A_VARIABLES = [
 /** Contenu du bloc `:root { … }`, seul endroit où les valeurs de la charte sont écrites. */
 function rootBlock(): string {
   const match = /:root\s*\{([^}]*)\}/.exec(css);
-  if (!match?.[1]) throw new Error("bloc :root absent de styles.css");
+  if (!match?.[1]) throw new Error("bloc :root absent de src/ui/styles/");
   return match[1];
 }
 

@@ -1,0 +1,215 @@
+/* Mise en page (U1a) : bases, en-tête, groupe Fichier, page du document, pied de page. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--nano-font-sans);
+  background: var(--nano-app-bg);
+  color: var(--nano-ink);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* En-tête : logo, nom du document, groupe Fichier. Passe à la ligne sur un écran étroit. */
+.nano-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 28px;
+}
+
+.nano-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nano-brand h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Nom et version de l'application, l'un sous l'autre (H1, critère 9). */
+.nano-app-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nano-version {
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-logo {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nano-radius-logo);
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: var(--nano-shadow-logo);
+}
+
+.nano-header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--nano-separator-strong);
+}
+
+.nano-document-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.nano-document-title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.nano-file-name {
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-header-spacer {
+  flex: 1 1 24px;
+}
+
+.nano-file-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--nano-radius-group);
+  background: var(--nano-group-bg);
+}
+
+.nano-file-menu button {
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nano-file-menu .nano-primary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 500;
+  box-shadow: var(--nano-shadow-primary);
+}
+
+.nano-shortcut {
+  font-family: var(--nano-font-mono);
+  font-size: 11px;
+  color: var(--nano-on-ink-muted);
+}
+
+/* Le document : une page blanche centrée sur le fond gris. */
+.nano-workspace {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 36px 20px 40px;
+}
+
+.nano-page {
+  width: 100%;
+  max-width: 794px;
+  min-height: 1000px;
+  display: flex;
+  flex-direction: column;
+  padding: 88px 11%;
+  border-radius: var(--nano-radius-page);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-page);
+  color: var(--nano-document-text);
+}
+
+/* Le conteneur de Tiptap et l'éditeur occupent toute la page : un clic n'importe où y écrit. */
+.nano-page > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nano-editor {
+  flex: 1;
+  font-size: 16px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  outline: none;
+}
+
+.nano-editor p {
+  margin: 0 0 16px;
+}
+
+.nano-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 28px 22px;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+/* Écran étroit (moins de 600 px) : marges réduites. */
+@media (max-width: 600px) {
+  .nano-header {
+    padding: 14px 16px;
+  }
+
+  .nano-workspace {
+    padding: 20px 8px 24px;
+  }
+
+  .nano-page {
+    min-height: 70vh;
+    padding: 32px 20px;
+  }
+
+  .nano-footer {
+    padding: 0 16px 16px;
+  }
+}
