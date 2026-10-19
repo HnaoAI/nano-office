@@ -32,7 +32,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
+        // woff2 : les polices intégrées (U1a) s'affichent hors ligne. Les .woff de secours de
+        // Fontsource ne sont pas mis en cache : Chrome, Edge, Safari et Firefox lisent tous le woff2.
+        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
       },
     }),
   ],
