@@ -48,6 +48,18 @@ describe("createNewDocument", () => {
 });
 
 describe("openDocumentText", () => {
+  it("R1 critère 12 : un fichier enregistré avant le renommage (format « nano-office ») s'ouvre toujours", () => {
+    // Texte exact d'un fichier écrit avant le renommage en Nano Buro, figé ici : ne pas le regénérer.
+    const fileText = String.raw`{"format":"nano-office","version":1,"id":"3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c","content":{"type":"doc","content":[{"type":"paragraph","attrs":{"id":"p-1"},"content":[{"type":"text","text":"Lettre écrite avant le renommage 😀"}]}]},"ydoc":"AQT5yJfYDgAHAQdkZWZhdWx0AwlwYXJhZ3JhcGgHAPnIl9gOAAYEAPnIl9gOASZMZXR0cmUgw6ljcml0ZSBhdmFudCBsZSByZW5vbW1hZ2Ug8J+YgCgA+ciX2A4AAmlkAXcDcC0xAA=="}`;
+    const result = openDocumentText("lettre.nano", fileText);
+    if (!result.ok) throw new Error(result.message);
+    expect(result.document.id).toBe("3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c");
+    expect(jsonFromYdoc(result.document.ydoc)).toEqual({
+      type: "doc",
+      content: [paragraph("p-1", { text: "Lettre écrite avant le renommage 😀" })],
+    });
+  });
+
   it("critère 9 : ouvrir un fichier crée un nouveau Y.Doc avec son contenu, sans toucher au document en cours", () => {
     const current = createNewDocument();
     typeParagraph(current.ydoc, "Document en cours");
@@ -98,14 +110,14 @@ describe("openDocumentText", () => {
 
   it("critère 12 : un JSON invalide affiche un message clair en français", () => {
     const result = openDocumentText("x.nano", "{ pas du JSON");
-    expect(result).toEqual({ ok: false, message: "Ce fichier n'est pas un document Nano Office." });
+    expect(result).toEqual({ ok: false, message: "Ce fichier n'est pas un document Nano Buro." });
   });
 
   it("critère 12 : un fichier qui n'est pas un .nano affiche un message clair en français", () => {
     for (const text of ["", "Bonjour", JSON.stringify({ format: "autre", version: 1 }), "[]"]) {
       expect(openDocumentText("x.txt", text)).toEqual({
         ok: false,
-        message: "Ce fichier n'est pas un document Nano Office.",
+        message: "Ce fichier n'est pas un document Nano Buro.",
       });
     }
   });
@@ -116,7 +128,7 @@ describe("openDocumentText", () => {
     expect(result).toEqual({
       ok: false,
       message:
-        "Ce document vient d'une version de Nano Office que cette application ne sait pas lire. Mettez Nano Office à jour pour l'ouvrir.",
+        "Ce document vient d'une version de Nano Buro que cette application ne sait pas lire. Mettez Nano Buro à jour pour l'ouvrir.",
     });
   });
 
@@ -195,16 +207,16 @@ describe("hasUnsavedChanges et markSaved", () => {
 
 describe("windowTitle", () => {
   it("critère 13 : le titre indique le nom du fichier", () => {
-    expect(windowTitle("lettre.nano", false)).toBe("lettre.nano - Nano Office");
+    expect(windowTitle("lettre.nano", false)).toBe("lettre.nano - Nano Buro");
   });
 
   it("critère 13 : le titre porte un repère • s'il y a des modifications non enregistrées", () => {
-    expect(windowTitle("lettre.nano", true)).toBe("• lettre.nano - Nano Office");
+    expect(windowTitle("lettre.nano", true)).toBe("• lettre.nano - Nano Buro");
   });
 
   it("critère 13 : un document jamais enregistré s'appelle « Sans titre »", () => {
-    expect(windowTitle(null, false)).toBe("Sans titre - Nano Office");
-    expect(windowTitle(null, true)).toBe("• Sans titre - Nano Office");
+    expect(windowTitle(null, false)).toBe("Sans titre - Nano Buro");
+    expect(windowTitle(null, true)).toBe("• Sans titre - Nano Buro");
   });
 });
 

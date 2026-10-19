@@ -119,7 +119,7 @@ test("critère 4 : après rechargement de la page, le dernier document modifié 
   await page.reload();
   await expect(editor(page)).toHaveText("Texte non enregistré, élève 👨‍👩‍👧");
   await expect(page.getByRole("status")).toHaveText(RECOVERED_MESSAGE);
-  await expect(page).toHaveTitle("• Sans titre - Nano Office");
+  await expect(page).toHaveTitle("• Sans titre - Nano Buro");
 });
 
 test("critère 4 : après une fermeture brutale de l'onglet, le dernier document modifié est restauré", async ({
@@ -144,7 +144,7 @@ test("critère 4 : un document enregistré n'est pas présenté comme une récup
   await start(page);
   await page.keyboard.type("Déjà enregistré");
   await button(page, "Enregistrer").click();
-  await expect(page).toHaveTitle("document.nano - Nano Office");
+  await expect(page).toHaveTitle("document.nano - Nano Buro");
   await flushBackups(page);
   await page.reload();
   await expect(editor(page)).toHaveText("");
@@ -195,7 +195,7 @@ test("critère 5 : fermer l'onglet sans modification non enregistrée ne déclen
   await start(page);
   await page.keyboard.type("Enregistré");
   await button(page, "Enregistrer").click();
-  await expect(page).toHaveTitle("document.nano - Nano Office");
+  await expect(page).toHaveTitle("document.nano - Nano Buro");
   const dialogs: string[] = [];
   page.on("dialog", (dialog) => {
     dialogs.push(dialog.type());
@@ -212,7 +212,7 @@ test("critère 7 : rouvrir un fichier dont la copie de secours a le même conten
   await openFile(page, "lettre.nano", nanoFile(FILE_TEXT, FILE_ID));
   await typeAtEnd(page, " ajout");
   await button(page, "Enregistrer").click();
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
   const saved = (await fakeFiles(page)).files["lettre.nano"] ?? "";
   await flushBackups(page);
 
@@ -220,7 +220,7 @@ test("critère 7 : rouvrir un fichier dont la copie de secours a le même conten
   await openFile(page, "lettre.nano", saved);
   await expect(editor(page)).toHaveText(`${FILE_TEXT} ajout`);
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
 });
 
 test("critères 6 et 8 : si la copie de secours diffère du fichier, elle n'est pas appliquée et une question en français est posée", async ({
@@ -247,7 +247,7 @@ test("critère 9 : « Récupérer » ouvre la copie de secours seule, sans fusio
 
   await expect(editor(page)).toHaveText(`${FILE_TEXT} ajout`);
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
-  await expect(page).toHaveTitle("• lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("• lettre.nano - Nano Buro");
   const json = await page.evaluate(() => window.__nanoTest?.documentJson());
   expect(json?.content).toHaveLength(1);
 });
@@ -261,7 +261,7 @@ test("critère 10 : « Ouvrir le fichier tel quel » efface la copie de secours,
   await button(page, OPEN_AS_IS).click();
 
   await expect(editor(page)).toHaveText(FILE_TEXT);
-  await expect(page).toHaveTitle("lettre.nano - Nano Office");
+  await expect(page).toHaveTitle("lettre.nano - Nano Buro");
 
   // La copie modifiée a disparu : rouvrir le fichier ne pose plus de question.
   await flushBackups(page);

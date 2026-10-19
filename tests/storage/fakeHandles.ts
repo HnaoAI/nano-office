@@ -64,11 +64,13 @@ export function fakePickers(log: CallLog) {
   const state: {
     nextOpen: FakeHandle | null;
     nextSave: FakeHandle | null;
+    openOptions: unknown[];
     saveOptions: unknown[];
-  } = { nextOpen: null, nextSave: null, saveOptions: [] };
+  } = { nextOpen: null, nextSave: null, openOptions: [], saveOptions: [] };
   const pickers: FilePickers = {
-    showOpenFilePicker: async () => {
+    showOpenFilePicker: async (options) => {
       log.push("showOpenFilePicker");
+      state.openOptions.push(options);
       if (!state.nextOpen) throw abortError();
       return [state.nextOpen];
     },

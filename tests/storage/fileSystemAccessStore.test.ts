@@ -18,6 +18,18 @@ describe("FileSystemAccessStore", () => {
     expect(store.canSaveInPlace()).toBe(true);
   });
 
+  it("R1 critère 5 : le type de fichier proposé par les sélecteurs s'appelle « Document Nano Buro »", async () => {
+    const expected = expect.objectContaining({
+      types: [{ description: "Document Nano Buro", accept: { "application/json": [".nano"] } }],
+    });
+    fake.state.nextOpen = new FakeHandle("ouvert.nano", "x", log);
+    await store.open();
+    fake.state.nextSave = new FakeHandle("lettre.nano", "", log);
+    await store.saveAs("contenu", "document.nano");
+    expect(fake.state.openOptions[0]).toEqual(expected);
+    expect(fake.state.saveOptions[0]).toEqual(expected);
+  });
+
   it("critère 3 : « Enregistrer sous » propose le nom suggéré et laisse choisir l'emplacement", async () => {
     fake.state.nextSave = new FakeHandle("lettre.nano", "", log);
     const result = await store.saveAs("contenu", "document.nano");
