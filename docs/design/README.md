@@ -67,4 +67,5 @@ Icônes : trait de 1,75 px, 18 px, couleur du texte.
 - **Indicateur** : « Enregistré » (point plein), « Enregistrement… » (point creux), « Non enregistré » (pastille noire).
 - **Messages** : une information sur fond blanc avec une puce d'icône grise ; une alerte sur fond noir.
   Les deux ont un bouton de fermeture ; une action éventuelle est à droite.
+- **Numéro de version** : sous le nom de l'application, en haut à gauche, IBM Plex Mono 12 px, couleur texte discret `#5F5F5C` (format `v2026.10.19·a16f19a`, ticket H1).
 - **Largeur réduite** : l'en-tête et la barre passent à la ligne, la page occupe toute la largeur avec des marges réduites.
