@@ -8,7 +8,7 @@
 
 ## User story
 
-En tant que membre de la famille, je veux récupérer le texte d'un fichier abîmé que Nano Office refuse d'ouvrir,
+En tant que membre de la famille, je veux récupérer le texte d'un fichier abîmé que Nano Buro refuse d'ouvrir,
 afin de ne pas perdre ce que j'avais écrit, sans risquer d'abîmer davantage le fichier d'origine.
 
 ## Contexte

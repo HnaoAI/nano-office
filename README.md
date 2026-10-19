@@ -1,4 +1,4 @@
-# Nano Office
+# Nano Buro
 
 Traitement de texte sobre, sans publicité ni assistant IA, pour un usage familial (projet pilote).
 PWA en TypeScript, React, Tiptap et Yjs. Commandes : `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e`.

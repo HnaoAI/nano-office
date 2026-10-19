@@ -1,4 +1,4 @@
-# Charte graphique de Nano Office
+# Charte graphique de Nano Buro
 
 Référence visuelle validée par le product owner le 2026-10-19. Elle fait foi pour toute l'interface :
 chaque ticket qui ajoute ou modifie un élément d'interface la respecte.

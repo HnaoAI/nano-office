@@ -1,4 +1,4 @@
-# Nano Office : contexte produit
+# Nano Buro : contexte produit
 
 Fiche de référence pour le travail de product owner. Les règles techniques sont dans `CLAUDE.md`, les règles générales dans `CLAUDE-utilisateur.md`.
 
@@ -14,7 +14,7 @@ Un traitement de texte sobre, qui fait le travail courant sans rien imposer : pa
 
 ## Ce qui a guidé les choix
 
-Les plaintes récentes sur Word (2025-2026) portent surtout sur : publicités et incitations à payer dans l'application, régressions après mise à jour, plantages, mise en page instable (en-têtes, images, tableaux), corrections automatiques intrusives, collage qui change la police. Les règles produit de Nano Office répondent directement à ces points.
+Les plaintes récentes sur Word (2025-2026) portent surtout sur : publicités et incitations à payer dans l'application, régressions après mise à jour, plantages, mise en page instable (en-têtes, images, tableaux), corrections automatiques intrusives, collage qui change la police. Les règles produit de Nano Buro répondent directement à ces points.
 
 ## Architecture en bref
 
@@ -47,7 +47,7 @@ Ordre conseillé : T0a à T0e dans l'ordre, puis T1.6 (sauvegarde automatique), 
 
 ## Questions ouvertes
 
-- Disponibilité du nom « Nano Office » (INPI, EUIPO, domaines).
+- Disponibilité du nom « Nano Buro » (INPI, EUIPO, domaines).
 - Hébergement de la PWA : Cloudflare Pages ou Netlify (dépôt privé), à décider après T0.
 - Place du tableur : second module, avec sa propre story map.
 - Retours de la famille après T0 et T1.
