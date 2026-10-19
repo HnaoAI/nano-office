@@ -28,6 +28,7 @@ PWA (application web installable, hors ligne), TypeScript, React, Tiptap, Yjs. V
 | T1 : écrire au quotidien | Titres, listes, alignement, police et taille, copier-coller propre, sauvegarde automatique | User stories écrites (T1.1 à T1.6) |
 | T2 : partager | Export PDF via l'impression du navigateur, impression, import `.docx` | À écrire |
 | T3 : confort | Tableaux, couleur et surlignage, rechercher et remplacer, nombre de mots | À écrire |
+| U1 : interface | Refonte selon la charte graphique monochrome (`docs/design/`), avant T1 | Ticket écrit, maquette validée le 2026-10-19 |
 | T4 : mise en page | Marges, orientation, en-têtes, pieds de page, affichage en pages | À écrire (risque technique : Tiptap n'affiche pas les pages nativement) |
 | Plus tard | Module tableur, historique des versions, synchronisation, collaboration en ligne, traduction locale, mode récupération des fichiers abîmés (PL1) | Non planifié |
 
