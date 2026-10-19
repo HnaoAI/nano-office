@@ -102,6 +102,7 @@ test("critère 1 : l'indicateur d'enregistrement est entre le nom du document et
   page,
 }) => {
   await start(page);
+  await page.keyboard.type("A");
   const header = page.getByRole("banner");
   const boxes = await Promise.all(
     [
@@ -114,17 +115,47 @@ test("critère 1 : l'indicateur d'enregistrement est entre le nom du document et
   expect([...xs].sort((a, b) => a - b)).toEqual(xs);
 });
 
-test("critère 2 : l'indicateur passe de « Enregistré » à « Non enregistré » après une modification, avec le style de la charte", async ({
+test("critère 2 : aucun indicateur tant que le document est vide et sans fichier, puis « Non enregistré » dès la première frappe", async ({
   page,
 }) => {
+  // Décision du product owner pendant la relecture de U1b : « Enregistré » ferait croire qu'un fichier existe.
   await start(page);
-  await expect(indicator(page)).toHaveText("Enregistré");
-  expect(await style(indicator(page), "background-color")).toBe(WHITE);
+  await expect(indicator(page)).toHaveCount(0);
 
   await page.keyboard.type("É");
   await expect(indicator(page)).toHaveText("Non enregistré");
   expect(await style(indicator(page), "background-color")).toBe(INK);
   expect(await style(indicator(page), "color")).toBe(WHITE);
+
+  // Effacer le texte d'un document sans fichier fait disparaître l'indicateur.
+  await page.keyboard.press("Backspace");
+  await expect(indicator(page)).toHaveCount(0);
+});
+
+test("critère 2 : « Enregistré » s'affiche avec le style de la charte une fois le document enregistré, même vide", async ({
+  page,
+}) => {
+  await start(page);
+  await page.keyboard.type("Lettre");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect(indicator(page)).toHaveText("Enregistré");
+  expect(await style(indicator(page), "background-color")).toBe(WHITE);
+
+  // Un fichier enregistré puis vidé garde son indicateur : il a un fichier.
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  await expect(indicator(page)).toHaveText("Non enregistré");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect(indicator(page)).toHaveText("Enregistré");
+});
+
+test("critère 2 : « Nouveau » revient à une page blanche sans indicateur", async ({ page }) => {
+  await start(page);
+  await page.keyboard.type("Texte");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect(indicator(page)).toHaveText("Enregistré");
+  await button(page, "Nouveau").click();
+  await expect(indicator(page)).toHaveCount(0);
 });
 
 test("critère 2 : l'indicateur affiche « Enregistrement… » pendant l'écriture, puis « Enregistré »", async ({

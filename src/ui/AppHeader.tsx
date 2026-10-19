@@ -9,7 +9,7 @@ import type { SaveState } from "./useDocumentFile";
 /**
  * En-tête de l'application.
  * @param fileName nom du fichier du document affiché, null s'il n'a jamais été enregistré
- * @param saveState état de l'indicateur d'enregistrement (U1b)
+ * @param saveState état de l'indicateur d'enregistrement (U1b), null pour ne pas l'afficher
  * @param actions boutons du groupe Fichier ; absents, avec l'indicateur, pendant le chargement de la copie de secours
  */
 export function AppHeader({
@@ -18,7 +18,7 @@ export function AppHeader({
   actions,
 }: {
   fileName: string | null;
-  saveState: SaveState;
+  saveState: SaveState | null;
   actions: FileMenuActions | null;
 }) {
   return (
@@ -43,7 +43,7 @@ export function AppHeader({
             {fileName && <span className="nano-file-name">{fileName}</span>}
           </div>
           <div className="nano-header-spacer" />
-          <SaveIndicator state={saveState} />
+          {saveState && <SaveIndicator state={saveState} />}
           <FileMenu {...actions} />
         </>
       )}

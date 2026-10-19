@@ -264,7 +264,16 @@ export function useDocumentFile() {
     return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
   }, []);
 
-  const saveState: SaveState = writing ? "saving" : unsaved ? "unsaved" : "saved";
+  // Pas d'indicateur pour une page vide sans fichier : « Enregistré » ferait croire qu'un fichier existe
+  // (décision du product owner à la relecture de U1b). Dès la première frappe, il passe à « Non enregistré ».
+  const blank = document !== null && document.fileName === null && !unsaved;
+  const saveState: SaveState | null = writing
+    ? "saving"
+    : unsaved
+      ? "unsaved"
+      : blank
+        ? null
+        : "saved";
 
   return {
     document,
