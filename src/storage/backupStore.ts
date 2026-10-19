@@ -25,8 +25,9 @@ export interface BackupStore {
    * Relie `ydoc` à la copie de `id` : chaque modification y est copiée (critère 1). Détache la copie précédente.
    * INVARIANT : y-indexeddb applique d'abord la copie existante sur `ydoc`. Ne relier que si la copie est
    * absente, identique à `ydoc` (même historique) ou effacée, sinon Yjs additionnerait les deux contenus.
+   * @returns vrai une fois la copie à jour (affiché dans le pied de page, U1a) ; faux s'il n'y a pas de copie
    */
-  attach(id: string, ydoc: Y.Doc): void;
+  attach(id: string, ydoc: Y.Doc): Promise<boolean>;
   /** Arrête de copier le document relié. La copie reste dans le navigateur. */
   detach(): void;
   /** Efface la copie de `id` (critère 10), après l'avoir détachée si c'est celle du document affiché. */
@@ -67,9 +68,12 @@ class IndexedDbBackupStore implements BackupStore {
     });
   }
 
-  attach(id: string, ydoc: Y.Doc): void {
+  async attach(id: string, ydoc: Y.Doc): Promise<boolean> {
     this.detach();
-    this.attached = { id, persistence: new IndexeddbPersistence(BACKUP_DB_PREFIX + id, ydoc) };
+    const persistence = new IndexeddbPersistence(BACKUP_DB_PREFIX + id, ydoc);
+    this.attached = { id, persistence };
+    await persistence.whenSynced;
+    return true;
   }
 
   detach(): void {
@@ -110,7 +114,7 @@ class IndexedDbBackupStore implements BackupStore {
 /** Remplaçant quand IndexedDB n'existe pas : aucune copie de secours, l'application reste utilisable. */
 const NO_BACKUP: BackupStore = {
   read: () => Promise.resolve(null),
-  attach: () => undefined,
+  attach: () => Promise.resolve(false),
   detach: () => undefined,
   remove: () => Promise.resolve(),
   lastModifiedId: () => null,
