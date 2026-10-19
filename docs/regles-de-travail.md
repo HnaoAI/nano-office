@@ -21,7 +21,10 @@ Le CLAUDE.md d'un projet peut les préciser ou les remplacer : en cas de contrad
 - **Commencer par les tests**, écrits à partir des critères d'acceptation et des interfaces décrites dans le ticket.
 - **Ne jamais modifier, supprimer ou affaiblir un test pour le faire passer.** Si un test semble faux, le signaler.
 - Rester dans le périmètre du ticket. Pas de fonctionnalité en plus, même utile.
-- Si un ticket dépasse une journée de travail ou environ 400 lignes, proposer de le découper avant de commencer.
+- **Taille d'un ticket** : un ticket = une intention que le product owner peut vérifier en une seule fois.
+  Proposer de le découper avant de commencer seulement s'il mélange des sujets indépendants, ou s'il
+  touche à la fois une zone à risque (format de fichier, enregistrement, copie de secours) et autre chose.
+  Le nombre de lignes n'est qu'un indice : les tests et la documentation ne comptent pas.
 - Signaler une ambiguïté plutôt que la trancher seul.
 
 ## Définition de « terminé »
