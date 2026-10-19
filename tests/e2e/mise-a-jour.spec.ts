@@ -7,6 +7,7 @@ import type { LaunchActivity } from "../../src/core/appUpdate";
 import { serializeDocument } from "../../src/core/fileFormat";
 import type { DocumentJson } from "../../src/core/types";
 import { paragraph, ydocFromJson } from "../core/helpers";
+import { flushBackups } from "./backupHelpers";
 import { installFakeFileStore, setFakeFiles } from "./fakeFileStore";
 
 const QUIET_TEXT = "rgb(95, 95, 92)";
@@ -113,6 +114,8 @@ test("critère 6 : un document restauré depuis la copie de secours compte comme
   await start(page);
   await editor(page).click();
   await page.keyboard.type("Brouillon");
+  // La copie de secours doit être écrite avant le rechargement (correction autorisée pendant U1b).
+  await flushBackups(page);
   await page.reload();
   await expect(editor(page)).toContainText("Brouillon");
   await expect
@@ -133,6 +136,8 @@ test("critère 6 : la question de la copie de secours affichée compte comme tra
   await editor(page).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" modifié");
+  // La copie de secours doit être écrite avant le rechargement (correction autorisée pendant U1b).
+  await flushBackups(page);
   // Rechargement sans question : le document restauré n'est pas le cas testé ici.
   await page.evaluate(() => localStorage.clear());
   await page.reload();
