@@ -1,7 +1,8 @@
 // Accès aux fichiers par l'API File System Access (Chrome, Edge), pour T0c.
 // Les sélecteurs sont fournis par l'appelant, ce qui permet de les remplacer dans les tests.
 import { DEFAULT_FILE_NAME } from "../core/types";
-import type { FileStore, OpenedFile, SaveResult } from "./fileStore";
+import type { FileHandleMemory } from "./fileHandleMemory";
+import type { FileStore, OpenedFile, RestoredFile, SaveResult } from "./fileStore";
 
 /** Types de fichiers proposés par les sélecteurs. */
 const NANO_FILE_TYPES = [
@@ -48,8 +49,14 @@ function isAbort(error: unknown): boolean {
 export class FileSystemAccessStore implements FileStore {
   private current: NanoFileHandle | null = null;
 
-  /** @param pickers sélecteurs du navigateur, ou de faux sélecteurs dans les tests */
-  constructor(private readonly pickers: FilePickers) {}
+  /**
+   * @param pickers sélecteurs du navigateur, ou de faux sélecteurs dans les tests
+   * @param memory poignées retenues entre deux lancements (PL3) ; sans elle, rien n'est retenu
+   */
+  constructor(
+    private readonly pickers: FilePickers,
+    private readonly memory?: FileHandleMemory,
+  ) {}
 
   canSaveInPlace(): boolean {
     return true;
@@ -57,6 +64,29 @@ export class FileSystemAccessStore implements FileStore {
 
   forget(): void {
     this.current = null;
+  }
+
+  async remember(documentId: string): Promise<void> {
+    if (!this.current || !this.memory) return;
+    await this.memory.remember(documentId, this.current).catch(() => undefined);
+  }
+
+  /**
+   * Le fichier retenu redevient le fichier courant. On ne fait que demander l'état de l'autorisation,
+   * sans la redemander : le navigateur exige pour cela un geste de l'utilisateur (PL3, critère 2).
+   */
+  async restore(documentId: string): Promise<RestoredFile | null> {
+    try {
+      const handle = await this.memory?.recall(documentId);
+      if (!handle) return null;
+      const permission = handle.queryPermission
+        ? await handle.queryPermission({ mode: "readwrite" })
+        : "granted";
+      this.current = handle;
+      return { name: handle.name, needsPermission: permission !== "granted" };
+    } catch {
+      return null;
+    }
   }
 
   async open(accept?: (file: OpenedFile) => boolean): Promise<OpenedFile | null> {

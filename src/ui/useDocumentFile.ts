@@ -2,18 +2,11 @@
 // titre de la fenêtre et messages, puis restauration et question de la copie de secours (T0d).
 // Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6),
 // et donne l'état de l'indicateur d'enregistrement et les actions des messages (U1b).
+// Fichier retrouvé au lancement pour un document restauré (PL3).
 // Sauvegarde automatique dans le fichier, par le même verrou que « Enregistrer » (T1.6).
 // La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
-import {
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NO_ACTIVITY, type LaunchActivity } from "../core/appUpdate";
-import { AutoSaver } from "../core/autoSave";
 import { compareWithBackup, recoveredDocument, restoredDocument } from "../core/backup";
 import {
   contentSnapshot,
@@ -28,53 +21,20 @@ import { serializeDocument } from "../core/fileFormat";
 import type { OpenDocument } from "../core/types";
 import type * as Y from "yjs";
 import { createBackupStore } from "../storage/backupStore";
-import { createFileStore, type SaveResult } from "../storage/fileStore";
+import { createFileStore } from "../storage/fileStore";
+import {
+  DISCARD_QUESTION,
+  READ_ERROR,
+  recoveredMessage,
+  saveMessage,
+  type FileMessage,
+} from "./fileMessages";
+import { useAutoSave } from "./useAutoSave";
 import { useBackup } from "./useBackup";
-
-/** Message affiché sous la barre de menus : information (`status`) ou erreur (`alert`). */
-export interface FileMessage {
-  kind: "status" | "alert";
-  text: string;
-  /** Icône de la puce, selon la maquette Messages.dc.html (U1b). */
-  icon: "recovered" | "downloaded" | "unreadable" | "save-failed";
-  /** Vrai si le message propose « Enregistrer sous… » (U1b, critère 4). */
-  offersSaveAs?: boolean;
-}
+import { useSaveShortcut } from "./useSaveShortcut";
 
 /** État affiché par l'indicateur d'enregistrement de l'en-tête (U1b, critère 2). */
 export type SaveState = "saved" | "saving" | "unsaved";
-
-const DISCARD_QUESTION =
-  "Les modifications non enregistrées de ce document seront perdues. Voulez-vous continuer ?";
-const READ_ERROR = "Le fichier n'a pas pu être lu. Le document en cours n'a pas changé.";
-const RECOVERED_MESSAGE =
-  "Ce document a été récupéré depuis la copie de secours de ce navigateur. Enregistrez-le pour le garder dans un fichier.";
-const SAVE_ERROR =
-  "Le document n'a pas pu être enregistré. Réessayez, ou choisissez un autre emplacement avec « Enregistrer sous… ».";
-
-/** Message à afficher après un enregistrement, ou null s'il n'y a rien à dire. */
-function saveMessage(result: SaveResult): FileMessage | null {
-  if (result.status === "downloaded") {
-    return {
-      kind: "status",
-      icon: "downloaded",
-      text: `Le fichier « ${result.name} » a été téléchargé dans votre dossier de téléchargements. Pour enregistrer directement dans le dossier de votre choix, utilisez Chrome ou Edge.`,
-    };
-  }
-  return result.status === "failed"
-    ? { kind: "alert", icon: "save-failed", text: SAVE_ERROR, offersSaveAs: true }
-    : null;
-}
-
-/** Vrai pour Ctrl+S (Windows) ou Cmd+S (Mac), sans autre touche de modification. */
-function isSaveShortcut(event: KeyboardEvent): boolean {
-  return (
-    (event.ctrlKey || event.metaKey) &&
-    !event.altKey &&
-    !event.shiftKey &&
-    event.key.toLowerCase() === "s"
-  );
-}
 
 /** Fichier ouvert dont la copie de secours diffère, en attente du choix de l'utilisateur (T0d, critère 8). */
 export interface PendingBackup {
@@ -102,8 +62,8 @@ export function useDocumentFile() {
   // Vrai d'« Ouvrir » jusqu'à l'affichage du fichier choisi : le fichier courant du FileStore peut déjà
   // être le nouveau, alors que le document affiché est encore l'ancien (T1.6).
   const opening = useRef(false);
-  /** Sauvegarde automatique du document affiché (T1.6), recréée pour chaque Y.Doc. */
-  const autoSaver = useRef<AutoSaver | null>(null);
+  /** Y.Doc restauré au lancement avec son fichier : sa sauvegarde automatique commence en pause (PL3). */
+  const pausedAtStart = useRef<Y.Doc | null>(null);
 
   /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
   const noteActivity = useCallback((sign: keyof LaunchActivity) => {
@@ -131,53 +91,43 @@ export function useDocumentFile() {
    * Enregistrement lancé par la sauvegarde automatique (T1.6). Seulement si le document a déjà un
    * fichier réécrit sur place (critères 4 et 7) et des modifications : jamais de sélecteur.
    */
-  const autoSave = useEffectEvent(async (): Promise<"done" | "busy"> => {
-    if (opening.current) return "busy";
-    if (!document || pending || document.fileName === null || !store.canSaveInPlace()) {
-      return "done";
-    }
-    if (!hasUnsavedChanges(document)) return "done";
-    return save(false, true);
-  });
-
-  // Chaque modification du Y.Doc prévoit la sauvegarde automatique (critères 1 et 2). Les écritures de
-  // l'éditeur à l'ouverture en font partie, mais `autoSave` n'écrit rien si le contenu n'a pas changé.
-  const ydoc = document?.ydoc;
-  useEffect(() => {
-    if (!ydoc) return;
-    const saver = new AutoSaver(() => autoSave());
-    autoSaver.current = saver;
-    const onUpdate = () => saver.change();
-    ydoc.on("update", onUpdate);
-    return () => {
-      ydoc.off("update", onUpdate);
-      saver.dispose();
-      if (autoSaver.current === saver) autoSaver.current = null;
-    };
-  }, [ydoc]);
+  const autoSaver = useAutoSave(
+    document?.ydoc,
+    async () => {
+      if (opening.current) return "busy";
+      if (!document || pending || document.fileName === null || !store.canSaveInPlace()) {
+        return "done";
+      }
+      if (!hasUnsavedChanges(document)) return "done";
+      return save(false, true);
+    },
+    (ydoc) => pausedAtStart.current === ydoc,
+  );
 
   // Au chargement, le dernier document modifié est restauré depuis sa copie de secours (T0d, critère 4).
   useEffect(() => {
     let cancelled = false;
     const id = backups.lastModifiedId();
-    void (id ? backups.read(id) : Promise.resolve(null)).then((backup) => {
+    void (async () => {
+      const restored = id ? restoredDocument(id, await backups.read(id)) : null;
+      // PL3 : le document reprend le fichier où il était enregistré, sans rien y écrire pour l'instant.
+      const file = restored ? await store.restore(restored.id) : null;
       if (cancelled) return;
-      const restored = id ? restoredDocument(id, backup) : null;
-      setDocument(restored ?? createNewDocument());
-      if (restored) {
-        noteActivity("restoredFromBackup");
-        setMessage({
-          kind: "status",
-          icon: "recovered",
-          text: RECOVERED_MESSAGE,
-          offersSaveAs: true,
-        });
+      if (!restored) {
+        setDocument(createNewDocument());
+        return;
       }
-    });
+      // INVARIANT (PL3, critère 4) : le fichier retrouvé n'est réécrit qu'après un enregistrement choisi
+      // par l'utilisateur, qui a vu son nom ; jusque-là, la sauvegarde automatique attend.
+      if (file) pausedAtStart.current = restored.ydoc;
+      setDocument(file ? { ...restored, fileName: file.name } : restored);
+      noteActivity("restoredFromBackup");
+      setMessage(recoveredMessage(file));
+    })();
     return () => {
       cancelled = true;
     };
-  }, [backups, noteActivity]);
+  }, [backups, store, noteActivity]);
 
   /** Demande confirmation avant d'abandonner des modifications non enregistrées (critère 1). */
   function canDiscard(): boolean {
@@ -260,6 +210,8 @@ export function useDocumentFile() {
         error = READ_ERROR;
       }
       if (opened) {
+        // PL3 : le fichier ouvert est retenu pour le prochain lancement, sous l'id du document.
+        await store.remember((opened as OpenDocument).id);
         await showOpenedFile(opened);
       } else if (error) {
         setMessage({ kind: "alert", icon: "unreadable", text: error });
@@ -297,6 +249,9 @@ export function useDocumentFile() {
           current === saved ? markSaved(current, name, snapshot) : current,
         );
         autoSaver.current?.reportResult("saved");
+        // PL3 : un nouveau fichier est retenu pour le prochain lancement. « Enregistrer » sans fichier
+        // ouvre aussi le sélecteur.
+        if (asNew || saved.fileName === null) await store.remember(saved.id);
       }
       // Après un échec, la sauvegarde automatique attend un enregistrement réussi (critère 5).
       if (result.status === "failed") autoSaver.current?.reportResult("failed");
@@ -310,17 +265,7 @@ export function useDocumentFile() {
     return "done";
   }
 
-  // Ctrl/Cmd+S est intercepté sur toute la page, en phase de capture, avant l'éditeur :
-  // la fenêtre « Enregistrer la page » du navigateur ne s'ouvre jamais (critère 6).
-  const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
-    if (!isSaveShortcut(event)) return;
-    event.preventDefault();
-    void save(false);
-  });
-  useEffect(() => {
-    window.addEventListener("keydown", onKeyDown, { capture: true });
-    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
-  }, []);
+  useSaveShortcut(() => void save(false));
 
   // Pas d'indicateur pour une page vide sans fichier : « Enregistré » ferait croire qu'un fichier existe
   // (décision du product owner à la relecture de U1b). Dès la première frappe, il passe à « Non enregistré ».

@@ -1,6 +1,7 @@
 // Interface d'accès aux fichiers `.nano` (T0c) et choix de l'implémentation selon le navigateur.
 // L'interface ne passe que du texte : la lecture du format est faite par src/core/.
 import { DownloadStore } from "./downloadStore";
+import { createFileHandleMemory } from "./fileHandleMemory";
 import { type FilePickers, FileSystemAccessStore } from "./fileSystemAccessStore";
 
 /**
@@ -15,6 +16,15 @@ export type SaveResult =
   | { status: "downloaded"; name: string }
   | { status: "cancelled" }
   | { status: "failed" };
+
+/**
+ * Fichier retrouvé au lancement pour un document (PL3) : son nom, et s'il faut redemander au
+ * navigateur l'autorisation d'y écrire (critère 2).
+ */
+export interface RestoredFile {
+  name: string;
+  needsPermission: boolean;
+}
 
 /** Fichier lu par « Ouvrir » : son nom et son texte (UTF-8). */
 export interface OpenedFile {
@@ -44,6 +54,17 @@ export interface FileStore {
   canSaveInPlace(): boolean;
   /** Oublie le fichier courant (« Nouveau ») : le prochain « Enregistrer » demandera un emplacement. */
   forget(): void;
+  /**
+   * Retient le fichier courant comme fichier du document `documentId`, pour le prochain lancement (PL3).
+   * Sans effet s'il n'y a pas de fichier courant ou pas de mémoire (Safari, Firefox). Ne lève jamais d'exception.
+   */
+  remember(documentId: string): Promise<void>;
+  /**
+   * Reprend le fichier retenu pour `documentId` comme fichier courant, sans rien écrire ni rien demander (PL3).
+   * Ne lève jamais d'exception.
+   * @returns le fichier retrouvé, ou null s'il n'y en a pas
+   */
+  restore(documentId: string): Promise<RestoredFile | null>;
 }
 
 /** Ce que `selectFileStore` regarde dans l'environnement du navigateur (en pratique `window`). */
@@ -63,7 +84,7 @@ export function selectFileStore(environment: FileStoreEnvironment): FileStore {
       showOpenFilePicker: showOpenFilePicker.bind(environment),
       showSaveFilePicker: showSaveFilePicker.bind(environment),
     } as FilePickers;
-    return new FileSystemAccessStore(pickers);
+    return new FileSystemAccessStore(pickers, createFileHandleMemory());
   }
   return new DownloadStore();
 }

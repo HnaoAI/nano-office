@@ -49,7 +49,7 @@ export function recoveredDocument(file: OpenDocument, backup: Y.Doc): OpenDocume
 
 /**
  * Document restauré au chargement de la page (critère 4), non enregistré et sans nom de fichier :
- * mémoriser le fichier d'origine est traité avec la sauvegarde automatique (T1.6).
+ * `useDocumentFile` lui redonne ensuite le fichier retenu par le navigateur, s'il y en a un (PL3).
  * @returns null si la copie n'existe pas ou ne contient aucun texte (rien à récupérer)
  */
 export function restoredDocument(id: string, backup: Y.Doc | null): OpenDocument | null {
