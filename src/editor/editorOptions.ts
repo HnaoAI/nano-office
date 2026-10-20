@@ -5,6 +5,8 @@ import Collaboration from "@tiptap/extension-collaboration";
 import type * as Y from "yjs";
 import { documentExtensions, YJS_FRAGMENT_NAME } from "../core/schema";
 import { BlockIdGenerator } from "./blockIds";
+import { CleanClipboard } from "./clipboard";
+import { FormatShortcuts } from "./keyboardShortcuts";
 
 /**
  * Options de l'éditeur pour un document donné.
@@ -14,7 +16,9 @@ import { BlockIdGenerator } from "./blockIds";
  * - L'extension de collaboration remplace l'historique de Tiptap : Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z et
  *   Ctrl/Cmd+Y passent par le gestionnaire d'annulation de Yjs (critère 4).
  * - Aucune mise en forme automatique : `**texte**` ou un collage Markdown restent du texte
- *   (règle produit 6, critère 8). Les titres et listes n'existent pas encore dans le schéma.
+ *   (règle produit 6, critère 8) : `# ` ne crée pas de titre (T1.1, critère 9).
+ * - Les raccourcis de mise en forme sont reconnus à la touche physique (`FormatShortcuts`).
+ * - Le copier-coller garde la structure et retire la mise en forme d'origine (`CleanClipboard`, T1.5).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
@@ -25,6 +29,8 @@ export function createEditorOptions(ydoc: Y.Doc): Partial<EditorOptions> {
     extensions: [
       ...documentExtensions,
       BlockIdGenerator,
+      FormatShortcuts,
+      CleanClipboard,
       Collaboration.configure({ document: ydoc, field: YJS_FRAGMENT_NAME }),
     ],
     enableInputRules: false,

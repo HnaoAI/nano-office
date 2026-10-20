@@ -61,6 +61,9 @@ export function createBlockIdPlugin(generateId: () => string = () => crypto.rand
         return null;
       }
       tr.setMeta(BLOCK_IDS_ASSIGNED_META, true);
+      // Une transaction qui modifie le document efface les marques en attente : sans cette ligne,
+      // Entrée perdrait la police, la taille, le gras ou l'italique choisis pour la suite (T1.4).
+      if (newState.storedMarks) tr.setStoredMarks(newState.storedMarks);
       if (!changes.some((change) => change.getMeta("addToHistory") !== false)) {
         tr.setMeta("addToHistory", false);
       }

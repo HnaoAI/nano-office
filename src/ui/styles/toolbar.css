@@ -40,12 +40,41 @@
   color: var(--nano-on-ink);
 }
 
+/* Alignement et listes activés (T1.2, T1.3) : fond gris clair, comme l'alignement de la charte. */
+.nano-format-bar .nano-block-button[aria-pressed="true"] {
+  background: var(--nano-group-bg);
+  color: var(--nano-ink);
+}
+
 .nano-format-bar .nano-bold {
   font-weight: 600;
 }
 
 .nano-format-bar .nano-italic {
   font-style: italic;
+}
+
+/* Listes déroulantes de la barre (T1.1, T1.4), au style de la maquette. */
+.nano-select {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nano-size-select {
+  width: 72px;
+  padding: 0 10px;
+}
+
+.nano-select:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
 }
 
 .nano-separator {

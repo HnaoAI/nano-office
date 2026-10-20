@@ -3,6 +3,11 @@
 import { Extension, getSchema } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
+import Heading from "@tiptap/extension-heading";
+import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyleAttributes } from "./textStyle";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -18,8 +23,23 @@ export const YJS_FRAGMENT_NAME = "default";
 /** Nom de l'attribut qui porte l'identifiant stable d'un bloc. */
 export const BLOCK_ID_ATTRIBUTE = "id";
 
-/** Types de nœuds qui portent un identifiant de bloc. T1.x ajoutera titres, listes et cellules. */
-export const BLOCK_TYPES_WITH_ID = ["paragraph"];
+/** Types de nœuds qui portent un identifiant de bloc (règle produit 5). Les cellules viendront avec les tableaux. */
+export const BLOCK_TYPES_WITH_ID = ["paragraph", "heading", "listItem"];
+
+/** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
+export const HEADING_LEVELS = [1, 2, 3] as const;
+
+/** Alignements proposés (T1.3). L'absence d'alignement (null) vaut « gauche », l'alignement par défaut. */
+export const TEXT_ALIGNMENTS = ["left", "center", "right", "justify"] as const;
+
+/** Alignement d'un paragraphe ou d'un titre. */
+export type TextAlignment = (typeof TEXT_ALIGNMENTS)[number];
+
+/** Nombre maximal de niveaux d'une liste (T1.2, critère 5). */
+export const MAX_LIST_DEPTH = 3;
+
+/** Niveau d'un titre, ou 0 pour le texte normal. */
+export type BlockStyleLevel = 0 | (typeof HEADING_LEVELS)[number];
 
 /**
  * Extension d'identifiant de bloc : ajoute l'attribut `id` aux paragraphes (règle produit 5).
@@ -52,10 +72,64 @@ export const BlockId = Extension.create({
 });
 
 /**
- * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, gras, italique,
- * identifiant de bloc. T0b les réutilise telles quelles, sans redéfinir le schéma.
+ * Paragraphe et titres sans leurs raccourcis Tiptap (Mod-Alt-0 à 3), reconnus au caractère produit :
+ * sous Windows, Ctrl+Alt équivaut à AltGr, qui tape `@` ou `#` sur un clavier AZERTY (T1.1, critère 5).
+ * Les raccourcis de Nano Buro sont dans src/editor/keyboardShortcuts.ts, à la touche physique.
  */
-export const documentExtensions = [Document, Paragraph, Text, Bold, Italic, BlockId];
+const DocumentParagraph = Paragraph.extend({ addKeyboardShortcuts: () => ({}) });
+const DocumentHeading = Heading.extend({ addKeyboardShortcuts: () => ({}) }).configure({
+  levels: [...HEADING_LEVELS],
+});
+
+/**
+ * Listes sans leurs raccourcis Tiptap (Mod-Shift-7 et 8, Tab), remplacés par ceux de
+ * src/editor/keyboardShortcuts.ts (touche physique, trois niveaux au plus). Entrée garde le
+ * comportement de Tiptap : nouvel élément, ou sortie de la liste sur un élément vide (T1.2, critère 4).
+ * Le collage de la liste numérotée est retiré : il transformait un texte « 1. … » collé en liste,
+ * une mise en forme automatique interdite (règle produit 6).
+ */
+const DocumentBulletList = BulletList.extend({ addKeyboardShortcuts: () => ({}) });
+const DocumentOrderedList = OrderedList.extend({
+  addKeyboardShortcuts: () => ({}),
+  addProseMirrorPlugins: () => [],
+});
+const DocumentListItem = ListItem.extend({
+  addKeyboardShortcuts() {
+    return { Enter: () => this.editor.commands.splitListItem(this.name) };
+  },
+});
+
+/**
+ * Alignement des paragraphes et des titres (T1.3), dans l'attribut `textAlign`, sans les raccourcis
+ * de Tiptap (remplacés par ceux de src/editor/keyboardShortcuts.ts, à la touche physique).
+ * L'attribut est gardé quand Entrée coupe le bloc : le nouveau paragraphe reprend l'alignement.
+ */
+const DocumentTextAlign = TextAlign.extend({ addKeyboardShortcuts: () => ({}) }).configure({
+  types: ["paragraph", "heading"],
+  alignments: [...TEXT_ALIGNMENTS],
+});
+
+/**
+ * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
+ * puces et numérotées (T1.2), alignement (T1.3), gras, italique, police et taille (T1.4),
+ * identifiant de bloc. T0b les réutilise telles
+ * quelles, sans redéfinir le schéma.
+ */
+export const documentExtensions = [
+  Document,
+  DocumentParagraph,
+  DocumentHeading,
+  DocumentBulletList,
+  DocumentOrderedList,
+  DocumentListItem,
+  Text,
+  Bold,
+  Italic,
+  TextStyle,
+  TextStyleAttributes,
+  DocumentTextAlign,
+  BlockId,
+];
 
 /** Schéma ProseMirror obtenu à partir de `documentExtensions`, utilisable sans éditeur. */
 export const documentSchema = getSchema(documentExtensions);
