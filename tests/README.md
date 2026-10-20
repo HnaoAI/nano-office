@@ -9,7 +9,7 @@ Même arborescence que `src/`.
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
 - `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`)
 - `ui/` : tests Vitest de la feuille de style : variables de la charte, aucune nouvelle variable après U1a (`styles.test.ts`)
-- `editor/` : tests Vitest de la configuration de l'éditeur, sans navigateur (`blockIds.test.ts`, `blockStyle.test.ts`)
+- `editor/` : tests Vitest de la configuration de l'éditeur, sans navigateur (`blockIds.test.ts`, `blockStyle.test.ts`) ; copier-coller dans jsdom (`clipboard.test.ts`, T1.5)
 - `e2e/` : tests Playwright dans Chromium (`npm run test:e2e`)
   - `editeur.spec.ts` : saisie, gras, italique, annuler et rétablir, Y.Doc, identifiants (T0b)
   - `fichiers.spec.ts` : nouveau, ouvrir, enregistrer, Ctrl/Cmd+S, titre, fichiers invalides (T0c)
@@ -23,6 +23,7 @@ Même arborescence que `src/`.
   - `listes.spec.ts` : boutons, raccourcis, Entrée sur élément vide, Tab et Shift+Tab, `1. ` sans effet, conversion (T1.2)
   - `alignement.spec.ts` : boutons, raccourcis consommés, sélection de plusieurs paragraphes, héritage après Entrée (T1.3)
   - `police.spec.ts` : police et taille sur une sélection et sur le texte tapé ensuite, sélection mixte, police inconnue, aucune requête externe (T1.4)
+  - `collage.spec.ts` : collage HTML, texte brut, collage interne, copie vers une autre application, collage volumineux, annulation (T1.5)
   - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, enregistrer puis rouvrir (lot A)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours

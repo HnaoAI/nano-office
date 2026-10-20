@@ -5,6 +5,7 @@ import Collaboration from "@tiptap/extension-collaboration";
 import type * as Y from "yjs";
 import { documentExtensions, YJS_FRAGMENT_NAME } from "../core/schema";
 import { BlockIdGenerator } from "./blockIds";
+import { CleanClipboard } from "./clipboard";
 import { FormatShortcuts } from "./keyboardShortcuts";
 
 /**
@@ -17,6 +18,7 @@ import { FormatShortcuts } from "./keyboardShortcuts";
  * - Aucune mise en forme automatique : `**texte**` ou un collage Markdown restent du texte
  *   (règle produit 6, critère 8) : `# ` ne crée pas de titre (T1.1, critère 9).
  * - Les raccourcis de mise en forme sont reconnus à la touche physique (`FormatShortcuts`).
+ * - Le copier-coller garde la structure et retire la mise en forme d'origine (`CleanClipboard`, T1.5).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
@@ -28,6 +30,7 @@ export function createEditorOptions(ydoc: Y.Doc): Partial<EditorOptions> {
       ...documentExtensions,
       BlockIdGenerator,
       FormatShortcuts,
+      CleanClipboard,
       Collaboration.configure({ document: ydoc, field: YJS_FRAGMENT_NAME }),
     ],
     enableInputRules: false,
