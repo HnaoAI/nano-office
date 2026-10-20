@@ -12,9 +12,10 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `SaveIndicator.tsx` : pastille « Enregistré », « Enregistrement… » ou « Non enregistré » (U1b)
 - `MessageBar.tsx` : message d'information ou d'alerte, avec puce d'icône, « Enregistrer sous… » éventuel et bouton de fermeture (U1b)
 - `FileMenu.tsx` : groupe Fichier : Nouveau, Ouvrir…, Enregistrer sous…, Enregistrer (bouton principal)
-- `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S)
+- `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres)
 - `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b)
 - `fonts.ts` : polices IBM Plex Sans et Mono intégrées (U1a)
+- `ParagraphStyleSelect.tsx` : liste déroulante « Style du paragraphe » : texte normal, titre 1 à 3 (T1.1)
 - `DocumentEditor.tsx` : barre de mise en forme et éditeur d'un document, relié à un Y.Doc, sur une page centrée
-- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, Gras, Italique)
+- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, Gras, Italique)
 - `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

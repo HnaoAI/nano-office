@@ -1,13 +1,17 @@
-// Barre de mise en forme flottante (T0b, style U1a) : Annuler, Rétablir, séparateur, Gras, Italique.
-// Lit l'état de l'éditeur avec useEditorState pour mettre à jour les boutons à chaque modification.
-// Les tickets T1 ajouteront leurs contrôles ici, au même style.
+// Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
+// style du paragraphe (T1.1) | Gras, Italique.
+// Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
+import { currentBlockStyle } from "../editor/blockStyle";
 import { RedoIcon, UndoIcon } from "./icons";
+import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
 import { MOD } from "./shortcuts";
 
 /**
  * Barre de mise en forme. Gras et Italique indiquent leur état avec `aria-pressed`.
+ * Les séparateurs ajoutés par T1 sont décoratifs (`aria-hidden`), comme dans la maquette ; seul le
+ * premier garde le rôle `separator` (U1a).
  * INVARIANT : les noms accessibles (« Annuler », « Rétablir », « Gras », « Italique ») ne changent pas,
  * même si le bouton n'affiche qu'une icône ou une lettre (U1a, critère 7).
  * @param editor éditeur Tiptap à piloter
@@ -20,6 +24,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       italic: current.isActive("italic"),
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
+      blockStyle: currentBlockStyle(current.state),
     }),
   });
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -47,6 +52,8 @@ export function Toolbar({ editor }: { editor: Editor }) {
         <RedoIcon />
       </button>
       <div className="nano-separator" role="separator" aria-orientation="vertical" />
+      <ParagraphStyleSelect editor={editor} value={state.blockStyle} />
+      <div className="nano-separator" aria-hidden="true" />
       <button
         type="button"
         className="nano-bold"

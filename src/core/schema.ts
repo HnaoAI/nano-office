@@ -3,6 +3,7 @@
 import { Extension, getSchema } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
+import Heading from "@tiptap/extension-heading";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -18,8 +19,14 @@ export const YJS_FRAGMENT_NAME = "default";
 /** Nom de l'attribut qui porte l'identifiant stable d'un bloc. */
 export const BLOCK_ID_ATTRIBUTE = "id";
 
-/** Types de nœuds qui portent un identifiant de bloc. T1.x ajoutera titres, listes et cellules. */
-export const BLOCK_TYPES_WITH_ID = ["paragraph"];
+/** Types de nœuds qui portent un identifiant de bloc (règle produit 5). Les cellules viendront avec les tableaux. */
+export const BLOCK_TYPES_WITH_ID = ["paragraph", "heading"];
+
+/** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
+export const HEADING_LEVELS = [1, 2, 3] as const;
+
+/** Niveau d'un titre, ou 0 pour le texte normal. */
+export type BlockStyleLevel = 0 | (typeof HEADING_LEVELS)[number];
 
 /**
  * Extension d'identifiant de bloc : ajoute l'attribut `id` aux paragraphes (règle produit 5).
@@ -52,10 +59,28 @@ export const BlockId = Extension.create({
 });
 
 /**
- * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, gras, italique,
- * identifiant de bloc. T0b les réutilise telles quelles, sans redéfinir le schéma.
+ * Paragraphe et titres sans leurs raccourcis Tiptap (Mod-Alt-0 à 3), reconnus au caractère produit :
+ * sous Windows, Ctrl+Alt équivaut à AltGr, qui tape `@` ou `#` sur un clavier AZERTY (T1.1, critère 5).
+ * Les raccourcis de Nano Buro sont dans src/editor/keyboardShortcuts.ts, à la touche physique.
  */
-export const documentExtensions = [Document, Paragraph, Text, Bold, Italic, BlockId];
+const DocumentParagraph = Paragraph.extend({ addKeyboardShortcuts: () => ({}) });
+const DocumentHeading = Heading.extend({ addKeyboardShortcuts: () => ({}) }).configure({
+  levels: [...HEADING_LEVELS],
+});
+
+/**
+ * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), gras,
+ * italique, identifiant de bloc. T0b les réutilise telles quelles, sans redéfinir le schéma.
+ */
+export const documentExtensions = [
+  Document,
+  DocumentParagraph,
+  DocumentHeading,
+  Text,
+  Bold,
+  Italic,
+  BlockId,
+];
 
 /** Schéma ProseMirror obtenu à partir de `documentExtensions`, utilisable sans éditeur. */
 export const documentSchema = getSchema(documentExtensions);
