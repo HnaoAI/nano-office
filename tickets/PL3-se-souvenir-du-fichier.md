@@ -4,7 +4,7 @@
 **Dépend de** : T1.6
 **Taille estimée** : M
 **Branche** : `ticket/PL3-se-souvenir-du-fichier`
-**Tranche** : plus tard, non planifié
+**Lot** : B. Ne jamais perdre, après T1.6
 
 ## User story
 
@@ -16,7 +16,7 @@ s'enregistre toujours dans le même fichier, afin de ne pas avoir à refaire « 
 Aujourd'hui, au redémarrage, l'application ne se souvient plus du fichier : elle restaure la copie de
 secours et propose « Enregistrer sous… ». Sorti de T1.6 le 2026-10-19 pour garder T1.6 simple.
 
-## Critères d'acceptation (à préciser avant le lancement)
+## Critères d'acceptation
 
 1. Sur Chrome et Edge, le fichier du document est retenu entre deux lancements (poignée de fichier
    gardée dans le stockage du navigateur, rangée sous l'`id` du document).
