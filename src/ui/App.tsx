@@ -48,7 +48,13 @@ export function App() {
   return (
     <div className="nano-app">
       <AppHeader fileName={document.fileName} saveState={saveState} actions={actions} />
-      {message && <MessageBar message={message} onSaveAs={file.saveAs} onClose={dismissMessage} />}
+      {message && (
+        <MessageBar
+          message={message}
+          onAction={(action) => (action === "save-as" ? file.saveAs() : file.save())}
+          onClose={dismissMessage}
+        />
+      )}
       {pending ? (
         // L'éditeur est masqué tant que l'utilisateur n'a pas choisi (T0d, critère 8) ; une page estompée
         // le remplace, sous la boîte de dialogue (U1b, critère 5).

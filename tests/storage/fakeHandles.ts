@@ -8,6 +8,8 @@ export type CallLog = string[];
 export class FakeHandle implements NanoFileHandle {
   /** Permission d'écriture renvoyée par `queryPermission`. */
   permission: PermissionState = "granted";
+  /** Date de dernière modification du fichier, avancée à chaque écriture (PL3). */
+  lastModified = 1_000;
 
   constructor(
     readonly name: string,
@@ -16,7 +18,7 @@ export class FakeHandle implements NanoFileHandle {
   ) {}
 
   async getFile(): Promise<File> {
-    return new File([this.content], this.name);
+    return new File([this.content], this.name, { lastModified: this.lastModified });
   }
 
   async queryPermission(): Promise<PermissionState> {
@@ -41,6 +43,7 @@ export class FakeHandle implements NanoFileHandle {
       close: async () => {
         this.log.push(`close:${this.name}`);
         this.content = pending;
+        this.lastModified += 1;
       },
       abort: async () => {
         this.log.push(`abort:${this.name}`);

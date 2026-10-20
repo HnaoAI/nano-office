@@ -1,7 +1,7 @@
 // Repli pour Safari et Firefox (T0c, critère 8) : « Enregistrer » télécharge le fichier,
 // « Ouvrir » passe par un champ de choix de fichier. Fonctionne dans tous les navigateurs.
 import { DEFAULT_FILE_NAME } from "../core/types";
-import type { FileStore, OpenedFile, SaveResult } from "./fileStore";
+import type { FileStore, OpenedFile, RestoredFile, SaveResult } from "./fileStore";
 
 /** Opérations du navigateur utilisées par `DownloadStore`, remplaçables dans les tests. */
 export interface DownloadDependencies {
@@ -58,6 +58,13 @@ export class DownloadStore implements FileStore {
 
   forget(): void {
     this.currentName = null;
+  }
+
+  /** Safari et Firefox n'ont pas de poignée de fichier à retenir (PL3, hors périmètre). */
+  async remember(): Promise<void> {}
+
+  async restore(): Promise<RestoredFile | null> {
+    return null;
   }
 
   async open(accept?: (file: OpenedFile) => boolean): Promise<OpenedFile | null> {

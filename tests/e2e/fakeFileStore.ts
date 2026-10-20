@@ -9,7 +9,10 @@ export interface FakeFilesState {
   files: Record<string, string>;
   /** Fichier courant, celui que « Enregistrer » réécrit sans rien demander. */
   current: string | null;
-  /** Appels reçus, dans l'ordre : `open`, `save`, `saveAs:<nom proposé>`, `forget`, `picker`. */
+  /**
+   * Appels reçus, dans l'ordre : `open`, `save`, `saveAs:<nom proposé>`, `forget`, `picker`,
+   * `requestPermission:<nom>` (PL3). `remember` et `restore` n'y figurent pas : voir `remembered`.
+   */
   calls: string[];
   /** Fichier renvoyé par le prochain « Ouvrir » (null : l'utilisateur annule). */
   nextOpen: string | null;
@@ -21,7 +24,28 @@ export interface FakeFilesState {
   nextSaveFails: boolean;
   /** Vrai : chaque écriture attend `releaseWrites(page)`, pour observer « Enregistrement… » (U1b). */
   holdWrites: boolean;
+  /** Fichier retenu pour chaque document, par `id` (PL3). */
+  remembered: Record<string, string>;
+  /** Autorisation d'écrire d'un fichier retrouvé au lancement ; `prompt` : à redemander (PL3, critère 2). */
+  restorePermission: "granted" | "prompt";
+  /** Vrai tant que l'autorisation du fichier courant doit être redemandée avant d'écrire. */
+  needsPermission: boolean;
+  /**
+   * Vrai : le fichier courant a été modifié ailleurs depuis son ouverture ou le dernier enregistrement.
+   * La sauvegarde automatique (`onlyIfUnchanged`) renvoie alors `conflict` ; « Enregistrer » le remplace (T1.6).
+   */
+  changedOnDisk: boolean;
+  /**
+   * Vrai : le fichier retenu a été modifié ailleurs pendant la fermeture (scénario lundi, mardi, mercredi).
+   * Gardé au rechargement. `restore` le signale, ou le premier enregistrement après l'autorisation (PL3, relecture).
+   */
+  changedSinceLastLaunch: boolean;
+  /** Vrai tant que le premier enregistrement après le lancement doit renvoyer `conflict`. */
+  launchCheck: boolean;
 }
+
+/** Clé de sessionStorage où `keepAcrossReloads` garde les fichiers et les fichiers retenus (PL3). */
+const KEPT_STATE_KEY = "__fakeFilesKept";
 
 declare global {
   interface Window {
@@ -35,72 +59,145 @@ declare global {
 export async function installFakeFileStore(
   page: Page,
   mode: FakeFilesState["mode"] = "file-system-access",
+  { keepAcrossReloads = false }: { keepAcrossReloads?: boolean } = {},
 ) {
-  await page.addInitScript((initialMode) => {
-    // Ce code s'exécute dans le navigateur : il ne peut rien importer.
-    const state: FakeFilesState = {
-      files: {},
-      current: null,
-      calls: [],
-      nextOpen: null,
-      nextSaveName: "document.nano",
-      mode: initialMode,
-      nextSaveFails: false,
-      holdWrites: false,
-    };
-    window.__fakeFiles = state;
-
-    let held: (() => void)[] = [];
-    window.__fakeFilesRelease = () => {
-      const waiting = held;
-      held = [];
-      waiting.forEach((resolve) => resolve());
-    };
-
-    const write = async (name: string, text: string): Promise<SaveResult> => {
-      if (state.holdWrites) await new Promise<void>((resolve) => held.push(resolve));
-      if (state.nextSaveFails) {
-        state.nextSaveFails = false;
-        return { status: "failed" };
+  await page.addInitScript(
+    ([initialMode, keep, keptKey]) => {
+      // Ce code s'exécute dans le navigateur : il ne peut rien importer.
+      const state: FakeFilesState = {
+        files: {},
+        current: null,
+        calls: [],
+        nextOpen: null,
+        nextSaveName: "document.nano",
+        mode: initialMode,
+        nextSaveFails: false,
+        holdWrites: false,
+        remembered: {},
+        restorePermission: "granted",
+        needsPermission: false,
+        changedOnDisk: false,
+        changedSinceLastLaunch: false,
+        launchCheck: false,
+      };
+      // PL3 : fichiers sur le « disque » et fichiers retenus survivent au rechargement de la page,
+      // comme le disque et IndexedDB du vrai navigateur.
+      if (keep) {
+        const kept = sessionStorage.getItem(keptKey);
+        if (kept) Object.assign(state, JSON.parse(kept));
+        window.addEventListener("pagehide", () => {
+          const { files, remembered, restorePermission, changedSinceLastLaunch } = state;
+          sessionStorage.setItem(
+            keptKey,
+            JSON.stringify({ files, remembered, restorePermission, changedSinceLastLaunch }),
+          );
+        });
       }
-      state.files[name] = text;
-      return state.mode === "download" ? { status: "downloaded", name } : { status: "saved", name };
-    };
-    const saveAs = async (text: string, suggestedName: string): Promise<SaveResult> => {
-      state.calls.push(`saveAs:${suggestedName}`);
-      if (state.mode === "download") {
-        state.current = suggestedName;
-        return write(suggestedName, text);
-      }
-      state.calls.push("picker");
-      if (state.nextSaveName === null) return { status: "cancelled" };
-      state.current = state.nextSaveName;
-      return write(state.nextSaveName, text);
-    };
+      window.__fakeFiles = state;
 
-    window.__nanoTestFileStore = {
-      canSaveInPlace: () => state.mode === "file-system-access",
-      open: async (accept) => {
-        state.calls.push("open");
-        const name = state.nextOpen;
-        if (name === null) return null;
-        const text = state.files[name];
-        if (text === undefined) throw new Error(`Fichier de test absent : ${name}`);
-        if (!accept || accept({ name, text })) state.current = name;
-        return { name, text };
-      },
-      save: async (text) => {
-        state.calls.push("save");
-        if (state.current === null) return saveAs(text, "document.nano");
-        return write(state.current, text);
-      },
-      saveAs: (text, suggestedName) => saveAs(text, suggestedName),
-      forget: () => {
-        state.calls.push("forget");
-        state.current = null;
-      },
-    };
-  }, mode);
+      let held: (() => void)[] = [];
+      window.__fakeFilesRelease = () => {
+        const waiting = held;
+        held = [];
+        waiting.forEach((resolve) => resolve());
+      };
+
+      const write = async (name: string, text: string): Promise<SaveResult> => {
+        if (state.needsPermission) {
+          // Le vrai navigateur affiche ici sa demande, avec le nom du fichier ; on suppose que l'utilisateur accepte.
+          state.calls.push(`requestPermission:${name}`);
+          state.needsPermission = false;
+        }
+        if (state.launchCheck && name === state.current) {
+          // Une seule fois : après l'alerte, un nouvel « Enregistrer » remplace le fichier.
+          state.launchCheck = false;
+          return { status: "conflict", name };
+        }
+        if (state.holdWrites) await new Promise<void>((resolve) => held.push(resolve));
+        if (state.nextSaveFails) {
+          state.nextSaveFails = false;
+          return { status: "failed" };
+        }
+        state.files[name] = text;
+        if (name === state.current) {
+          state.changedOnDisk = false;
+          state.changedSinceLastLaunch = false;
+        }
+        return state.mode === "download"
+          ? { status: "downloaded", name }
+          : { status: "saved", name };
+      };
+      const saveAs = async (text: string, suggestedName: string): Promise<SaveResult> => {
+        state.calls.push(`saveAs:${suggestedName}`);
+        if (state.mode === "download") {
+          state.current = suggestedName;
+          return write(suggestedName, text);
+        }
+        state.calls.push("picker");
+        if (state.nextSaveName === null) return { status: "cancelled" };
+        state.current = state.nextSaveName;
+        state.launchCheck = false;
+        state.needsPermission = false;
+        return write(state.nextSaveName, text);
+      };
+
+      window.__nanoTestFileStore = {
+        canSaveInPlace: () => state.mode === "file-system-access",
+        open: async (accept) => {
+          state.calls.push("open");
+          const name = state.nextOpen;
+          if (name === null) return null;
+          const text = state.files[name];
+          if (text === undefined) throw new Error(`Fichier de test absent : ${name}`);
+          if (!accept || accept({ name, text })) {
+            state.current = name;
+            state.launchCheck = false;
+            state.changedOnDisk = false;
+            state.needsPermission = false;
+          }
+          return { name, text };
+        },
+        save: async (text, options) => {
+          state.calls.push("save");
+          if (state.current === null) {
+            return options?.onlyIfUnchanged ? { status: "failed" } : saveAs(text, "document.nano");
+          }
+          if (options?.onlyIfUnchanged && state.changedOnDisk) {
+            return { status: "conflict", name: state.current };
+          }
+          return write(state.current, text);
+        },
+        saveAs: (text, suggestedName) => saveAs(text, suggestedName),
+        forget: () => {
+          state.calls.push("forget");
+          state.current = null;
+          state.launchCheck = false;
+          state.changedOnDisk = false;
+        },
+        remember: async (documentId) => {
+          if (state.mode === "download" || state.current === null) return;
+          state.remembered[documentId] = state.current;
+        },
+        restore: async (documentId) => {
+          const name = state.remembered[documentId];
+          if (state.mode === "download" || name === undefined) return null;
+          state.current = name;
+          state.needsPermission = state.restorePermission === "prompt";
+          // Au lancement, la sauvegarde automatique attend un premier « Enregistrer » (PL3, critère 4).
+          state.changedOnDisk = true;
+          // Avec l'autorisation, l'alerte du lancement prévient ; sans elle, le premier enregistrement compare.
+          state.launchCheck = state.needsPermission && state.changedSinceLastLaunch;
+          return {
+            name,
+            needsPermission: state.needsPermission,
+            // Sans autorisation, la date ne peut pas être lue : la comparaison se fait au premier enregistrement.
+            changedElsewhere: !state.needsPermission && state.changedSinceLastLaunch,
+          };
+        },
+      };
+    },
+    [mode, keepAcrossReloads, KEPT_STATE_KEY] as const,
+  );
 }
 
 /** État courant de la fausse implémentation. */
