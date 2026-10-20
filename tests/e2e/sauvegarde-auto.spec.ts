@@ -205,3 +205,51 @@ test("ouvrir un autre fichier juste après une frappe n'écrit jamais l'ancien d
   expect(after.files["autre.nano"]).toBe(other);
   expect(after.files["lettre.nano"]).not.toContain("à abandonner");
 });
+
+test("« Ouvrir » pendant un enregistrement ne fait rien : le document ouvert ne peut pas s'écrire dans l'ancien fichier", async ({
+  page,
+}) => {
+  await start(page);
+  await page.keyboard.type("Premier");
+  await setFakeFiles(page, { holdWrites: true, nextSaveName: "premier.nano", nextOpen: null });
+  await button(page, "Enregistrer").click();
+  await expect(indicator(page)).toHaveText("Enregistrement…");
+  await button(page, "Ouvrir…").click();
+  await button(page, "Nouveau").click();
+  expect((await fakeFiles(page)).calls).not.toContain("open");
+  expect((await fakeFiles(page)).calls).not.toContain("forget");
+  await releaseWrites(page);
+  await expect(page).toHaveTitle("premier.nano - Nano Buro");
+});
+
+test("pendant la question de la copie de secours, l'ancien document ne s'écrit pas dans le fichier ouvert", async ({
+  page,
+}) => {
+  page.on("dialog", (dialog) => void dialog.accept().catch(() => undefined));
+  await start(page);
+  // Le fichier B a une copie de secours différente : ses modifications n'ont pas pu être enregistrées.
+  const fileB = serializeDocument({
+    id: crypto.randomUUID(),
+    ydoc: ydocFromJson({ type: "doc", content: [paragraph("p-1", { text: "Fichier B" })] }),
+  });
+  await setFakeFiles(page, { files: { "b.nano": fileB }, nextOpen: "b.nano", nextSaveFails: true });
+  await button(page, "Ouvrir…").click();
+  await expect(page).toHaveTitle("b.nano - Nano Buro");
+  await editor(page).press("End");
+  await page.keyboard.type(" modifié");
+  await expect(page.getByRole("alert")).toBeVisible({ timeout: AFTER_AUTO_SAVE });
+
+  // Document A, avec son fichier, modifié juste avant de rouvrir B.
+  await button(page, "Nouveau").click();
+  await editor(page).click();
+  await setFakeFiles(page, { nextSaveName: "a.nano" });
+  await page.keyboard.type("Document A");
+  await button(page, "Enregistrer").click();
+  await expect(page).toHaveTitle("a.nano - Nano Buro");
+  await page.keyboard.type(" modifié");
+  await setFakeFiles(page, { nextOpen: "b.nano" });
+  await button(page, "Ouvrir…").click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page.waitForTimeout(AFTER_AUTO_SAVE);
+  expect((await fakeFiles(page)).files["b.nano"]).toBe(fileB);
+});

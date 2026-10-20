@@ -9,13 +9,16 @@ import { type FilePickers, FileSystemAccessStore } from "./fileSystemAccessStore
  * - `saved` : le fichier a été écrit sur le disque (API File System Access) ;
  * - `downloaded` : repli de Safari et Firefox, le fichier a été téléchargé ;
  * - `cancelled` : l'utilisateur a fermé le sélecteur sans choisir ;
- * - `failed` : écriture impossible (autorisation refusée, disque plein…). Le fichier d'origine est intact.
+ * - `failed` : écriture impossible (autorisation refusée, disque plein…). Le fichier d'origine est intact ;
+ * - `conflict` : le fichier retrouvé au lancement a été modifié en dehors de Nano Buro depuis le dernier
+ *   enregistrement ; il n'a pas été réécrit (PL3, critère 4).
  */
 export type SaveResult =
   | { status: "saved"; name: string }
   | { status: "downloaded"; name: string }
   | { status: "cancelled" }
-  | { status: "failed" };
+  | { status: "failed" }
+  | { status: "conflict"; name: string };
 
 /**
  * Fichier retrouvé au lancement pour un document (PL3) : son nom, et s'il faut redemander au

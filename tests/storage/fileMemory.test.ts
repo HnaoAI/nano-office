@@ -3,11 +3,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { DownloadStore } from "../../src/storage/downloadStore";
 import type { FileStore } from "../../src/storage/fileStore";
-import type { FileHandleMemory } from "../../src/storage/fileHandleMemory";
-import {
-  FileSystemAccessStore,
-  type NanoFileHandle,
-} from "../../src/storage/fileSystemAccessStore";
+import type { FileHandleMemory, RememberedFile } from "../../src/storage/fileHandleMemory";
+import { FileSystemAccessStore } from "../../src/storage/fileSystemAccessStore";
 import { type CallLog, FakeHandle, fakePickers } from "./fakeHandles";
 
 const ID = "3b7e1f0a-2c4d-4e6f-8a9b-0c1d2e3f4a5b";
@@ -15,9 +12,9 @@ const OTHER_ID = "9f1e2d3c-4b5a-4968-8776-655443322110";
 
 /** Mémoire des poignées en mémoire vive, à la place d'IndexedDB. */
 class MapMemory implements FileHandleMemory {
-  readonly handles = new Map<string, NanoFileHandle>();
-  async remember(id: string, handle: NanoFileHandle) {
-    this.handles.set(id, handle);
+  readonly handles = new Map<string, RememberedFile>();
+  async remember(id: string, file: RememberedFile) {
+    this.handles.set(id, file);
   }
   async recall(id: string) {
     return this.handles.get(id) ?? null;
@@ -47,7 +44,7 @@ async function firstLaunch(): Promise<FakeHandle> {
 describe("FileSystemAccessStore : se souvenir du fichier (PL3)", () => {
   it("critère 1 : le fichier du document est retenu entre deux lancements, rangé sous l'id du document", async () => {
     const handle = await firstLaunch();
-    expect(await memory.recall(ID)).toBe(handle);
+    expect((await memory.recall(ID))?.handle).toBe(handle);
 
     // Second lancement : nouvelle instance, aucun sélecteur.
     const store = new FileSystemAccessStore(fake.pickers, memory);
@@ -101,7 +98,7 @@ describe("FileSystemAccessStore : se souvenir du fichier (PL3)", () => {
     fake.state.nextOpen = opened;
     await store.open();
     await store.remember(ID);
-    expect(await memory.recall(ID)).toBe(opened);
+    expect((await memory.recall(ID))?.handle).toBe(opened);
   });
 
   it("remember sans fichier courant ne retient rien", async () => {
@@ -128,6 +125,52 @@ describe("FileSystemAccessStore : se souvenir du fichier (PL3)", () => {
     await store.saveAs("v1", "document.nano");
     await store.remember(ID);
     expect(await store.restore(ID)).toBeNull();
+  });
+});
+
+describe("FileSystemAccessStore : fichier modifié ailleurs pendant la fermeture (PL3, critère 4, relecture)", () => {
+  it("un fichier retrouvé modifié en dehors de Nano Buro n'est pas écrasé", async () => {
+    const handle = await firstLaunch();
+    // Le fichier est modifié sur l'autre ordinateur, puis synchronisé.
+    handle.content = "version de l'autre ordinateur";
+    handle.lastModified += 50;
+    const store = new FileSystemAccessStore(fake.pickers, memory);
+    await store.restore(ID);
+    log.length = 0;
+    expect(await store.save("v2")).toEqual({ status: "conflict", name: "lettre.nano" });
+    expect(handle.content).toBe("version de l'autre ordinateur");
+    expect(log.filter((step) => step.startsWith("createWritable"))).toEqual([]);
+  });
+
+  it("un fichier retrouvé inchangé est réécrit, puis la vérification n'est plus faite pendant la session", async () => {
+    const handle = await firstLaunch();
+    const store = new FileSystemAccessStore(fake.pickers, memory);
+    await store.restore(ID);
+    expect(await store.save("v2")).toEqual({ status: "saved", name: "lettre.nano" });
+    handle.lastModified += 50;
+    expect(await store.save("v3")).toEqual({ status: "saved", name: "lettre.nano" });
+    expect(handle.content).toBe("v3");
+  });
+
+  it("chaque écriture met à jour la date retenue : un redémarrage après plusieurs enregistrements réécrit le fichier", async () => {
+    const handle = await firstLaunch();
+    const first = new FileSystemAccessStore(fake.pickers, memory);
+    await first.restore(ID);
+    await first.save("v2");
+    await first.save("v3");
+    const second = new FileSystemAccessStore(fake.pickers, memory);
+    await second.restore(ID);
+    expect(await second.save("v4")).toEqual({ status: "saved", name: "lettre.nano" });
+    expect(handle.content).toBe("v4");
+  });
+
+  it("un fichier dont la date n'a pas pu être retenue n'est pas réécrit au redémarrage", async () => {
+    const handle = await firstLaunch();
+    await memory.remember(ID, { handle, lastModified: null });
+    const store = new FileSystemAccessStore(fake.pickers, memory);
+    await store.restore(ID);
+    expect(await store.save("v2")).toEqual({ status: "conflict", name: "lettre.nano" });
+    expect(handle.content).toBe("v1");
   });
 });
 

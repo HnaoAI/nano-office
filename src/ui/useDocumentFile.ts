@@ -149,7 +149,8 @@ export function useDocumentFile() {
   }
 
   function newDocument() {
-    if (!canDiscard()) return;
+    // Pendant une écriture, « Nouveau » attend : la fin de l'écriture reprendrait le fichier oublié (lot B).
+    if (saving.current || !canDiscard()) return;
     store.forget();
     show(createNewDocument());
   }
@@ -163,6 +164,8 @@ export function useDocumentFile() {
     const backup = await backups.read(file.id);
     const comparison = compareWithBackup(file, backup);
     if (comparison === "different" && backup) {
+      // L'ancien document est abandonné : le fichier courant est déjà celui qu'on ouvre (T1.6).
+      autoSaver.current?.dispose();
       noteActivity("backupQuestion");
       setMessage(null);
       setPending({ file, backup });
@@ -189,11 +192,15 @@ export function useDocumentFile() {
   }
 
   async function open() {
-    if (!canDiscard()) return;
+    // Pendant une écriture, « Ouvrir » attend : la fin d'un « Enregistrer sous » changerait le fichier
+    // courant après l'ouverture, et le document ouvert s'écrirait dans l'ancien fichier (lot B).
+    if (saving.current || opening.current || !canDiscard()) return;
     // Compte dès l'ouverture du sélecteur, même si l'utilisateur annule (H1, critère 6).
     noteActivity("fileAction");
-    if (opening.current) return;
     opening.current = true;
+    // Rien n'est écrit pendant l'ouverture : le fichier courant peut changer avant le document affiché.
+    const held = autoSaver.current;
+    held?.hold();
     try {
       let opened: OpenDocument | null = null;
       let error: string | null = null;
@@ -218,6 +225,8 @@ export function useDocumentFile() {
       }
     } finally {
       opening.current = false;
+      // Sans effet si l'ancien document a été remplacé (son AutoSaver est arrêté).
+      held?.release();
     }
   }
 
@@ -233,6 +242,8 @@ export function useDocumentFile() {
     if (saving.current || opening.current || pending) return "busy";
     saving.current = true;
     setWriting(true);
+    // Le résultat est signalé à la sauvegarde automatique de ce document, même s'il est remplacé entre-temps.
+    const saver = autoSaver.current;
     // Un sélecteur d'enregistrement ouvert ne doit pas disparaître dans un rechargement (H1).
     noteActivity("fileAction");
     const saved = document;
@@ -248,14 +259,15 @@ export function useDocumentFile() {
         setDocument((current) =>
           current === saved ? markSaved(current, name, snapshot) : current,
         );
-        autoSaver.current?.reportResult("saved");
+        saver?.reportResult("saved");
         // PL3 : un nouveau fichier est retenu pour le prochain lancement. « Enregistrer » sans fichier
         // ouvre aussi le sélecteur.
         if (asNew || saved.fileName === null) await store.remember(saved.id);
       }
       // Après un échec, la sauvegarde automatique attend un enregistrement réussi (critère 5).
-      if (result.status === "failed") autoSaver.current?.reportResult("failed");
-      if (result.status !== "cancelled" && (!auto || result.status === "failed")) {
+      const failed = result.status === "failed" || result.status === "conflict";
+      if (failed) saver?.reportResult("failed");
+      if (result.status !== "cancelled" && (!auto || failed)) {
         setMessage(saveMessage(result));
       }
     } finally {

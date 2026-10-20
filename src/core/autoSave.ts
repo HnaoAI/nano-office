@@ -28,6 +28,9 @@ export class AutoSaver {
   private running = false;
   private stopped = false;
   private isPaused = false;
+  private held = false;
+  /** Une modification a eu lieu pendant une pause ou une attente : à enregistrer à la reprise. */
+  private missed = false;
 
   /** @param run enregistre le document s'il a des modifications ; ne doit jamais ouvrir de sélecteur */
   constructor(private readonly run: AutoSaveRun) {}
@@ -37,9 +40,16 @@ export class AutoSaver {
     return this.isPaused;
   }
 
-  /** Une modification a eu lieu : prévoit l'enregistrement (critères 1 et 2). Sans effet pendant une pause. */
+  /**
+   * Une modification a eu lieu : prévoit l'enregistrement (critères 1 et 2). Pendant une pause ou une
+   * attente, elle est seulement retenue, pour être enregistrée à la reprise.
+   */
   change(): void {
-    if (this.stopped || this.isPaused) return;
+    if (this.stopped) return;
+    if (this.isPaused || this.held) {
+      this.missed = true;
+      return;
+    }
     const now = Date.now();
     this.firstChange ??= now;
     this.schedule(Math.min(now + AUTO_SAVE_IDLE_MS, this.firstChange + AUTO_SAVE_MAX_MS) - now);
@@ -50,8 +60,28 @@ export class AutoSaver {
    * boucle ; un enregistrement réussi reprend la sauvegarde automatique (critère 5).
    */
   reportResult(status: "saved" | "failed"): void {
-    if (status === "failed") this.pause();
-    else this.isPaused = false;
+    if (status === "failed") {
+      this.pause();
+      return;
+    }
+    this.isPaused = false;
+    this.resumeMissed();
+  }
+
+  /**
+   * Met la sauvegarde automatique en attente, par exemple pendant « Ouvrir » : le fichier courant peut
+   * alors changer avant le document affiché. Rien n'est écrit jusqu'à `release()`.
+   */
+  hold(): void {
+    this.held = true;
+    if (this.timer !== null) this.missed = true;
+    this.cancel();
+  }
+
+  /** Fin de l'attente de `hold()` : les modifications faites entre-temps seront enregistrées. */
+  release(): void {
+    this.held = false;
+    this.resumeMissed();
   }
 
   /** Suspend la sauvegarde automatique jusqu'au prochain enregistrement réussi, et annule celle prévue. */
@@ -64,6 +94,12 @@ export class AutoSaver {
   dispose(): void {
     this.stopped = true;
     this.cancel();
+  }
+
+  private resumeMissed() {
+    if (!this.missed || this.isPaused || this.held) return;
+    this.missed = false;
+    this.change();
   }
 
   private cancel() {
@@ -79,7 +115,7 @@ export class AutoSaver {
 
   private async fire() {
     this.timer = null;
-    if (this.stopped || this.isPaused) return;
+    if (this.stopped || this.isPaused || this.held) return;
     // Une écriture automatique est encore en cours : on réessaie après elle (critère 6).
     if (this.running) {
       this.schedule(AUTO_SAVE_IDLE_MS);
@@ -96,7 +132,7 @@ export class AutoSaver {
       this.running = false;
     }
     // Un enregistrement manuel était en cours : on réessaie plus tard, sans écrire en même temps.
-    if (outcome === "busy" && !this.stopped && !this.isPaused) {
+    if (outcome === "busy" && !this.stopped && !this.isPaused && !this.held) {
       this.firstChange ??= Date.now();
       this.schedule(AUTO_SAVE_IDLE_MS);
     }

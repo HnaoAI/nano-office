@@ -64,6 +64,15 @@ export function saveMessage(result: SaveResult): FileMessage | null {
       text: `Le fichier « ${result.name} » a été téléchargé dans votre dossier de téléchargements. Pour enregistrer directement dans le dossier de votre choix, utilisez Chrome ou Edge.`,
     };
   }
+  if (result.status === "conflict") {
+    // PL3, critère 4 : le fichier a changé ailleurs depuis le dernier enregistrement ; on ne l'écrase pas.
+    return {
+      kind: "alert",
+      icon: "save-failed",
+      text: `Le fichier « ${result.name} » a été modifié en dehors de Nano Buro depuis le dernier enregistrement. Pour ne pas l'écraser, enregistrez ce document ailleurs avec « Enregistrer sous… ».`,
+      action: "save-as",
+    };
+  }
   return result.status === "failed"
     ? { kind: "alert", icon: "save-failed", text: SAVE_ERROR, action: "save-as" }
     : null;

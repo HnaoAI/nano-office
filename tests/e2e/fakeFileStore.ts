@@ -30,6 +30,10 @@ export interface FakeFilesState {
   restorePermission: "granted" | "prompt";
   /** Vrai tant que l'autorisation du fichier courant doit être redemandée avant d'écrire. */
   needsPermission: boolean;
+  /** Vrai : le fichier retrouvé au lancement a été modifié ailleurs ; sa première écriture renvoie `conflict` (PL3). */
+  restoredChangedOnDisk: boolean;
+  /** Vrai tant que le fichier courant est celui retrouvé au lancement et n'a pas encore été réécrit. */
+  checkRestored: boolean;
 }
 
 /** Clé de sessionStorage où `keepAcrossReloads` garde les fichiers et les fichiers retenus (PL3). */
@@ -64,6 +68,8 @@ export async function installFakeFileStore(
         remembered: {},
         restorePermission: "granted",
         needsPermission: false,
+        restoredChangedOnDisk: false,
+        checkRestored: false,
       };
       // PL3 : fichiers sur le « disque » et fichiers retenus survivent au rechargement de la page,
       // comme le disque et IndexedDB du vrai navigateur.
@@ -90,12 +96,16 @@ export async function installFakeFileStore(
           state.calls.push(`requestPermission:${name}`);
           state.needsPermission = false;
         }
+        if (state.checkRestored && name === state.current && state.restoredChangedOnDisk) {
+          return { status: "conflict", name };
+        }
         if (state.holdWrites) await new Promise<void>((resolve) => held.push(resolve));
         if (state.nextSaveFails) {
           state.nextSaveFails = false;
           return { status: "failed" };
         }
         state.files[name] = text;
+        if (name === state.current) state.checkRestored = false;
         return state.mode === "download"
           ? { status: "downloaded", name }
           : { status: "saved", name };
@@ -104,11 +114,13 @@ export async function installFakeFileStore(
         state.calls.push(`saveAs:${suggestedName}`);
         if (state.mode === "download") {
           state.current = suggestedName;
+          state.checkRestored = false;
           return write(suggestedName, text);
         }
         state.calls.push("picker");
         if (state.nextSaveName === null) return { status: "cancelled" };
         state.current = state.nextSaveName;
+        state.checkRestored = false;
         state.needsPermission = false;
         return write(state.nextSaveName, text);
       };
@@ -123,6 +135,7 @@ export async function installFakeFileStore(
           if (text === undefined) throw new Error(`Fichier de test absent : ${name}`);
           if (!accept || accept({ name, text })) {
             state.current = name;
+            state.checkRestored = false;
             state.needsPermission = false;
           }
           return { name, text };
@@ -136,6 +149,7 @@ export async function installFakeFileStore(
         forget: () => {
           state.calls.push("forget");
           state.current = null;
+          state.checkRestored = false;
         },
         remember: async (documentId) => {
           if (state.mode === "download" || state.current === null) return;
@@ -146,6 +160,7 @@ export async function installFakeFileStore(
           if (state.mode === "download" || name === undefined) return null;
           state.current = name;
           state.needsPermission = state.restorePermission === "prompt";
+          state.checkRestored = true;
           return { name, needsPermission: state.needsPermission };
         },
       };

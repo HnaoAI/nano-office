@@ -201,3 +201,59 @@ describe("AutoSaver (T1.6)", () => {
     expect(calls).toBe(2);
   });
 });
+
+describe("AutoSaver : reprise et attente (T1.6, relecture)", () => {
+  it("critère 5 : une modification faite pendant la pause est enregistrée après la reprise, sans nouvelle frappe", async () => {
+    saver.reportResult("failed");
+    saver.change();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(fake.state.calls).toBe(0);
+    saver.reportResult("saved");
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_IDLE_MS);
+    expect(fake.state.calls).toBe(1);
+  });
+
+  it("une reprise sans modification manquée n'écrit rien", async () => {
+    saver.reportResult("failed");
+    saver.reportResult("saved");
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fake.state.calls).toBe(0);
+  });
+
+  it("hold() empêche toute écriture, même déjà prévue, jusqu'à release()", async () => {
+    saver.change();
+    await vi.advanceTimersByTimeAsync(1_000);
+    saver.hold();
+    saver.change();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fake.state.calls).toBe(0);
+    saver.release();
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_IDLE_MS);
+    expect(fake.state.calls).toBe(1);
+  });
+
+  it("release() sans modification pendant l'attente n'écrit rien", async () => {
+    saver.hold();
+    saver.release();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fake.state.calls).toBe(0);
+  });
+
+  it("release() ne lève pas une pause due à un échec", async () => {
+    saver.reportResult("failed");
+    saver.hold();
+    saver.change();
+    saver.release();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fake.state.calls).toBe(0);
+  });
+
+  it("après dispose(), release() n'écrit rien", async () => {
+    saver.hold();
+    saver.change();
+    saver.dispose();
+    saver.release();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fake.state.calls).toBe(0);
+  });
+});
