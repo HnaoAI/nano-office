@@ -1,6 +1,7 @@
 // Boutons « Liste à puces » et « Liste numérotée » de la barre de mise en forme (T1.2),
 // avec les icônes de la maquette. Activés quand le curseur est dans une liste du même type.
 import type { Editor } from "@tiptap/react";
+import { focusEditor } from "../editor/focus";
 import { toggleList, type ListType } from "../editor/lists";
 import { BulletListIcon, OrderedListIcon } from "./icons";
 import { MOD } from "./shortcuts";
@@ -26,7 +27,7 @@ export function ListButtons({ editor, active }: { editor: Editor; active: ListTy
       title={`${label} (${MOD}+Shift+${key})`}
       onMouseDown={(event) => event.preventDefault()}
       onClick={() => {
-        editor.commands.focus();
+        focusEditor(editor);
         toggleList(editor, type);
       }}
     >

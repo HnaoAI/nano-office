@@ -41,6 +41,17 @@ export async function topBlocks(page: Page): Promise<DocumentJson[]> {
   return (await ydocJson(page)).content ?? [];
 }
 
+/**
+ * Attend que l'éditeur ait lu la sélection du navigateur. Chrome traite les touches avant
+ * l'événement `selectionchange`, qui met à jour la sélection de ProseMirror : sans cette attente,
+ * un raccourci tapé juste après un déplacement au clavier s'appliquerait à l'ancienne sélection.
+ */
+export async function settleSelection(page: Page) {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
+}
+
 /** Laisse passer le délai de regroupement des annulations de Yjs, pour isoler l'étape suivante. */
 export async function waitUndoGroup(page: Page) {
   await page.waitForTimeout(700);

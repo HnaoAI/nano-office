@@ -1,6 +1,7 @@
 // Liste déroulante « Style du paragraphe » de la barre de mise en forme (T1.1) : texte normal ou
 // titre 1 à 3, au style des listes déroulantes de la maquette (docs/design/maquette/Main.dc.html).
 import type { Editor } from "@tiptap/react";
+import { focusEditor } from "../editor/focus";
 import type { BlockStyleLevel } from "../core/schema";
 import { setBlockStyle } from "../editor/blockStyle";
 import { HEADING_MOD } from "./shortcuts";
@@ -33,7 +34,7 @@ export function ParagraphStyleSelect({
       value={value === null ? "" : String(value)}
       onChange={(event) => {
         const level = Number(event.target.value) as BlockStyleLevel;
-        editor.commands.focus();
+        focusEditor(editor);
         setBlockStyle(level)(editor.state, editor.view.dispatch);
       }}
     >

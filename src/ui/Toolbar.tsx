@@ -1,11 +1,13 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
-// style du paragraphe (T1.1) | Gras, Italique | listes (T1.2).
+// style du paragraphe (T1.1) | Gras, Italique | alignement (T1.3) | listes (T1.2).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
+import { currentAlignment } from "../editor/alignment";
 import { currentBlockStyle } from "../editor/blockStyle";
 import { currentListType } from "../editor/lists";
 import { RedoIcon, UndoIcon } from "./icons";
+import { AlignmentButtons } from "./AlignmentButtons";
 import { ListButtons } from "./ListButtons";
 import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
 import { MOD } from "./shortcuts";
@@ -28,6 +30,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       canRedo: current.can().redo(),
       blockStyle: currentBlockStyle(current.state),
       listType: currentListType(current.state),
+      alignment: currentAlignment(current.state),
     }),
   });
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -79,6 +82,8 @@ export function Toolbar({ editor }: { editor: Editor }) {
       >
         I
       </button>
+      <div className="nano-separator" aria-hidden="true" />
+      <AlignmentButtons editor={editor} active={state.alignment} />
       <div className="nano-separator" aria-hidden="true" />
       <ListButtons editor={editor} active={state.listType} />
     </div>

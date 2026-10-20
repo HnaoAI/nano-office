@@ -21,6 +21,7 @@ Même arborescence que `src/`.
   - `interface.spec.ts` : structure de l'interface et polices intégrées (U1a)
   - `titres.spec.ts` : titres, raccourcis Mac et Windows, AltGr, Entrée, `# `, annulation (T1.1)
   - `listes.spec.ts` : boutons, raccourcis, Entrée sur élément vide, Tab et Shift+Tab, `1. ` sans effet, conversion (T1.2)
+  - `alignement.spec.ts` : boutons, raccourcis consommés, sélection de plusieurs paragraphes, héritage après Entrée (T1.3)
   - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, enregistrer puis rouvrir (lot A)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours

@@ -3,7 +3,8 @@
 // Les raccourcis équivalents de Tiptap sont retirés dans src/core/schema.ts.
 import { Extension, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import type { BlockStyleLevel } from "../core/schema";
+import type { BlockStyleLevel, TextAlignment } from "../core/schema";
+import { setAlignment } from "./alignment";
 import { setBlockStyle } from "./blockStyle";
 import { indentListItem, outdentListItem, toggleList } from "./lists";
 import { isMacPlatform } from "./platform";
@@ -65,9 +66,31 @@ const LIST_SHORTCUTS: Shortcut[] = [
   { code: "Tab", shift: true, run: outdentListItem },
 ];
 
+/**
+ * Raccourcis d'alignement (T1.3, critère 2), ceux de Google Docs : Ctrl/Cmd+Shift+L, E, R, J.
+ * Toujours consommés dans l'éditeur, pour ne pas ouvrir la console, les téléchargements ou
+ * recharger la page (Chrome et Edge laissent la page les intercepter).
+ */
+const ALIGNMENT_SHORTCUTS: Shortcut[] = (
+  [
+    ["KeyL", "left"],
+    ["KeyE", "center"],
+    ["KeyR", "right"],
+    ["KeyJ", "justify"],
+  ] as [string, TextAlignment][]
+).map(([code, alignment]) => ({
+  code,
+  mod: true,
+  shift: true,
+  run: (editor: Editor) => {
+    setAlignment(editor, alignment);
+    return true;
+  },
+}));
+
 /** Liste de tous les raccourcis, pour la plateforme donnée. */
 export function formatShortcuts(mac: boolean): Shortcut[] {
-  return [...headingShortcuts(mac), ...LIST_SHORTCUTS];
+  return [...headingShortcuts(mac), ...LIST_SHORTCUTS, ...ALIGNMENT_SHORTCUTS];
 }
 
 /**

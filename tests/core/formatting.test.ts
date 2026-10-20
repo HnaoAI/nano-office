@@ -109,3 +109,34 @@ describe("T1.2 : listes", () => {
     expect(reread.content?.[1]?.attrs?.id).toBe("p-1");
   });
 });
+
+describe("T1.3 : alignement", () => {
+  it("aller-retour avec les quatre alignements, sur des paragraphes et un titre", () => {
+    const aligned = (id: string, textAlign: string | null, text: string): DocumentJson => ({
+      type: "paragraph",
+      attrs: { id, textAlign },
+      content: [{ type: "text", text }],
+    });
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        aligned("p-1", "right", "Mme Dupont, 3 rue des Lilas"),
+        {
+          ...heading("h-1", 1, "Invitation 🎉"),
+          attrs: { id: "h-1", level: 1, textAlign: "center" },
+        },
+        aligned("p-2", "justify", "Un long corps de lettre justifié."),
+        aligned("p-3", "left", "À gauche, explicitement."),
+        aligned("p-4", null, "À gauche, par défaut."),
+      ],
+    };
+    const reread = roundTrip(json);
+    expect(reread.content?.map((block) => block.attrs?.textAlign ?? null)).toEqual([
+      "right",
+      "center",
+      "justify",
+      "left",
+      null,
+    ]);
+  });
+});

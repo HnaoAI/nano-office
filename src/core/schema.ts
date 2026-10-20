@@ -5,6 +5,7 @@ import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
 import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
+import TextAlign from "@tiptap/extension-text-align";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -25,6 +26,12 @@ export const BLOCK_TYPES_WITH_ID = ["paragraph", "heading", "listItem"];
 
 /** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
 export const HEADING_LEVELS = [1, 2, 3] as const;
+
+/** Alignements proposés (T1.3). L'absence d'alignement (null) vaut « gauche », l'alignement par défaut. */
+export const TEXT_ALIGNMENTS = ["left", "center", "right", "justify"] as const;
+
+/** Alignement d'un paragraphe ou d'un titre. */
+export type TextAlignment = (typeof TEXT_ALIGNMENTS)[number];
 
 /** Nombre maximal de niveaux d'une liste (T1.2, critère 5). */
 export const MAX_LIST_DEPTH = 3;
@@ -91,8 +98,18 @@ const DocumentListItem = ListItem.extend({
 });
 
 /**
+ * Alignement des paragraphes et des titres (T1.3), dans l'attribut `textAlign`, sans les raccourcis
+ * de Tiptap (remplacés par ceux de src/editor/keyboardShortcuts.ts, à la touche physique).
+ * L'attribut est gardé quand Entrée coupe le bloc : le nouveau paragraphe reprend l'alignement.
+ */
+const DocumentTextAlign = TextAlign.extend({ addKeyboardShortcuts: () => ({}) }).configure({
+  types: ["paragraph", "heading"],
+  alignments: [...TEXT_ALIGNMENTS],
+});
+
+/**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
- * puces et numérotées (T1.2), gras, italique, identifiant de bloc. T0b les réutilise telles
+ * puces et numérotées (T1.2), alignement (T1.3), gras, italique, identifiant de bloc. T0b les réutilise telles
  * quelles, sans redéfinir le schéma.
  */
 export const documentExtensions = [
@@ -105,6 +122,7 @@ export const documentExtensions = [
   Text,
   Bold,
   Italic,
+  DocumentTextAlign,
   BlockId,
 ];
 

@@ -140,3 +140,39 @@ export function OrderedListIcon() {
     </Icon>
   );
 }
+
+/** Aligner à gauche, reprise de la maquette Main.dc.html (T1.3). */
+export function AlignLeftIcon() {
+  return (
+    <Icon>
+      <path d="M4 6h16M4 10h10M4 14h16M4 18h10" />
+    </Icon>
+  );
+}
+
+/** Centrer, reprise de la maquette Main.dc.html (T1.3). */
+export function AlignCenterIcon() {
+  return (
+    <Icon>
+      <path d="M4 6h16M7 10h10M4 14h16M7 18h10" />
+    </Icon>
+  );
+}
+
+/** Aligner à droite, reprise de la maquette Main.dc.html (T1.3). */
+export function AlignRightIcon() {
+  return (
+    <Icon>
+      <path d="M4 6h16M10 10h10M4 14h16M10 18h10" />
+    </Icon>
+  );
+}
+
+/** Justifier, reprise de la maquette Main.dc.html (T1.3). */
+export function AlignJustifyIcon() {
+  return (
+    <Icon>
+      <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </Icon>
+  );
+}
