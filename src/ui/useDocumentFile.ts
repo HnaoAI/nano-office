@@ -2,6 +2,7 @@
 // titre de la fenêtre et messages, puis restauration et question de la copie de secours (T0d).
 // Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6),
 // et donne l'état de l'indicateur d'enregistrement et les actions des messages (U1b).
+// Sauvegarde automatique dans le fichier, par le même verrou que « Enregistrer » (T1.6).
 // La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
 import {
   useCallback,
@@ -12,6 +13,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { NO_ACTIVITY, type LaunchActivity } from "../core/appUpdate";
+import { AutoSaver } from "../core/autoSave";
 import { compareWithBackup, recoveredDocument, restoredDocument } from "../core/backup";
 import {
   contentSnapshot,
@@ -97,6 +99,11 @@ export function useDocumentFile() {
   // Copie lisible de `saving` pour l'indicateur (U1b) ; la référence reste le seul verrou d'enregistrement.
   const [writing, setWriting] = useState(false);
   const choosing = useRef(false);
+  // Vrai d'« Ouvrir » jusqu'à l'affichage du fichier choisi : le fichier courant du FileStore peut déjà
+  // être le nouveau, alors que le document affiché est encore l'ancien (T1.6).
+  const opening = useRef(false);
+  /** Sauvegarde automatique du document affiché (T1.6), recréée pour chaque Y.Doc. */
+  const autoSaver = useRef<AutoSaver | null>(null);
 
   /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
   const noteActivity = useCallback((sign: keyof LaunchActivity) => {
@@ -119,6 +126,35 @@ export function useDocumentFile() {
   useEffect(() => {
     window.document.title = windowTitle(document?.fileName ?? null, unsaved);
   }, [document?.fileName, unsaved]);
+
+  /**
+   * Enregistrement lancé par la sauvegarde automatique (T1.6). Seulement si le document a déjà un
+   * fichier réécrit sur place (critères 4 et 7) et des modifications : jamais de sélecteur.
+   */
+  const autoSave = useEffectEvent(async (): Promise<"done" | "busy"> => {
+    if (opening.current) return "busy";
+    if (!document || pending || document.fileName === null || !store.canSaveInPlace()) {
+      return "done";
+    }
+    if (!hasUnsavedChanges(document)) return "done";
+    return save(false, true);
+  });
+
+  // Chaque modification du Y.Doc prévoit la sauvegarde automatique (critères 1 et 2). Les écritures de
+  // l'éditeur à l'ouverture en font partie, mais `autoSave` n'écrit rien si le contenu n'a pas changé.
+  const ydoc = document?.ydoc;
+  useEffect(() => {
+    if (!ydoc) return;
+    const saver = new AutoSaver(() => autoSave());
+    autoSaver.current = saver;
+    const onUpdate = () => saver.change();
+    ydoc.on("update", onUpdate);
+    return () => {
+      ydoc.off("update", onUpdate);
+      saver.dispose();
+      if (autoSaver.current === saver) autoSaver.current = null;
+    };
+  }, [ydoc]);
 
   // Au chargement, le dernier document modifié est restauré depuis sa copie de secours (T0d, critère 4).
   useEffect(() => {
@@ -150,6 +186,8 @@ export function useDocumentFile() {
 
   /** Affiche un autre document. INVARIANT : sa copie de secours est absente, identique ou effacée. */
   function show(next: OpenDocument) {
+    // Rien de l'ancien document ne doit plus être écrit, même avant que React ait affiché le nouveau (T1.6).
+    autoSaver.current?.dispose();
     // L'utilisateur a accepté de perdre ces modifications : elles ne reviennent plus au chargement.
     // Leur copie reste dans IndexedDB, pour le futur mode récupération (#15). Décision de relecture de T0d.
     if (document && unsaved && backups.lastModifiedId() === document.id) {
@@ -204,29 +242,43 @@ export function useDocumentFile() {
     if (!canDiscard()) return;
     // Compte dès l'ouverture du sélecteur, même si l'utilisateur annule (H1, critère 6).
     noteActivity("fileAction");
-    let opened: OpenDocument | null = null;
-    let error: string | null = null;
+    if (opening.current) return;
+    opening.current = true;
     try {
-      // Le fichier n'est retenu comme fichier courant que s'il est lisible (critère 15).
-      const file = await store.open(({ name, text }) => {
-        const result = openDocumentText(name, text);
-        if (result.ok) opened = result.document;
-        else error = result.message;
-        return result.ok;
-      });
-      if (!file) return;
-    } catch {
-      error = READ_ERROR;
-    }
-    if (opened) {
-      await showOpenedFile(opened);
-    } else if (error) {
-      setMessage({ kind: "alert", icon: "unreadable", text: error });
+      let opened: OpenDocument | null = null;
+      let error: string | null = null;
+      try {
+        // Le fichier n'est retenu comme fichier courant que s'il est lisible (critère 15).
+        const file = await store.open(({ name, text }) => {
+          const result = openDocumentText(name, text);
+          if (result.ok) opened = result.document;
+          else error = result.message;
+          return result.ok;
+        });
+        if (!file) return;
+      } catch {
+        error = READ_ERROR;
+      }
+      if (opened) {
+        await showOpenedFile(opened);
+      } else if (error) {
+        setMessage({ kind: "alert", icon: "unreadable", text: error });
+      }
+    } finally {
+      opening.current = false;
     }
   }
 
-  async function save(asNew: boolean) {
-    if (saving.current || !document) return;
+  /**
+   * Enregistre le document affiché. Un seul enregistrement à la fois, manuel ou automatique (T1.6, critère 6).
+   * INVARIANT : rien n'est écrit pendant « Ouvrir » ni pendant la question de la copie de secours :
+   * le fichier courant du FileStore peut alors être celui qu'on ouvre, et non celui du document affiché.
+   * @param auto vrai pour la sauvegarde automatique : une réussite ne change pas le message affiché
+   * @returns `busy` si un autre enregistrement ou une ouverture est en cours, sinon `done`
+   */
+  async function save(asNew: boolean, auto = false): Promise<"done" | "busy"> {
+    if (!document) return "done";
+    if (saving.current || opening.current || pending) return "busy";
     saving.current = true;
     setWriting(true);
     // Un sélecteur d'enregistrement ouvert ne doit pas disparaître dans un rechargement (H1).
@@ -244,12 +296,18 @@ export function useDocumentFile() {
         setDocument((current) =>
           current === saved ? markSaved(current, name, snapshot) : current,
         );
+        autoSaver.current?.reportResult("saved");
       }
-      if (result.status !== "cancelled") setMessage(saveMessage(result));
+      // Après un échec, la sauvegarde automatique attend un enregistrement réussi (critère 5).
+      if (result.status === "failed") autoSaver.current?.reportResult("failed");
+      if (result.status !== "cancelled" && (!auto || result.status === "failed")) {
+        setMessage(saveMessage(result));
+      }
     } finally {
       saving.current = false;
       setWriting(false);
     }
+    return "done";
   }
 
   // Ctrl/Cmd+S est intercepté sur toute la page, en phase de capture, avant l'éditeur :

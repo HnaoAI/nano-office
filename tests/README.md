@@ -6,6 +6,7 @@ Même arborescence que `src/`.
   - `helpers.ts` : construire un Y.Doc à partir d'un JSON, document d'exemple
   - `schema.test.ts`, `fileFormat.test.ts`, `base64.test.ts`, `documentFile.test.ts`, `backup.test.ts`
   - `formatting.test.ts` : aller-retour du format avec la mise en forme du lot A ; `textStyle.test.ts` : polices et tailles (T1.4)
+  - `autoSave.test.ts` : délais de la sauvegarde automatique, pas de chevauchement, pause après un échec, avec une horloge simulée (T1.6)
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
 - `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`)
 - `ui/` : tests Vitest de la feuille de style : variables de la charte, aucune nouvelle variable après U1a (`styles.test.ts`)
@@ -26,6 +27,7 @@ Même arborescence que `src/`.
   - `collage.spec.ts` : collage HTML, texte brut, collage interne, copie vers une autre application, collage volumineux, annulation (T1.5)
   - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, enregistrer puis rouvrir (lot A)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
+  - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture (T1.6)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours
   - `networkWatch.ts` : journal des requêtes et messages envoyés par la page
   - `fakeFileStore.ts` : fausse implémentation de `FileStore`, installée avant le chargement de la page ; peut retenir les écritures ou faire échouer un enregistrement (U1b)

@@ -4,7 +4,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 
 - `App.tsx` : composant racine (en-tête, message, question de la copie de secours, éditeur recréé pour chaque Y.Doc, pied de page)
 - `AppHeader.tsx` : en-tête : logo, nom et version de l'application (H1), nom du document et du fichier, indicateur d'enregistrement (U1b), groupe Fichier (U1a)
-- `useDocumentFile.ts` : hook du document affiché : Nouveau, Ouvrir, Enregistrer, Ctrl/Cmd+S, titre de la fenêtre (T0c), restauration et question de la copie de secours (T0d), signes de travail commencé (H1), état de l'indicateur et fermeture des messages (U1b)
+- `useDocumentFile.ts` : hook du document affiché : Nouveau, Ouvrir, Enregistrer, Ctrl/Cmd+S, titre de la fenêtre (T0c), restauration et question de la copie de secours (T0d), signes de travail commencé (H1), état de l'indicateur et fermeture des messages (U1b), sauvegarde automatique (T1.6)
 - `useBackup.ts` : relie le document affiché à sa copie de secours, retient le dernier document modifié, alerte avant fermeture (T0d), indique si la copie est à jour (U1a)
 - `useAppUpdate.ts` : enregistre le service worker et applique une nouvelle version au démarrage si rien n'est commencé (H1)
 - `appVersion.ts` : version injectée par Vite à la construction (H1)

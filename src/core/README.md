@@ -8,6 +8,7 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `fileFormat.ts` : format `.nano` version 1 (`createDocumentId`, `serializeDocument`, `parseDocument`)
 - `documentFile.ts` : nouveau document, ouverture avec message d'erreur en français, modifications non enregistrées, titre de la fenêtre (T0c), nom du document dans l'en-tête (U1a)
 - `backup.ts` : copie de secours relue dans un Y.Doc neuf, comparaison avec un fichier ouvert, document récupéré ou restauré (T0d)
+- `autoSave.ts` : déclenchement de la sauvegarde automatique : 3 secondes après la dernière modification, 30 secondes au plus, jamais deux écritures à la fois, pause après un échec (`AutoSaver`, T1.6)
 - `appUpdate.ts` : décision « recharger maintenant ou attendre » quand une nouvelle version est prête (`decideUpdate`, H1)
 - `appVersion.ts` : numéro de version `v<date>·<commit court>`, ou `dev` (`formatVersion`, H1)
 - `base64.ts` : conversion octets <-> base64 pour l'état Yjs
