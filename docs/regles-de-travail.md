@@ -48,6 +48,10 @@ Un ticket est terminé quand :
 - Une branche par ticket : `ticket/<identifiant>-<sujet>`, par exemple `ticket/T0-squelette`.
 - Messages de commit : `<identifiant>: description courte`, par exemple `T0: ajoute le format de fichier`.
 - Petits commits cohérents plutôt qu'un seul gros commit.
+- **Pousser tôt et souvent** : dès le premier commit, pousser la branche et ouvrir une PR en brouillon (draft),
+  puis continuer. Pousser après chaque ticket terminé (dans un lot) et au moins toutes les heures de travail,
+  pour que rien ne soit perdu si la session s'arrête et que le relecteur puisse suivre l'avancement.
+  Passer la PR en « prête » (ready for review) seulement quand tout le travail est fini.
 - **Ne jamais pousser sur `main` sans mon accord.**
 - Ne jamais commiter de secret (clé, mot de passe, jeton).
 
