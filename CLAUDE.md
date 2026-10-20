@@ -117,6 +117,8 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 |---|---|---|
 | **A. Mise en forme** | T1.1 titres, T1.2 listes, T1.3 alignement, T1.4 police et taille, T1.5 copier-coller | #8, #9, #10, #11, #12 |
 | **B. Ne jamais perdre** | T1.6 sauvegarde automatique, puis PL3 se souvenir du fichier | #7, #38 |
+| **C. Mise en forme (suite)** | T1.7 couleur et surlignage, T1.8 tableaux | #44, #45 |
+| **D. Images** | T1.9 images, avec le format `.nano` version 2 | #46 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -179,3 +181,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-20 : La branche est poussée avec une PR en brouillon dès le premier commit, puis après chaque ticket terminé : le travail d'une session n'est jamais seulement local, et le relecteur suit l'avancement.
 - 2026-10-20 : La mise en forme du lot A enrichit le contenu du format .nano v1 sans en changer la structure ni la version.
 - 2026-10-20 : La sauvegarde automatique n'écrase jamais un fichier modifié ailleurs (par exemple sur l'autre ordinateur, via le dossier synchronisé) : la date de modification du fichier, retenue à l'ouverture et après chaque écriture, est relue avant chaque sauvegarde automatique ; si elle a changé, rien n'est écrit, la sauvegarde automatique s'arrête et une alerte propose « Enregistrer sous… ». « Enregistrer » reste un choix explicite qui remplace le fichier. Ce n'est pas une gestion des conflits, seulement « ne jamais écraser sans prévenir ».
+- 2026-10-20 : Couleur du texte, surlignage, tableaux et images ajoutés à la tranche T1 (lots C et D). Palettes de couleurs courtes et fixes ; les seules couleurs à l'écran sont celles du document. Les images sont rangées dans le fichier `.nano`, une seule fois chacune, et réduites à 2 000 px à l'insertion : le format passe en version 2, avec une migration testée depuis la version 1.
