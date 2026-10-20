@@ -109,6 +109,31 @@ Les tests sont dans `tests/`, avec la même arborescence (`tests/core/`, `tests/
 - La description de la PR qui livre un ticket contient `Closes #<numéro de l'Issue>`, pour fermer l'Issue à la fusion.
 - Si un ticket est découpé ou créé, créer aussi son Issue, avec l'étiquette de tranche (`T0 squelette`, `T1 écrire au quotidien`…) et de taille (`taille S`, `taille M`).
 
+### Lots
+
+Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…` par ticket du lot.
+
+| Lot | Tickets | Issues |
+|---|---|---|
+| **A. Mise en forme** | T1.1 titres, T1.2 listes, T1.3 alignement, T1.4 police et taille, T1.5 copier-coller | #8, #9, #10, #11, #12 |
+| **B. Ne jamais perdre** | T1.6 sauvegarde automatique, puis PL3 se souvenir du fichier | #7, #38 |
+
+### Quand s'arrêter pour demander au product owner
+
+Claude Code tranche seul les petites questions et les liste dans la PR (« Choix faits, à confirmer »).
+Il s'arrête et demande seulement si la question :
+
+1. peut faire perdre ou abîmer un document, ou réécrire un fichier sans que l'utilisateur l'ait voulu ;
+2. change le format `.nano` ;
+3. demande une dépendance hors des licences acceptées ;
+4. s'écarte visiblement de la charte ou de la maquette (un nouvel écran, un nouvel élément sans modèle).
+
+### Vérification et publication
+
+Tant que la famille n'a pas l'adresse de l'application, le product owner fusionne dès que la CI est verte
+et vérifie sur la version publiée (GitHub Pages), sur le Mac et le PC, sans Terminal. Un défaut se corrige
+dans une PR suivante, ou par « Revert ». La PR donne une liste de vérification courte : 10 points au plus par lot.
+
 ## Relecture et échanges sur la PR
 
 La PR est le lieu d'échange entre le développeur, le relecteur et le product owner.
@@ -150,3 +175,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-19 : Publication automatique sur GitHub Pages à chaque fusion sur `main` (ticket H1), pour tester sur le Mac et le PC sans Terminal. Publié ne veut pas dire partagé : l'adresse n'est donnée à la famille qu'une fois l'interface aboutie. Une nouvelle version s'applique d'elle-même au démarrage si l'utilisateur n'a pas encore commencé à travailler, sinon au lancement suivant ; pas de bandeau de mise à jour pour l'instant. La version (`v<date>·<commit>`) s'affiche sous le nom de l'application.
 - 2026-10-19 : Nouvelle règle de découpage : un ticket = une intention que le product owner vérifie en une fois. On ne découpe que s'il mélange des sujets indépendants ou associe une zone à risque à autre chose ; la limite de 400 lignes est abandonnée, car un découpage trop fin multiplie les PR et les vérifications sans aider Claude Code.
 - 2026-10-19 : T1.6 simplifié après U1b : la sauvegarde automatique est toujours active, sans réglage, et réutilise l'indicateur et les messages existants. Se souvenir du fichier après un redémarrage devient un ticket à part (PL3), pour ne pas mêler la mémoire des fichiers à la sauvegarde automatique.
+- 2026-10-20 : Livraison par lots (A mise en forme, B ne jamais perdre) au lieu d'un ticket par PR, pour profiter de Claude Code et réduire les allers-retours. Claude Code tranche les petites questions et les liste dans la PR ; il ne s'arrête que dans quatre cas (perte de document, format `.nano`, licence, écart visible à la charte). Il se relit avant de signaler la PR. Le product owner fusionne quand la CI est verte et vérifie sur la version publiée, tant que la famille n'a pas l'adresse.
