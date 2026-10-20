@@ -6,6 +6,8 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
 import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
 import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyleAttributes } from "./textStyle";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -109,7 +111,8 @@ const DocumentTextAlign = TextAlign.extend({ addKeyboardShortcuts: () => ({}) })
 
 /**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
- * puces et numérotées (T1.2), alignement (T1.3), gras, italique, identifiant de bloc. T0b les réutilise telles
+ * puces et numérotées (T1.2), alignement (T1.3), gras, italique, police et taille (T1.4),
+ * identifiant de bloc. T0b les réutilise telles
  * quelles, sans redéfinir le schéma.
  */
 export const documentExtensions = [
@@ -122,6 +125,8 @@ export const documentExtensions = [
   Text,
   Bold,
   Italic,
+  TextStyle,
+  TextStyleAttributes,
   DocumentTextAlign,
   BlockId,
 ];

@@ -3,7 +3,8 @@
 Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèques.
 
 - `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `ParseResult`) et constantes du format
-- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3)
+- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4)
+- `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4)
 - `fileFormat.ts` : format `.nano` version 1 (`createDocumentId`, `serializeDocument`, `parseDocument`)
 - `documentFile.ts` : nouveau document, ouverture avec message d'erreur en français, modifications non enregistrées, titre de la fenêtre (T0c), nom du document dans l'en-tête (U1a)
 - `backup.ts` : copie de secours relue dans un Y.Doc neuf, comparaison avec un fichier ouvert, document récupéré ou restauré (T0d)

@@ -1,13 +1,15 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
-// style du paragraphe (T1.1) | Gras, Italique | alignement (T1.3) | listes (T1.2).
+// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique | alignement (T1.3) | listes (T1.2).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 import { currentAlignment } from "../editor/alignment";
 import { currentBlockStyle } from "../editor/blockStyle";
+import { currentTextStyle } from "../editor/fontStyle";
 import { currentListType } from "../editor/lists";
 import { RedoIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
+import { FontSelects } from "./FontSelects";
 import { ListButtons } from "./ListButtons";
 import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
 import { MOD } from "./shortcuts";
@@ -31,6 +33,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       blockStyle: currentBlockStyle(current.state),
       listType: currentListType(current.state),
       alignment: currentAlignment(current.state),
+      textStyle: currentTextStyle(current.state),
     }),
   });
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -59,6 +62,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       </button>
       <div className="nano-separator" role="separator" aria-orientation="vertical" />
       <ParagraphStyleSelect editor={editor} value={state.blockStyle} />
+      <FontSelects editor={editor} font={state.textStyle.font} size={state.textStyle.size} />
       <div className="nano-separator" aria-hidden="true" />
       <button
         type="button"

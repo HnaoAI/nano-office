@@ -8,6 +8,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `blockStyle.ts` : texte normal ou titre 1 à 3, en gardant les attributs du bloc (`setBlockStyle`, `currentBlockStyle`, T1.1)
 - `lists.ts` : listes à puces et numérotées : type de la liste du curseur, Tab et Shift+Tab sur trois niveaux (T1.2)
 - `alignment.ts` : alignement à gauche, centré, à droite ou justifié des paragraphes et titres (`setAlignment`, `currentAlignment`, T1.3)
+- `fontStyle.ts` : police et taille de la sélection ou du texte tapé ensuite, lecture au curseur (`setFontFamily`, `setFontSize`, `currentTextStyle`, T1.4)
 - `focus.ts` : redonne le focus à l'éditeur tout de suite après un clic sur la barre (`focusEditor`, lot A)
 - `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1)
 - `userEdits.ts` : reconnaît une modification faite par l'utilisateur, pour la mise à jour au démarrage (`isUserEdit`, H1)

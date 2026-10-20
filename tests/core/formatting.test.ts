@@ -140,3 +140,68 @@ describe("T1.3 : alignement", () => {
     ]);
   });
 });
+
+describe("T1.4 : police et taille", () => {
+  /** Texte avec une police et une taille, `null` pour la valeur par défaut. */
+  function styled(text: string, fontFamily: string | null, fontSize: string | null): DocumentJson {
+    return { type: "text", text, marks: [{ type: "textStyle", attrs: { fontFamily, fontSize } }] };
+  }
+
+  it("aller-retour avec plusieurs polices et tailles dans un même paragraphe", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { id: "p-1" },
+          content: [
+            { type: "text", text: "Par défaut, " },
+            styled("Garamond 36, ", "EB Garamond", "36pt"),
+            styled("Mono 8, ", "IBM Plex Mono", "8pt"),
+            {
+              ...styled("Serif gras 72 😀", "IBM Plex Serif", "72pt"),
+              marks: [
+                { type: "bold" },
+                { type: "textStyle", attrs: { fontFamily: "IBM Plex Serif", fontSize: "72pt" } },
+              ],
+            },
+            styled(" taille seule", null, "14pt"),
+          ],
+        },
+      ],
+    };
+    const parts = roundTrip(json).content?.[0]?.content ?? [];
+    const summary = parts.map((part) => {
+      const attrs = part.marks?.find((mark) => mark.type === "textStyle")?.attrs;
+      return [part.text, attrs?.fontFamily ?? null, attrs?.fontSize ?? null];
+    });
+    expect(summary).toEqual([
+      ["Par défaut, ", null, null],
+      ["Garamond 36, ", "EB Garamond", "36pt"],
+      ["Mono 8, ", "IBM Plex Mono", "8pt"],
+      ["Serif gras 72 😀", "IBM Plex Serif", "72pt"],
+      [" taille seule", null, "14pt"],
+    ]);
+  });
+
+  it("critère 8 : une police inconnue de l'application est relue sans erreur et son nom reste enregistré", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { id: "p-1" },
+          content: [styled("Futur", "Futura Nova 2030", "13pt")],
+        },
+      ],
+    };
+    const text = serializeDocument({ id: "doc-1", ydoc: ydocFromJson(json) });
+    const result = parseDocument(text);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const attrs = jsonFromYdoc(result.ydoc).content?.[0]?.content?.[0]?.marks?.[0]?.attrs;
+    expect(attrs).toEqual({ fontFamily: "Futura Nova 2030", fontSize: "13pt" });
+    // Et il est réécrit tel quel à l'enregistrement suivant.
+    expect(serializeDocument({ id: "doc-1", ydoc: result.ydoc })).toContain("Futura Nova 2030");
+  });
+});

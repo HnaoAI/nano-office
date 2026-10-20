@@ -67,6 +67,11 @@
   cursor: pointer;
 }
 
+.nano-size-select {
+  width: 72px;
+  padding: 0 10px;
+}
+
 .nano-select:focus-visible {
   outline: none;
   box-shadow: var(--nano-focus-ring);
