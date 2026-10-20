@@ -40,6 +40,12 @@
   color: var(--nano-on-ink);
 }
 
+/* Alignement et listes activés (T1.2, T1.3) : fond gris clair, comme l'alignement de la charte. */
+.nano-format-bar .nano-block-button[aria-pressed="true"] {
+  background: var(--nano-group-bg);
+  color: var(--nano-ink);
+}
+
 .nano-format-bar .nano-bold {
   font-weight: 600;
 }

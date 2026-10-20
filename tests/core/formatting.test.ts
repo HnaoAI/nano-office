@@ -62,3 +62,50 @@ describe("T1.1 : titres", () => {
     expect(marks).toEqual(["bold", "italic"]);
   });
 });
+
+/** Élément de liste : un paragraphe, puis éventuellement une sous-liste. */
+function item(id: string, text: string, sublist?: DocumentJson): DocumentJson {
+  return {
+    type: "listItem",
+    attrs: { id },
+    content: [paragraph(`${id}-p`, { text }), ...(sublist ? [sublist] : [])],
+  };
+}
+
+describe("T1.2 : listes", () => {
+  it("aller-retour avec listes imbriquées des deux types, sur trois niveaux", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "orderedList",
+          attrs: { start: 1, type: null },
+          content: [
+            item("li-1", "Préparer la pâte", {
+              type: "bulletList",
+              content: [
+                item("li-1-1", "farine 🌾", {
+                  type: "orderedList",
+                  attrs: { start: 1, type: null },
+                  content: [item("li-1-1-1", "tamiser")],
+                }),
+                item("li-1-2", "œufs"),
+              ],
+            }),
+            item("li-2", "Cuire"),
+          ],
+        },
+        paragraph("p-1", { text: "Bon appétit !" }),
+      ],
+    };
+    const reread = roundTrip(json);
+    const [list] = reread.content ?? [];
+    expect(list?.type).toBe("orderedList");
+    const sub = list?.content?.[0]?.content?.[1];
+    expect(sub?.type).toBe("bulletList");
+    expect(sub?.content?.[0]?.content?.[1]?.type).toBe("orderedList");
+    expect(sub?.content?.[0]?.content?.[1]?.content?.[0]?.attrs?.id).toBe("li-1-1-1");
+    expect(list?.content?.map((entry) => entry.attrs?.id)).toEqual(["li-1", "li-2"]);
+    expect(reread.content?.[1]?.attrs?.id).toBe("p-1");
+  });
+});

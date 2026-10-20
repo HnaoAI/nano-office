@@ -117,3 +117,26 @@ export function CloseIcon() {
     </Icon>
   );
 }
+
+/** Liste à puces, reprise de la maquette Main.dc.html (T1.2). */
+export function BulletListIcon() {
+  return (
+    <Icon>
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <circle cx="4.5" cy="6" r="1" fill="currentColor" />
+      <circle cx="4.5" cy="12" r="1" fill="currentColor" />
+      <circle cx="4.5" cy="18" r="1" fill="currentColor" />
+    </Icon>
+  );
+}
+
+/** Liste numérotée, reprise de la maquette Main.dc.html (T1.2). */
+export function OrderedListIcon() {
+  return (
+    <Icon>
+      <path d="M10 6h10M10 12h10M10 18h10" />
+      <path d="M4 5h1.5v4" />
+      <path d="M4 15.5c0-.8.7-1.5 1.5-1.5s1.5.6 1.5 1.3c0 1.2-3 1.7-3 3.7h3" />
+    </Icon>
+  );
+}

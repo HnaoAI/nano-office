@@ -4,6 +4,7 @@ import { Extension, getSchema } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
+import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -20,10 +21,13 @@ export const YJS_FRAGMENT_NAME = "default";
 export const BLOCK_ID_ATTRIBUTE = "id";
 
 /** Types de nœuds qui portent un identifiant de bloc (règle produit 5). Les cellules viendront avec les tableaux. */
-export const BLOCK_TYPES_WITH_ID = ["paragraph", "heading"];
+export const BLOCK_TYPES_WITH_ID = ["paragraph", "heading", "listItem"];
 
 /** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
 export const HEADING_LEVELS = [1, 2, 3] as const;
+
+/** Nombre maximal de niveaux d'une liste (T1.2, critère 5). */
+export const MAX_LIST_DEPTH = 3;
 
 /** Niveau d'un titre, ou 0 pour le texte normal. */
 export type BlockStyleLevel = 0 | (typeof HEADING_LEVELS)[number];
@@ -69,13 +73,35 @@ const DocumentHeading = Heading.extend({ addKeyboardShortcuts: () => ({}) }).con
 });
 
 /**
- * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), gras,
- * italique, identifiant de bloc. T0b les réutilise telles quelles, sans redéfinir le schéma.
+ * Listes sans leurs raccourcis Tiptap (Mod-Shift-7 et 8, Tab), remplacés par ceux de
+ * src/editor/keyboardShortcuts.ts (touche physique, trois niveaux au plus). Entrée garde le
+ * comportement de Tiptap : nouvel élément, ou sortie de la liste sur un élément vide (T1.2, critère 4).
+ * Le collage de la liste numérotée est retiré : il transformait un texte « 1. … » collé en liste,
+ * une mise en forme automatique interdite (règle produit 6).
+ */
+const DocumentBulletList = BulletList.extend({ addKeyboardShortcuts: () => ({}) });
+const DocumentOrderedList = OrderedList.extend({
+  addKeyboardShortcuts: () => ({}),
+  addProseMirrorPlugins: () => [],
+});
+const DocumentListItem = ListItem.extend({
+  addKeyboardShortcuts() {
+    return { Enter: () => this.editor.commands.splitListItem(this.name) };
+  },
+});
+
+/**
+ * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
+ * puces et numérotées (T1.2), gras, italique, identifiant de bloc. T0b les réutilise telles
+ * quelles, sans redéfinir le schéma.
  */
 export const documentExtensions = [
   Document,
   DocumentParagraph,
   DocumentHeading,
+  DocumentBulletList,
+  DocumentOrderedList,
+  DocumentListItem,
   Text,
   Bold,
   Italic,

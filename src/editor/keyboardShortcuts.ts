@@ -1,10 +1,11 @@
 // Raccourcis de mise en forme de Nano Buro, reconnus à la touche physique (`event.code`) et non au
 // caractère produit (`event.key`), pour fonctionner sur un clavier AZERTY (décision du 2026-10-18).
 // Les raccourcis équivalents de Tiptap sont retirés dans src/core/schema.ts.
-import { Extension } from "@tiptap/core";
-import { Plugin, PluginKey, type Command } from "@tiptap/pm/state";
+import { Extension, type Editor } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { BlockStyleLevel } from "../core/schema";
 import { setBlockStyle } from "./blockStyle";
+import { indentListItem, outdentListItem, toggleList } from "./lists";
 import { isMacPlatform } from "./platform";
 
 /** Touches modificatrices d'un raccourci. `mod` est Cmd sur Mac, Ctrl ailleurs. */
@@ -14,10 +15,13 @@ interface Modifiers {
   alt?: boolean;
 }
 
-/** Un raccourci : la touche physique, ses modificateurs exacts, et la commande lancée. */
+/**
+ * Un raccourci : la touche physique, ses modificateurs exacts, et l'action lancée. L'action renvoie
+ * faux si la touche ne la concerne pas (Tab hors d'une liste) : le navigateur la traite alors.
+ */
 interface Shortcut extends Modifiers {
   code: string;
-  command: Command;
+  run: (editor: Editor) => boolean;
 }
 
 /**
@@ -30,13 +34,40 @@ function headingShortcuts(mac: boolean): Shortcut[] {
     code: `Digit${String(level)}`,
     mod: true,
     ...(mac ? { alt: true } : { shift: true }),
-    command: setBlockStyle(level),
+    run: (editor: Editor) => {
+      setBlockStyle(level)(editor.state, editor.view.dispatch);
+      return true;
+    },
   }));
 }
 
+/** Raccourcis des listes (T1.2, critères 2 et 5) : Ctrl/Cmd+Shift+8 et 7, Tab et Shift+Tab. */
+const LIST_SHORTCUTS: Shortcut[] = [
+  {
+    code: "Digit8",
+    mod: true,
+    shift: true,
+    run: (editor) => {
+      toggleList(editor, "bulletList");
+      return true;
+    },
+  },
+  {
+    code: "Digit7",
+    mod: true,
+    shift: true,
+    run: (editor) => {
+      toggleList(editor, "orderedList");
+      return true;
+    },
+  },
+  { code: "Tab", run: indentListItem },
+  { code: "Tab", shift: true, run: outdentListItem },
+];
+
 /** Liste de tous les raccourcis, pour la plateforme donnée. */
 export function formatShortcuts(mac: boolean): Shortcut[] {
-  return [...headingShortcuts(mac)];
+  return [...headingShortcuts(mac), ...LIST_SHORTCUTS];
 }
 
 /**
@@ -59,8 +90,8 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: Shortcut, mac: b
 
 /**
  * Extension qui installe les raccourcis. Priorité haute : elle passe avant les raccourcis des
- * autres extensions. Un raccourci reconnu est toujours consommé (`preventDefault`), même si la
- * commande ne change rien, pour qu'il n'ouvre pas une fonction du navigateur.
+ * autres extensions. Un raccourci dont l'action renvoie vrai est consommé (`preventDefault`), même
+ * si rien ne change, pour qu'il n'ouvre pas une fonction du navigateur.
  */
 export const FormatShortcuts = Extension.create({
   name: "formatShortcuts",
@@ -68,15 +99,14 @@ export const FormatShortcuts = Extension.create({
   addProseMirrorPlugins() {
     const mac = isMacPlatform();
     const shortcuts = formatShortcuts(mac);
+    const editor = this.editor;
     return [
       new Plugin({
         key: new PluginKey("formatShortcuts"),
         props: {
-          handleKeyDown(view, event) {
+          handleKeyDown(_view, event) {
             const shortcut = shortcuts.find((candidate) => matchesShortcut(event, candidate, mac));
-            if (!shortcut) return false;
-            shortcut.command(view.state, view.dispatch, view);
-            return true;
+            return shortcut ? shortcut.run(editor) : false;
           },
         },
       }),

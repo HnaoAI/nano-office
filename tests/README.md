@@ -20,6 +20,7 @@ Même arborescence que `src/`.
   - `publication.spec.ts` : version construite sous /nano-office/, installable, hors ligne, numéro de version (H1, projet Playwright « pages »)
   - `interface.spec.ts` : structure de l'interface et polices intégrées (U1a)
   - `titres.spec.ts` : titres, raccourcis Mac et Windows, AltGr, Entrée, `# `, annulation (T1.1)
+  - `listes.spec.ts` : boutons, raccourcis, Entrée sur élément vide, Tab et Shift+Tab, `1. ` sans effet, conversion (T1.2)
   - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, enregistrer puis rouvrir (lot A)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours

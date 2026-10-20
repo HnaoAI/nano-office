@@ -191,6 +191,26 @@ button:focus-visible {
   font-weight: 600;
 }
 
+/* Listes (T1.2), comme dans la maquette. Numérotation et puces du navigateur, recalculées seules. */
+.nano-editor ul,
+.nano-editor ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.nano-editor li {
+  margin-bottom: 6px;
+}
+
+.nano-editor li > p {
+  margin: 0;
+}
+
+.nano-editor li > ul,
+.nano-editor li > ol {
+  margin: 6px 0 0;
+}
+
 .nano-editor h1 {
   margin: 0 0 12px;
   font-size: 34px;
