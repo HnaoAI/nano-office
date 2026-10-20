@@ -16,7 +16,8 @@ Le CLAUDE.md d'un projet peut les préciser ou les remplacer : en cas de contrad
 
 ## Méthode de travail
 
-- **Un ticket à la fois.** Les tickets sont dans le dossier `tickets/` du projet.
+- **Un ticket ou un lot à la fois.** Les tickets sont dans le dossier `tickets/` du projet. Un lot regroupe
+  plusieurs tickets de la même zone, livrés dans une seule PR, avec un ou plusieurs commits par ticket.
 - Lire le ticket et le CLAUDE.md du projet avant de coder.
 - **Commencer par les tests**, écrits à partir des critères d'acceptation et des interfaces décrites dans le ticket.
 - **Ne jamais modifier, supprimer ou affaiblir un test pour le faire passer.** Si un test semble faux, le signaler.
@@ -25,7 +26,12 @@ Le CLAUDE.md d'un projet peut les préciser ou les remplacer : en cas de contrad
   Proposer de le découper avant de commencer seulement s'il mélange des sujets indépendants, ou s'il
   touche à la fois une zone à risque (format de fichier, enregistrement, copie de secours) et autre chose.
   Le nombre de lignes n'est qu'un indice : les tests et la documentation ne comptent pas.
-- Signaler une ambiguïté plutôt que la trancher seul.
+- **Petites questions : trancher et continuer.** Choisir ce qui suit le mieux le ticket, la charte et les règles,
+  sans s'arrêter, puis lister ces choix dans la PR sous « Choix faits, à confirmer ».
+- **Grandes questions : s'arrêter et demander.** Celles que le CLAUDE.md du projet désigne comme telles,
+  ou, à défaut, toute question qui change ce que le produit fait pour l'utilisateur.
+- Regrouper toutes les questions en un seul message, à la fin du travail.
+- Avant de signaler la PR, la relire soi-même (de préférence avec un agent séparé qui n'a pas écrit le code) et corriger.
 
 ## Définition de « terminé »
 
