@@ -35,6 +35,13 @@ export interface FakeFilesState {
    * La sauvegarde automatique (`onlyIfUnchanged`) renvoie alors `conflict` ; « Enregistrer » le remplace (T1.6).
    */
   changedOnDisk: boolean;
+  /**
+   * Vrai : le fichier retenu a été modifié ailleurs pendant la fermeture (scénario lundi, mardi, mercredi).
+   * Gardé au rechargement. `restore` le signale, ou le premier enregistrement après l'autorisation (PL3, relecture).
+   */
+  changedSinceLastLaunch: boolean;
+  /** Vrai tant que le premier enregistrement après le lancement doit renvoyer `conflict`. */
+  launchCheck: boolean;
 }
 
 /** Clé de sessionStorage où `keepAcrossReloads` garde les fichiers et les fichiers retenus (PL3). */
@@ -70,6 +77,8 @@ export async function installFakeFileStore(
         restorePermission: "granted",
         needsPermission: false,
         changedOnDisk: false,
+        changedSinceLastLaunch: false,
+        launchCheck: false,
       };
       // PL3 : fichiers sur le « disque » et fichiers retenus survivent au rechargement de la page,
       // comme le disque et IndexedDB du vrai navigateur.
@@ -77,8 +86,11 @@ export async function installFakeFileStore(
         const kept = sessionStorage.getItem(keptKey);
         if (kept) Object.assign(state, JSON.parse(kept));
         window.addEventListener("pagehide", () => {
-          const { files, remembered, restorePermission } = state;
-          sessionStorage.setItem(keptKey, JSON.stringify({ files, remembered, restorePermission }));
+          const { files, remembered, restorePermission, changedSinceLastLaunch } = state;
+          sessionStorage.setItem(
+            keptKey,
+            JSON.stringify({ files, remembered, restorePermission, changedSinceLastLaunch }),
+          );
         });
       }
       window.__fakeFiles = state;
@@ -96,13 +108,21 @@ export async function installFakeFileStore(
           state.calls.push(`requestPermission:${name}`);
           state.needsPermission = false;
         }
+        if (state.launchCheck && name === state.current) {
+          // Une seule fois : après l'alerte, un nouvel « Enregistrer » remplace le fichier.
+          state.launchCheck = false;
+          return { status: "conflict", name };
+        }
         if (state.holdWrites) await new Promise<void>((resolve) => held.push(resolve));
         if (state.nextSaveFails) {
           state.nextSaveFails = false;
           return { status: "failed" };
         }
         state.files[name] = text;
-        if (name === state.current) state.changedOnDisk = false;
+        if (name === state.current) {
+          state.changedOnDisk = false;
+          state.changedSinceLastLaunch = false;
+        }
         return state.mode === "download"
           ? { status: "downloaded", name }
           : { status: "saved", name };
@@ -116,6 +136,7 @@ export async function installFakeFileStore(
         state.calls.push("picker");
         if (state.nextSaveName === null) return { status: "cancelled" };
         state.current = state.nextSaveName;
+        state.launchCheck = false;
         state.needsPermission = false;
         return write(state.nextSaveName, text);
       };
@@ -130,6 +151,7 @@ export async function installFakeFileStore(
           if (text === undefined) throw new Error(`Fichier de test absent : ${name}`);
           if (!accept || accept({ name, text })) {
             state.current = name;
+            state.launchCheck = false;
             state.changedOnDisk = false;
             state.needsPermission = false;
           }
@@ -149,6 +171,7 @@ export async function installFakeFileStore(
         forget: () => {
           state.calls.push("forget");
           state.current = null;
+          state.launchCheck = false;
           state.changedOnDisk = false;
         },
         remember: async (documentId) => {
@@ -162,7 +185,14 @@ export async function installFakeFileStore(
           state.needsPermission = state.restorePermission === "prompt";
           // Au lancement, la sauvegarde automatique attend un premier « Enregistrer » (PL3, critère 4).
           state.changedOnDisk = true;
-          return { name, needsPermission: state.needsPermission };
+          // Avec l'autorisation, l'alerte du lancement prévient ; sans elle, le premier enregistrement compare.
+          state.launchCheck = state.needsPermission && state.changedSinceLastLaunch;
+          return {
+            name,
+            needsPermission: state.needsPermission,
+            // Sans autorisation, la date ne peut pas être lue : la comparaison se fait au premier enregistrement.
+            changedElsewhere: !state.needsPermission && state.changedSinceLastLaunch,
+          };
         },
       };
     },

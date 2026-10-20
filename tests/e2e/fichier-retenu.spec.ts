@@ -12,6 +12,10 @@ const RECOVERED = "Ce document a été récupéré depuis la copie de secours de
 const RECOVERED_MESSAGE = `${RECOVERED} Enregistrez-le pour le garder dans un fichier.`;
 const READY_MESSAGE = `${RECOVERED} Enregistrez-le pour mettre à jour le fichier « lettre.nano ».`;
 const PERMISSION_MESSAGE = `${RECOVERED} Pour l'enregistrer de nouveau dans « lettre.nano », autorisez Nano Buro à modifier ce fichier.`;
+const KEEP_BOTH =
+  "« Enregistrer sous… » garde les deux versions ; « Enregistrer » remplace l'autre.";
+const CHANGED_AT_LAUNCH = `Ce document a été récupéré depuis la copie de secours de ce navigateur, mais le fichier « lettre.nano » a été modifié ailleurs depuis, peut-être sur un autre ordinateur. ${KEEP_BOTH}`;
+const CHANGED_ELSEWHERE = `Le fichier « lettre.nano » a été modifié ailleurs, peut-être sur un autre ordinateur. Pour ne pas l'écraser, l'enregistrement automatique est arrêté. ${KEEP_BOTH}`;
 const SAVE_ERROR =
   "Le document n'a pas pu être enregistré. Réessayez, ou choisissez un autre emplacement avec « Enregistrer sous… ».";
 /** Délai de la sauvegarde automatique (T1.6), avec une marge. */
@@ -40,7 +44,11 @@ async function writes(page: Page): Promise<string[]> {
  * Premier lancement : le document est enregistré dans « lettre.nano », puis modifié sans que la
  * modification atteigne le fichier (écriture retenue), et l'application est relancée.
  */
-async function relaunchWithUnsavedChanges(page: Page, permission: "granted" | "prompt") {
+async function relaunchWithUnsavedChanges(
+  page: Page,
+  permission: "granted" | "prompt",
+  whileClosed?: (page: Page) => Promise<void>,
+) {
   await installFakeFileStore(page, "file-system-access", { keepAcrossReloads: true });
   await page.goto("/");
   await editor(page).click();
@@ -51,6 +59,7 @@ async function relaunchWithUnsavedChanges(page: Page, permission: "granted" | "p
   await setFakeFiles(page, { holdWrites: true });
   await page.keyboard.type(" puis la suite, élève 😀");
   await flushBackups(page);
+  await whileClosed?.(page);
   await page.reload();
   await expect(editor(page)).toHaveText("Début puis la suite, élève 😀");
 }
@@ -144,6 +153,59 @@ test("critère 4 : au redémarrage, le fichier n'est jamais réécrit avant que 
   expect(await writes(page)).toEqual([]);
 });
 
+/** Mardi, sur le PC : la même lettre est modifiée et enregistrée, puis synchronisée, pendant que le Mac est fermé. */
+async function changeOnOtherComputer(page: Page) {
+  const { files } = await fakeFiles(page);
+  await setFakeFiles(page, {
+    files: { ...files, "lettre.nano": "version de mardi" },
+    changedSinceLastLaunch: true,
+  });
+}
+
+test("lundi, mardi, mercredi : au redémarrage, un fichier modifié ailleurs est signalé et n'est pas écrasé", async ({
+  page,
+}) => {
+  // Lundi sur le Mac, puis mardi sur le PC, puis relance du Mac mercredi.
+  await relaunchWithUnsavedChanges(page, "granted", changeOnOtherComputer);
+  await expect(page.getByRole("alert")).toHaveText(CHANGED_AT_LAUNCH);
+  await expect(messageAction(page)).toHaveText("Enregistrer sous…");
+  // Rien n'est écrit tant que l'utilisateur n'a pas choisi, même après une frappe.
+  await editor(page).press("End");
+  await page.keyboard.type(" mercredi");
+  await page.waitForTimeout(AFTER_AUTO_SAVE);
+  expect(await writes(page)).toEqual([]);
+  expect((await fakeFiles(page)).files["lettre.nano"]).toBe("version de mardi");
+  // « Enregistrer sous… » garde les deux versions.
+  await setFakeFiles(page, { nextSaveName: "lettre-mac.nano" });
+  await messageAction(page).click();
+  await expect(page).toHaveTitle("lettre-mac.nano - Nano Buro");
+  const files = (await fakeFiles(page)).files;
+  expect(files["lettre.nano"]).toBe("version de mardi");
+  expect(files["lettre-mac.nano"]).toContain("Début puis la suite, élève 😀 mercredi");
+});
+
+test("lundi, mardi, mercredi : après l'alerte, « Enregistrer » est un choix explicite qui remplace la version de mardi", async ({
+  page,
+}) => {
+  await relaunchWithUnsavedChanges(page, "granted", changeOnOtherComputer);
+  await expect(page.getByRole("alert")).toHaveText(CHANGED_AT_LAUNCH);
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(indicator(page)).toHaveText("Enregistré");
+  expect((await fakeFiles(page)).files["lettre.nano"]).toContain("Début puis la suite, élève 😀");
+});
+
+test("lundi, mardi, mercredi : si l'autorisation manque, « Autoriser » compare la date avant d'écrire", async ({
+  page,
+}) => {
+  await relaunchWithUnsavedChanges(page, "prompt", changeOnOtherComputer);
+  await expect(page.getByRole("status")).toHaveText(PERMISSION_MESSAGE);
+  await messageAction(page).click();
+  await expect(page.getByRole("alert")).toHaveText(CHANGED_ELSEWHERE);
+  const state = await fakeFiles(page);
+  expect(state.calls).toEqual(["save", "requestPermission:lettre.nano"]);
+  expect(state.files["lettre.nano"]).toBe("version de mardi");
+});
+
 test("un document jamais enregistré revient sans fichier, comme avant", async ({ page }) => {
   await installFakeFileStore(page, "file-system-access", { keepAcrossReloads: true });
   await page.goto("/");
@@ -178,10 +240,10 @@ test("la mémoire des fichiers garde une poignée sous l'id du document, après 
     const { createFileHandleMemory } = (await import(
       /* @vite-ignore */ path
     )) as typeof import("../../src/storage/fileHandleMemory");
-    const handle = { name: "lettre.nano" } as unknown as Parameters<
+    const file = { handle: { name: "lettre.nano" }, lastModified: 42 } as unknown as Parameters<
       NonNullable<ReturnType<typeof createFileHandleMemory>>["remember"]
     >[1];
-    await createFileHandleMemory()?.remember("id-a", handle);
+    await createFileHandleMemory()?.remember("id-a", file);
   });
   await page.reload();
   const recalled = await page.evaluate(async () => {
@@ -191,9 +253,9 @@ test("la mémoire des fichiers garde une poignée sous l'id du document, après 
     )) as typeof import("../../src/storage/fileHandleMemory");
     const memory = createFileHandleMemory();
     return {
-      a: (await memory?.recall("id-a"))?.name ?? null,
-      b: (await memory?.recall("id-b"))?.name ?? null,
+      a: await memory?.recall("id-a"),
+      b: await memory?.recall("id-b"),
     };
   });
-  expect(recalled).toEqual({ a: "lettre.nano", b: null });
+  expect(recalled).toEqual({ a: { handle: { name: "lettre.nano" }, lastModified: 42 }, b: null });
 });

@@ -23,13 +23,17 @@ export const DISCARD_QUESTION =
   "Les modifications non enregistrées de ce document seront perdues. Voulez-vous continuer ?";
 export const READ_ERROR = "Le fichier n'a pas pu être lu. Le document en cours n'a pas changé.";
 const RECOVERED = "Ce document a été récupéré depuis la copie de secours de ce navigateur.";
+/** Fin des alertes « modifié ailleurs » : texte validé par le PO à la relecture du lot B. */
+const KEEP_BOTH =
+  "« Enregistrer sous… » garde les deux versions ; « Enregistrer » remplace l'autre.";
 const SAVE_ERROR =
   "Le document n'a pas pu être enregistré. Réessayez, ou choisissez un autre emplacement avec « Enregistrer sous… ».";
 
 /**
  * Message d'un document restauré depuis la copie de secours au lancement (T0d, critère 4).
  * PL3 : s'il a retrouvé son fichier, le message nomme ce fichier (critère 4) et propose de l'enregistrer,
- * ou de redonner l'autorisation d'y écrire (critère 2).
+ * ou de redonner l'autorisation d'y écrire (critère 2). Si le fichier a été modifié ailleurs pendant la
+ * fermeture, une alerte propose « Enregistrer sous… » (relecture de PL3).
  * @param file fichier retrouvé, ou null
  */
 export function recoveredMessage(file: RestoredFile | null): FileMessage {
@@ -38,6 +42,15 @@ export function recoveredMessage(file: RestoredFile | null): FileMessage {
     return {
       ...message,
       text: `${RECOVERED} Enregistrez-le pour le garder dans un fichier.`,
+      action: "save-as",
+    };
+  }
+  if (file.changedElsewhere) {
+    // Relecture de PL3 : une version plus récente, venue de l'autre ordinateur, ne doit pas être écrasée sans prévenir.
+    return {
+      kind: "alert",
+      icon: "save-failed",
+      text: `Ce document a été récupéré depuis la copie de secours de ce navigateur, mais le fichier « ${file.name} » a été modifié ailleurs depuis, peut-être sur un autre ordinateur. ${KEEP_BOTH}`,
       action: "save-as",
     };
   }
@@ -69,7 +82,7 @@ export function saveMessage(result: SaveResult): FileMessage | null {
     return {
       kind: "alert",
       icon: "save-failed",
-      text: `Le fichier « ${result.name} » a été modifié en dehors de Nano Buro, peut-être sur un autre ordinateur. Pour ne pas l'écraser, la sauvegarde automatique est arrêtée. Choisissez un autre emplacement avec « Enregistrer sous… », ou « Enregistrer » pour le remplacer.`,
+      text: `Le fichier « ${result.name} » a été modifié ailleurs, peut-être sur un autre ordinateur. Pour ne pas l'écraser, l'enregistrement automatique est arrêté. ${KEEP_BOTH}`,
       action: "save-as",
     };
   }

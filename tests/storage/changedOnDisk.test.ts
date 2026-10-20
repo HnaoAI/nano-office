@@ -111,7 +111,7 @@ describe("FileSystemAccessStore : fichier modifié ailleurs (T1.6)", () => {
     const handle = new FakeHandle("lettre.nano", "v1", log);
     const memory = {
       remember: async () => undefined,
-      recall: async () => handle,
+      recall: async () => ({ handle, lastModified: handle.lastModified }),
     };
     const restored = new FileSystemAccessStore(fake.pickers, memory);
     await restored.restore("id");

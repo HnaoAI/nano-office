@@ -255,7 +255,7 @@ test("pendant la question de la copie de secours, l'ancien document ne s'écrit 
 });
 
 const CHANGED_ELSEWHERE =
-  "Le fichier « lettre.nano » a été modifié en dehors de Nano Buro, peut-être sur un autre ordinateur. Pour ne pas l'écraser, la sauvegarde automatique est arrêtée. Choisissez un autre emplacement avec « Enregistrer sous… », ou « Enregistrer » pour le remplacer.";
+  "Le fichier « lettre.nano » a été modifié ailleurs, peut-être sur un autre ordinateur. Pour ne pas l'écraser, l'enregistrement automatique est arrêté. « Enregistrer sous… » garde les deux versions ; « Enregistrer » remplace l'autre.";
 
 test("fichier modifié ailleurs : la sauvegarde automatique ne l'écrase pas, s'arrête et propose « Enregistrer sous… »", async ({
   page,
