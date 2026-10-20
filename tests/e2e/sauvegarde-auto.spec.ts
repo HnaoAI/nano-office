@@ -253,3 +253,55 @@ test("pendant la question de la copie de secours, l'ancien document ne s'écrit 
   await page.waitForTimeout(AFTER_AUTO_SAVE);
   expect((await fakeFiles(page)).files["b.nano"]).toBe(fileB);
 });
+
+const CHANGED_ELSEWHERE =
+  "Le fichier « lettre.nano » a été modifié en dehors de Nano Buro, peut-être sur un autre ordinateur. Pour ne pas l'écraser, la sauvegarde automatique est arrêtée. Choisissez un autre emplacement avec « Enregistrer sous… », ou « Enregistrer » pour le remplacer.";
+
+test("fichier modifié ailleurs : la sauvegarde automatique ne l'écrase pas, s'arrête et propose « Enregistrer sous… »", async ({
+  page,
+}) => {
+  await startWithFile(page);
+  // Le fichier est enregistré sur l'autre ordinateur, puis synchronisé.
+  const elsewhere = "version du PC";
+  const { files } = await fakeFiles(page);
+  await setFakeFiles(page, { files: { ...files, "lettre.nano": elsewhere }, changedOnDisk: true });
+  await page.keyboard.type(" suite sur le Mac");
+  await expect(page.getByRole("alert")).toHaveText(CHANGED_ELSEWHERE, { timeout: AFTER_AUTO_SAVE });
+  await expect(page.locator(".nano-message-action")).toHaveText("Enregistrer sous…");
+  expect((await fakeFiles(page)).files["lettre.nano"]).toBe(elsewhere);
+  await expect(indicator(page)).toHaveText("Non enregistré");
+
+  // Pas de nouvel essai : la sauvegarde automatique est en pause.
+  const afterConflict = await saveCalls(page);
+  await page.keyboard.type(" encore");
+  await page.waitForTimeout(AFTER_AUTO_SAVE);
+  expect(await saveCalls(page)).toBe(afterConflict);
+  expect((await fakeFiles(page)).files["lettre.nano"]).toBe(elsewhere);
+
+  // « Enregistrer sous… » garde les deux versions.
+  await setFakeFiles(page, { nextSaveName: "lettre-mac.nano" });
+  await page.locator(".nano-message-action").click();
+  await expect(page).toHaveTitle("lettre-mac.nano - Nano Buro");
+  expect((await fakeFiles(page)).files["lettre.nano"]).toBe(elsewhere);
+  expect((await fakeFiles(page)).files["lettre-mac.nano"]).toContain("suite sur le Mac encore");
+});
+
+test("fichier modifié ailleurs : « Enregistrer » reste un choix explicite qui le remplace, puis la sauvegarde automatique reprend", async ({
+  page,
+}) => {
+  await startWithFile(page);
+  const { files } = await fakeFiles(page);
+  await setFakeFiles(page, {
+    files: { ...files, "lettre.nano": "version du PC" },
+    changedOnDisk: true,
+  });
+  await page.keyboard.type(" suite");
+  await expect(page.getByRole("alert")).toHaveText(CHANGED_ELSEWHERE, { timeout: AFTER_AUTO_SAVE });
+  await button(page, "Enregistrer").click();
+  await expect(indicator(page)).toHaveText("Enregistré");
+  expect((await fakeFiles(page)).files["lettre.nano"]).toContain("Début suite");
+  await page.keyboard.type(" et reprise");
+  await expect
+    .poll(async () => (await fakeFiles(page)).files["lettre.nano"], { timeout: AFTER_AUTO_SAVE })
+    .toContain("et reprise");
+});

@@ -2,7 +2,7 @@
 // Les sélecteurs sont fournis par l'appelant, ce qui permet de les remplacer dans les tests.
 import { DEFAULT_FILE_NAME } from "../core/types";
 import type { FileHandleMemory } from "./fileHandleMemory";
-import type { FileStore, OpenedFile, RestoredFile, SaveResult } from "./fileStore";
+import type { FileStore, OpenedFile, RestoredFile, SaveOptions, SaveResult } from "./fileStore";
 
 /** Types de fichiers proposés par les sélecteurs. */
 const NANO_FILE_TYPES = [
@@ -57,13 +57,11 @@ function isAbort(error: unknown): boolean {
  */
 export class FileSystemAccessStore implements FileStore {
   private current: NanoFileHandle | null = null;
-  /** Document dont le fichier courant est retenu (PL3) : sa date est mise à jour après chaque écriture. */
-  private documentId: string | null = null;
   /**
-   * PL3, critère 4 : date attendue du fichier retrouvé au lancement, vérifiée avant sa première écriture
-   * (null : inconnue, le fichier n'est pas réécrit). `undefined` : pas de vérification à faire.
+   * Date de modification du fichier courant, lue à l'ouverture et après chaque écriture de Nano Buro
+   * (T1.6, décision du PO à la relecture). null : inconnue, la sauvegarde automatique n'écrit pas.
    */
-  private expectedLastModified: number | null | undefined = undefined;
+  private knownLastModified: number | null = null;
 
   /**
    * @param pickers sélecteurs du navigateur, ou de faux sélecteurs dans les tests
@@ -79,13 +77,13 @@ export class FileSystemAccessStore implements FileStore {
   }
 
   forget(): void {
-    this.setCurrent(null);
+    this.current = null;
+    this.knownLastModified = null;
   }
 
   async remember(documentId: string): Promise<void> {
-    if (!this.current) return;
-    this.documentId = documentId;
-    await this.saveLastModified(this.current);
+    if (!this.current || !this.memory) return;
+    await this.memory.remember(documentId, this.current).catch(() => undefined);
   }
 
   /**
@@ -94,15 +92,15 @@ export class FileSystemAccessStore implements FileStore {
    */
   async restore(documentId: string): Promise<RestoredFile | null> {
     try {
-      const remembered = await this.memory?.recall(documentId);
-      if (!remembered) return null;
-      const { handle } = remembered;
+      const handle = await this.memory?.recall(documentId);
+      if (!handle) return null;
       const permission = handle.queryPermission
         ? await handle.queryPermission({ mode: "readwrite" })
         : "granted";
-      this.setCurrent(handle);
-      this.documentId = documentId;
-      this.expectedLastModified = remembered.lastModified;
+      this.current = handle;
+      // Au lancement, la sauvegarde automatique attend un premier « Enregistrer » choisi par
+      // l'utilisateur (PL3, critère 4) ; c'est lui qui donnera la date du fichier.
+      this.knownLastModified = null;
       return { name: handle.name, needsPermission: permission !== "granted" };
     } catch {
       return null;
@@ -118,13 +116,23 @@ export class FileSystemAccessStore implements FileStore {
       throw error;
     }
     if (!handle) return null;
-    const file = { name: handle.name, text: await (await handle.getFile()).text() };
-    if (!accept || accept(file)) this.setCurrent(handle);
+    const blob = await handle.getFile();
+    const file = { name: handle.name, text: await blob.text() };
+    if (!accept || accept(file)) {
+      this.current = handle;
+      this.knownLastModified = blob.lastModified;
+    }
     return file;
   }
 
-  async save(text: string): Promise<SaveResult> {
-    if (!this.current) return this.saveAs(text, DEFAULT_FILE_NAME);
+  async save(text: string, options: SaveOptions = {}): Promise<SaveResult> {
+    if (!this.current) {
+      // La sauvegarde automatique n'ouvre jamais de sélecteur (T1.6).
+      return options.onlyIfUnchanged ? { status: "failed" } : this.saveAs(text, DEFAULT_FILE_NAME);
+    }
+    if (options.onlyIfUnchanged && !(await this.unchangedOnDisk(this.current))) {
+      return { status: "conflict", name: this.current.name };
+    }
     return this.write(this.current, text);
   }
 
@@ -136,7 +144,10 @@ export class FileSystemAccessStore implements FileStore {
       return isAbort(error) ? { status: "cancelled" } : { status: "failed" };
     }
     const result = await this.write(handle, text);
-    if (result.status === "saved") this.setCurrent(handle);
+    if (result.status === "saved") {
+      this.current = handle;
+      this.knownLastModified = await lastModifiedOf(handle);
+    }
     return result;
   }
 
@@ -148,9 +159,6 @@ export class FileSystemAccessStore implements FileStore {
   private async write(handle: NanoFileHandle, text: string): Promise<SaveResult> {
     try {
       if (!(await this.hasWritePermission(handle))) return { status: "failed" };
-      if (handle === this.current && !(await this.unchangedSinceLaunch(handle))) {
-        return { status: "conflict", name: handle.name };
-      }
       const writable = await handle.createWritable();
       try {
         await writable.write(text);
@@ -159,40 +167,23 @@ export class FileSystemAccessStore implements FileStore {
         throw error;
       }
       await writable.close();
-      if (handle === this.current) {
-        this.expectedLastModified = undefined;
-        await this.saveLastModified(handle);
-      }
+      // Date de notre propre écriture : elle ne sera pas prise pour une modification faite ailleurs.
+      if (handle === this.current) this.knownLastModified = await lastModifiedOf(handle);
       return { status: "saved", name: handle.name };
     } catch {
       return { status: "failed" };
     }
   }
 
-  /** Change de fichier courant : l'ancien document et sa vérification ne le concernent plus. */
-  private setCurrent(handle: NanoFileHandle | null) {
-    this.current = handle;
-    this.documentId = null;
-    this.expectedLastModified = undefined;
-  }
-
   /**
-   * Vrai si le fichier retrouvé au lancement n'a pas été modifié en dehors de Nano Buro depuis son
-   * dernier enregistrement (PL3, critère 4), ou s'il n'y a rien à vérifier. Les fichiers de la famille
-   * sont sur un dossier synchronisé : une version plus récente, venue d'un autre ordinateur, ne doit
-   * pas être écrasée par la copie de secours de celui-ci.
+   * Vrai si le fichier n'a pas été modifié en dehors de Nano Buro depuis son ouverture ou le dernier
+   * enregistrement (T1.6, décision du PO à la relecture). Les fichiers de la famille sont sur un dossier
+   * synchronisé : la sauvegarde automatique ne doit pas écraser sans prévenir une version venue de
+   * l'autre ordinateur. Ce n'est pas une fusion des deux versions, seulement « ne pas écraser ».
    */
-  private async unchangedSinceLaunch(handle: NanoFileHandle): Promise<boolean> {
-    if (this.expectedLastModified === undefined) return true;
-    const lastModified = await lastModifiedOf(handle);
-    return lastModified !== null && lastModified === this.expectedLastModified;
-  }
-
-  /** Retient le fichier courant et sa date pour le prochain lancement (PL3). Ne lève jamais d'exception. */
-  private async saveLastModified(handle: NanoFileHandle) {
-    if (!this.memory || this.documentId === null) return;
-    const lastModified = await lastModifiedOf(handle);
-    await this.memory.remember(this.documentId, { handle, lastModified }).catch(() => undefined);
+  private async unchangedOnDisk(handle: NanoFileHandle): Promise<boolean> {
+    if (this.knownLastModified === null) return false;
+    return (await lastModifiedOf(handle)) === this.knownLastModified;
   }
 
   /**

@@ -65,11 +65,11 @@ export function saveMessage(result: SaveResult): FileMessage | null {
     };
   }
   if (result.status === "conflict") {
-    // PL3, critère 4 : le fichier a changé ailleurs depuis le dernier enregistrement ; on ne l'écrase pas.
+    // T1.6 (décision du PO à la relecture) : la sauvegarde automatique n'écrase pas un fichier modifié ailleurs.
     return {
       kind: "alert",
       icon: "save-failed",
-      text: `Le fichier « ${result.name} » a été modifié en dehors de Nano Buro depuis le dernier enregistrement. Pour ne pas l'écraser, enregistrez ce document ailleurs avec « Enregistrer sous… ».`,
+      text: `Le fichier « ${result.name} » a été modifié en dehors de Nano Buro, peut-être sur un autre ordinateur. Pour ne pas l'écraser, la sauvegarde automatique est arrêtée. Choisissez un autre emplacement avec « Enregistrer sous… », ou « Enregistrer » pour le remplacer.`,
       action: "save-as",
     };
   }

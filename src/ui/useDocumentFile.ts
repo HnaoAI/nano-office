@@ -253,7 +253,7 @@ export function useDocumentFile() {
       const text = serializeDocument(saved);
       const result = asNew
         ? await store.saveAs(text, saved.fileName ?? DEFAULT_FILE_NAME)
-        : await store.save(text);
+        : await store.save(text, { onlyIfUnchanged: auto });
       if (result.status === "saved" || result.status === "downloaded") {
         const name = result.name;
         setDocument((current) =>

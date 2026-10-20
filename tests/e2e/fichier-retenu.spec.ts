@@ -14,8 +14,6 @@ const READY_MESSAGE = `${RECOVERED} Enregistrez-le pour mettre à jour le fichie
 const PERMISSION_MESSAGE = `${RECOVERED} Pour l'enregistrer de nouveau dans « lettre.nano », autorisez Nano Buro à modifier ce fichier.`;
 const SAVE_ERROR =
   "Le document n'a pas pu être enregistré. Réessayez, ou choisissez un autre emplacement avec « Enregistrer sous… ».";
-const CONFLICT_MESSAGE =
-  "Le fichier « lettre.nano » a été modifié en dehors de Nano Buro depuis le dernier enregistrement. Pour ne pas l'écraser, enregistrez ce document ailleurs avec « Enregistrer sous… ».";
 /** Délai de la sauvegarde automatique (T1.6), avec une marge. */
 const AFTER_AUTO_SAVE = 3_000 + 2_000;
 
@@ -146,24 +144,6 @@ test("critère 4 : au redémarrage, le fichier n'est jamais réécrit avant que 
   expect(await writes(page)).toEqual([]);
 });
 
-test("critère 4 : un fichier modifié ailleurs pendant la fermeture n'est pas écrasé par la copie de secours", async ({
-  page,
-}) => {
-  await relaunchWithUnsavedChanges(page, "granted");
-  await setFakeFiles(page, { restoredChangedOnDisk: true });
-  const before = (await fakeFiles(page)).files["lettre.nano"];
-  await messageAction(page).click();
-  await expect(page.getByRole("alert")).toHaveText(CONFLICT_MESSAGE);
-  await expect(messageAction(page)).toHaveText("Enregistrer sous…");
-  expect((await fakeFiles(page)).files["lettre.nano"]).toBe(before);
-  await expect(indicator(page)).toHaveText("Non enregistré");
-  // La sauvegarde automatique ne réessaie pas non plus.
-  await editor(page).press("End");
-  await page.keyboard.type(" encore");
-  await page.waitForTimeout(AFTER_AUTO_SAVE);
-  expect((await fakeFiles(page)).files["lettre.nano"]).toBe(before);
-});
-
 test("un document jamais enregistré revient sans fichier, comme avant", async ({ page }) => {
   await installFakeFileStore(page, "file-system-access", { keepAcrossReloads: true });
   await page.goto("/");
@@ -198,10 +178,10 @@ test("la mémoire des fichiers garde une poignée sous l'id du document, après 
     const { createFileHandleMemory } = (await import(
       /* @vite-ignore */ path
     )) as typeof import("../../src/storage/fileHandleMemory");
-    const file = { handle: { name: "lettre.nano" }, lastModified: 42 } as unknown as Parameters<
+    const handle = { name: "lettre.nano" } as unknown as Parameters<
       NonNullable<ReturnType<typeof createFileHandleMemory>>["remember"]
     >[1];
-    await createFileHandleMemory()?.remember("id-a", file);
+    await createFileHandleMemory()?.remember("id-a", handle);
   });
   await page.reload();
   const recalled = await page.evaluate(async () => {
@@ -211,9 +191,9 @@ test("la mémoire des fichiers garde une poignée sous l'id du document, après 
     )) as typeof import("../../src/storage/fileHandleMemory");
     const memory = createFileHandleMemory();
     return {
-      a: await memory?.recall("id-a"),
-      b: await memory?.recall("id-b"),
+      a: (await memory?.recall("id-a"))?.name ?? null,
+      b: (await memory?.recall("id-b"))?.name ?? null,
     };
   });
-  expect(recalled).toEqual({ a: { handle: { name: "lettre.nano" }, lastModified: 42 }, b: null });
+  expect(recalled).toEqual({ a: "lettre.nano", b: null });
 });

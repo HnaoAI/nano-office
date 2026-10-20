@@ -10,8 +10,8 @@ import { type FilePickers, FileSystemAccessStore } from "./fileSystemAccessStore
  * - `downloaded` : repli de Safari et Firefox, le fichier a été téléchargé ;
  * - `cancelled` : l'utilisateur a fermé le sélecteur sans choisir ;
  * - `failed` : écriture impossible (autorisation refusée, disque plein…). Le fichier d'origine est intact ;
- * - `conflict` : le fichier retrouvé au lancement a été modifié en dehors de Nano Buro depuis le dernier
- *   enregistrement ; il n'a pas été réécrit (PL3, critère 4).
+ * - `conflict` : avec `onlyIfUnchanged`, le fichier a été modifié en dehors de Nano Buro depuis son
+ *   ouverture ou le dernier enregistrement ; il n'a pas été réécrit (T1.6, décision du PO à la relecture).
  */
 export type SaveResult =
   | { status: "saved"; name: string }
@@ -27,6 +27,16 @@ export type SaveResult =
 export interface RestoredFile {
   name: string;
   needsPermission: boolean;
+}
+
+/** Options d'« Enregistrer ». */
+export interface SaveOptions {
+  /**
+   * Vrai pour la sauvegarde automatique (T1.6) : ne rien écrire si le fichier a été modifié ailleurs depuis
+   * son ouverture ou le dernier enregistrement, ou si cela ne peut pas être vérifié, et renvoyer `conflict`.
+   * « Enregistrer » manuel reste un choix explicite de l'utilisateur : il réécrit le fichier.
+   */
+  onlyIfUnchanged?: boolean;
 }
 
 /** Fichier lu par « Ouvrir » : son nom et son texte (UTF-8). */
@@ -50,7 +60,7 @@ export interface FileStore {
    */
   open(accept?: (file: OpenedFile) => boolean): Promise<OpenedFile | null>;
   /** Réécrit le fichier courant, ou se comporte comme `saveAs(text, DEFAULT_FILE_NAME)` s'il n'y en a pas. */
-  save(text: string): Promise<SaveResult>;
+  save(text: string, options?: SaveOptions): Promise<SaveResult>;
   /** Demande un emplacement en proposant `suggestedName`, écrit le fichier et en fait le fichier courant. */
   saveAs(text: string, suggestedName: string): Promise<SaveResult>;
   /** Vrai si le fichier peut être réécrit sur place (API File System Access disponible). */

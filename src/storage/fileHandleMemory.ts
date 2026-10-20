@@ -10,26 +10,15 @@ export const FILE_HANDLES_DB = "nano-office-files";
 /** Magasin d'objets des poignées, rangées sous l'`id` du document. */
 const HANDLES_STORE = "handles";
 
-/** Fichier retenu pour un document (PL3). */
-export interface RememberedFile {
-  handle: NanoFileHandle;
-  /**
-   * Date de modification du fichier après le dernier enregistrement par Nano Buro, ou null si elle n'a
-   * pas pu être lue. Au redémarrage, un fichier dont la date a changé a été modifié ailleurs : il n'est
-   * pas réécrit (PL3, critère 4).
-   */
-  lastModified: number | null;
-}
-
 /**
  * Poignées de fichiers retenues, une par document.
  * INVARIANT : rangées sous l'`id` du document, comme la copie de secours : deux documents ne partagent jamais une entrée.
  */
 export interface FileHandleMemory {
-  /** Retient `file` comme fichier du document `id`, à la place du précédent. */
-  remember(id: string, file: RememberedFile): Promise<void>;
+  /** Retient `handle` comme fichier du document `id`, à la place du précédent. */
+  remember(id: string, handle: NanoFileHandle): Promise<void>;
   /** Fichier retenu pour le document `id`, ou null. */
-  recall(id: string): Promise<RememberedFile | null>;
+  recall(id: string): Promise<NanoFileHandle | null>;
 }
 
 /** Ouvre la base des poignées, en la créant au premier usage. */
@@ -63,13 +52,13 @@ async function withStore<T>(
 
 /** Poignées gardées dans IndexedDB, qui sait conserver une poignée de fichier entre deux lancements. */
 class IndexedDbFileHandleMemory implements FileHandleMemory {
-  async remember(id: string, file: RememberedFile): Promise<void> {
-    await withStore("readwrite", (store) => store.put(file, id));
+  async remember(id: string, handle: NanoFileHandle): Promise<void> {
+    await withStore("readwrite", (store) => store.put(handle, id));
   }
 
-  async recall(id: string): Promise<RememberedFile | null> {
-    const file = await withStore<unknown>("readonly", (store) => store.get(id));
-    return (file as RememberedFile | undefined) ?? null;
+  async recall(id: string): Promise<NanoFileHandle | null> {
+    const handle = await withStore<unknown>("readonly", (store) => store.get(id));
+    return (handle as NanoFileHandle | undefined) ?? null;
   }
 }
 

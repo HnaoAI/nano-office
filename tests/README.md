@@ -8,7 +8,7 @@ Même arborescence que `src/`.
   - `formatting.test.ts` : aller-retour du format avec la mise en forme du lot A ; `textStyle.test.ts` : polices et tailles (T1.4)
   - `autoSave.test.ts` : délais de la sauvegarde automatique, pas de chevauchement, pause après un échec, avec une horloge simulée (T1.6)
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
-- `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`) ; fichier retenu entre deux lancements (`fileMemory.test.ts`, PL3)
+- `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`) ; fichier retenu entre deux lancements (`fileMemory.test.ts`, PL3) ; fichier modifié ailleurs, non écrasé par la sauvegarde automatique (`changedOnDisk.test.ts`, T1.6)
 - `ui/` : tests Vitest de la feuille de style : variables de la charte, aucune nouvelle variable après U1a (`styles.test.ts`)
 - `editor/` : tests Vitest de la configuration de l'éditeur, sans navigateur (`blockIds.test.ts`, `blockStyle.test.ts`) ; copier-coller dans jsdom (`clipboard.test.ts`, T1.5)
 - `e2e/` : tests Playwright dans Chromium (`npm run test:e2e`)
@@ -27,7 +27,7 @@ Même arborescence que `src/`.
   - `collage.spec.ts` : collage HTML, texte brut, collage interne, copie vers une autre application, collage volumineux, annulation (T1.5)
   - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, enregistrer puis rouvrir (lot A)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
-  - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture (T1.6)
+  - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture, fichier modifié ailleurs (T1.6)
   - `fichier-retenu.spec.ts` : fichier retrouvé au redémarrage, autorisation à redonner, fichier déplacé, mémoire des fichiers (PL3)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours
   - `networkWatch.ts` : journal des requêtes et messages envoyés par la page
