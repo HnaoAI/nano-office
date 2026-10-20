@@ -1,7 +1,15 @@
 // Tests d'interface du ticket T1.2 (listes à puces et numérotées), dans Chromium.
 import { expect, test, type Page } from "@playwright/test";
 import type { DocumentJson } from "../../src/core/types";
-import { button, saveAndReopen, start, topBlocks, waitUndoGroup, ydocJson } from "./formatHelpers";
+import {
+  button,
+  saveAndReopen,
+  settleSelection,
+  start,
+  topBlocks,
+  waitUndoGroup,
+  ydocJson,
+} from "./formatHelpers";
 
 /** Écrit des lignes, une par élément, avec Entrée entre elles. */
 async function typeLines(page: Page, lines: string[]) {
@@ -253,4 +261,27 @@ test("critère 11 : Ctrl/Cmd+Z annule une création de liste ou un décalage en 
   await page.keyboard.press("ControlOrMeta+z");
   await expect(editor.locator("ul, li")).toHaveCount(0);
   await expect(editor.locator("p")).toHaveText(["un", "deux"]);
+});
+
+test("critère 5 : Tab refuse aussi un quatrième niveau atteint par les sous-points d'un élément", async ({
+  page,
+}) => {
+  await start(page);
+  await button(page, "Liste à puces").click();
+  await typeLines(page, ["X", "A", "B"]);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("C");
+  await page.keyboard.press("Tab");
+  expect(await listOutline(page)).toEqual(["ul1 X", "ul1 A", "ul2 B", "ul3 C"]);
+  // Curseur dans A : décaler A entraînerait C au niveau 4, donc rien ne bouge.
+  await page.locator(".nano-editor li p", { hasText: /^A$/ }).click();
+  await settleSelection(page);
+  await page.keyboard.press("Tab");
+  expect(await listOutline(page)).toEqual(["ul1 X", "ul1 A", "ul2 B", "ul3 C"]);
+  // Curseur dans B : B et C passent aux niveaux 3 et 4 ? Non : refusé aussi.
+  await page.locator(".nano-editor li p", { hasText: /^B$/ }).click();
+  await settleSelection(page);
+  await page.keyboard.press("Tab");
+  expect(await listOutline(page)).toEqual(["ul1 X", "ul1 A", "ul2 B", "ul3 C"]);
 });

@@ -21,9 +21,15 @@ import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
  */
 export const NANO_CLIPBOARD_ATTRIBUTE = "data-nano-buro";
 
-/** Vrai si le HTML du presse-papiers a été copié depuis Nano Buro. */
+/**
+ * Vrai si le HTML du presse-papiers a été copié depuis Nano Buro : son premier bloc porte à la fois
+ * la marque Nano Buro et celle de ProseMirror (`data-pm-slice`). Ce n'est pas une protection : un
+ * collage reconnu à tort garde seulement sa mise en forme, que le schéma limite déjà.
+ */
 export function isNanoBuroHtml(html: string): boolean {
-  return html.includes(NANO_CLIPBOARD_ATTRIBUTE);
+  if (!html.includes(NANO_CLIPBOARD_ATTRIBUTE)) return false;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.querySelector(`[${NANO_CLIPBOARD_ATTRIBUTE}][data-pm-slice]`) !== null;
 }
 
 /** Rendu HTML de la copie : celui du schéma, avec la marque Nano Buro sur chaque bloc copié. */

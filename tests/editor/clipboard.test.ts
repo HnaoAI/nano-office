@@ -305,4 +305,27 @@ describe("collage interne et identifiants (T1.5)", () => {
       p(text("# pas de titre")),
     ]);
   });
+
+  it("critère 8 : un collage depuis un autre document Nano Buro ne reprend pas ses identifiants", () => {
+    const source = createEditor(SOURCE);
+    const { html } = copyAll(source);
+    source.destroy();
+    const target = createEditor();
+    pasteHtml(target, html);
+    const ids = blockIds(target);
+    expect(ids.length).toBeGreaterThan(3);
+    for (const id of ["h-1", "p-1", "li-1", "p-2"]) expect(ids).not.toContain(id);
+  });
+
+  it("un HTML extérieur qui contient seulement le mot data-nano-buro n'est pas pris pour une copie interne", () => {
+    expect(
+      isNanoBuroHtml('<p>data-nano-buro</p><span style="font-family: Comic Sans MS">x</span>'),
+    ).toBe(false);
+    const target = createEditor();
+    pasteHtml(
+      target,
+      '<p data-nano-buro=""><span style="font-family: Comic Sans MS; font-size: 300pt">x</span></p>',
+    );
+    expect(JSON.stringify(target.getJSON())).not.toMatch(/Comic|300pt/);
+  });
 });

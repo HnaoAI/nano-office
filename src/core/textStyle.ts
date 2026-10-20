@@ -40,11 +40,18 @@ export function fontSizeValue(points: number): string {
   return `${String(points)}pt`;
 }
 
-/** Nombre de points d'une taille enregistrée (`14pt`), ou null si elle n'est pas en points. */
+/** Taille la plus grande affichée, en points ; au-delà, la taille enregistrée est gardée mais ignorée. */
+const MAX_FONT_SIZE = 400;
+
+/**
+ * Nombre de points d'une taille enregistrée (`14pt`), ou null si elle n'est pas en points ou sort
+ * des limites raisonnables (1 à 400 points).
+ */
 export function fontSizePoints(value: unknown): number | null {
   if (typeof value !== "string") return null;
   const match = /^(\d+(?:\.\d+)?)pt$/.exec(value);
-  return match ? Number(match[1]) : null;
+  const points = match ? Number(match[1]) : null;
+  return points !== null && points >= 1 && points <= MAX_FONT_SIZE ? points : null;
 }
 
 /** Premier nom d'une liste CSS de polices, sans guillemets (`"EB Garamond", serif` → `EB Garamond`). */

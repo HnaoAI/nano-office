@@ -64,6 +64,9 @@ describe("polices et tailles (T1.4)", () => {
     expect(fontSizePoints("14pt")).toBe(14);
     expect(fontSizePoints("10.5pt")).toBe(10.5);
     expect(fontSizePoints("16px")).toBeNull();
+    expect(fontSizePoints("0pt")).toBeNull();
+    expect(fontSizePoints("400pt")).toBe(400);
+    expect(fontSizePoints("5000pt")).toBeNull();
     expect(fontSizePoints(null)).toBeNull();
   });
 });

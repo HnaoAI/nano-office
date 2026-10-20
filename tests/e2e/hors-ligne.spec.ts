@@ -95,7 +95,7 @@ test("U1a, critère 6 : sans connexion internet, les polices IBM Plex intégrée
   expect(loaded).toEqual(expect.arrayContaining(["IBM Plex Sans", "IBM Plex Mono"]));
 });
 
-test("T1.4, critère 7 : sans connexion internet, les cinq polices du document s'affichent, graisses comprises", async ({
+test("T1.4, critère 7 : sans connexion internet, les cinq polices du document s'affichent, gras et italique compris", async ({
   page,
   context,
 }) => {
@@ -118,16 +118,24 @@ test("T1.4, critère 7 : sans connexion internet, les cinq polices du document s
     await page.keyboard.type(`${font} `);
     await page.keyboard.press("ControlOrMeta+B");
     await page.keyboard.type("gras");
+    await page.keyboard.press("ControlOrMeta+I");
+    await page.keyboard.type(" italique");
     await page.keyboard.press("ControlOrMeta+B");
+    await page.keyboard.type(" seul");
+    await page.keyboard.press("ControlOrMeta+I");
   }
   const loaded = await page.evaluate(async () => {
     await document.fonts.ready;
     return [...document.fonts]
       .filter((font) => font.status === "loaded")
-      .map((font) => `${font.family.replace(/"/g, "")} ${font.weight}`);
+      .map((font) => `${font.family.replace(/"/g, "")} ${font.weight} ${font.style}`);
   });
   for (const font of fonts) {
-    expect(loaded).toContain(`${font} 400`);
-    expect(loaded).toContain(`${font} 700`);
+    expect(loaded).toContain(`${font} 400 normal`);
+    expect(loaded).toContain(`${font} 700 normal`);
+    // IBM Plex Mono n'est livrée qu'en normal et gras (T1.4) : son italique est simulé.
+    if (font === "IBM Plex Mono") continue;
+    expect(loaded).toContain(`${font} 400 italic`);
+    expect(loaded).toContain(`${font} 700 italic`);
   }
 });

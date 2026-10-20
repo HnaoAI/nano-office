@@ -271,3 +271,17 @@ test("dans un titre sans taille choisie, la taille reste vide ; choisir 12 l'éc
   await sizeSelect(page).selectOption("12");
   expect(await styleOfText(page, "Titre")).toEqual({ font: "IBM Plex Sans", px: 16 });
 });
+
+test("critère 3 : Entrée garde la police et la taille choisies pour le texte tapé ensuite", async ({
+  page,
+}) => {
+  await start(page);
+  await fontSelect(page).selectOption("EB Garamond");
+  await sizeSelect(page).selectOption("20");
+  await page.keyboard.type("Un");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Deux");
+  expect(await styleOfText(page, "Deux")).toEqual({ font: "EB Garamond", px: px(20) });
+  await expect(fontSelect(page)).toHaveValue("EB Garamond");
+  await expect(sizeSelect(page)).toHaveValue("20");
+});
