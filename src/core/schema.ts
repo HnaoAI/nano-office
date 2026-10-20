@@ -7,6 +7,7 @@ import Heading from "@tiptap/extension-heading";
 import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
+import Highlight from "@tiptap/extension-highlight";
 import { TextStyleAttributes } from "./textStyle";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
@@ -110,9 +111,19 @@ const DocumentTextAlign = TextAlign.extend({ addKeyboardShortcuts: () => ({}) })
 });
 
 /**
+ * Surlignage (T1.7) : marque `highlight` multicolore, rendue en `<mark>` avec sa couleur en style
+ * (lisible par un e-mail), sans le raccourci Mod-Shift-H de Tiptap, reconnu au caractère produit.
+ * La couleur du texte est l'attribut `color` de la marque `textStyle`, à côté de la police et de la
+ * taille (src/core/textStyle.ts) : un seul `<span>` porte les trois.
+ */
+const DocumentHighlight = Highlight.extend({ addKeyboardShortcuts: () => ({}) }).configure({
+  multicolor: true,
+});
+
+/**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
  * puces et numérotées (T1.2), alignement (T1.3), gras, italique, police et taille (T1.4),
- * identifiant de bloc. T0b les réutilise telles
+ * couleur du texte et surlignage (T1.7), identifiant de bloc. T0b les réutilise telles
  * quelles, sans redéfinir le schéma.
  */
 export const documentExtensions = [
@@ -127,6 +138,7 @@ export const documentExtensions = [
   Italic,
   TextStyle,
   TextStyleAttributes,
+  DocumentHighlight,
   DocumentTextAlign,
   BlockId,
 ];

@@ -200,8 +200,57 @@ describe("T1.4 : police et taille", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const attrs = jsonFromYdoc(result.ydoc).content?.[0]?.content?.[0]?.marks?.[0]?.attrs;
-    expect(attrs).toEqual({ fontFamily: "Futura Nova 2030", fontSize: "13pt" });
+    expect(attrs).toEqual({ fontFamily: "Futura Nova 2030", fontSize: "13pt", color: null });
     // Et il est réécrit tel quel à l'enregistrement suivant.
     expect(serializeDocument({ id: "doc-1", ydoc: result.ydoc })).toContain("Futura Nova 2030");
+  });
+});
+
+describe("T1.7 : couleur du texte et surlignage", () => {
+  it("critère 7 et 9 : aller-retour de la couleur et du surlignage, dans content et dans ydoc", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { id: "p-1" },
+          content: [
+            { type: "text", text: "Rendez-vous le " },
+            {
+              type: "text",
+              text: "12 mai",
+              marks: [{ type: "highlight", attrs: { color: "#FFF176" } }],
+            },
+            { type: "text", text: " : " },
+            {
+              type: "text",
+              text: "45 € 😀",
+              marks: [
+                { type: "bold" },
+                {
+                  type: "textStyle",
+                  attrs: { color: "#C62828", fontFamily: "EB Garamond", fontSize: "14pt" },
+                },
+                { type: "highlight", attrs: { color: "#C5E1A5" } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const text = serializeDocument({ id: createDocumentId(), ydoc: ydocFromJson(json) });
+    const saved = JSON.parse(text) as { version: number; content: DocumentJson };
+    expect(saved.version).toBe(1);
+    expect(JSON.stringify(saved.content)).toContain('"color":"#C62828"');
+    const marks = roundTrip(json).content?.[0]?.content?.map((part) => part.marks);
+    expect(marks?.[1]).toEqual([{ type: "highlight", attrs: { color: "#FFF176" } }]);
+    const byType = Object.fromEntries((marks?.[3] ?? []).map((mark) => [mark.type, mark.attrs]));
+    expect(Object.keys(byType).sort()).toEqual(["bold", "highlight", "textStyle"]);
+    expect(byType.textStyle).toEqual({
+      color: "#C62828",
+      fontFamily: "EB Garamond",
+      fontSize: "14pt",
+    });
+    expect(byType.highlight).toEqual({ color: "#C5E1A5" });
   });
 });

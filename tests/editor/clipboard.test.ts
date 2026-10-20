@@ -146,7 +146,7 @@ describe("collage depuis une page web (T1.5)", () => {
     const pasted = target.state.doc.firstChild?.lastChild;
     expect(target.state.doc.textContent).toBe("Icicollé");
     expect(pasted?.marks.map((mark) => mark.attrs)).toEqual([
-      { fontFamily: "EB Garamond", fontSize: "14pt" },
+      { fontFamily: "EB Garamond", fontSize: "14pt", color: null },
     ]);
   });
 });

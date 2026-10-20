@@ -176,3 +176,15 @@ export function AlignJustifyIcon() {
     </Icon>
   );
 }
+
+/** Marqueur au trait, pour le bouton « Surlignage » (T1.7). */
+export function HighlighterIcon() {
+  return (
+    <Icon>
+      <path d="m9 11-5 5v3h3l5-5" />
+      <path d="m9 11 6.5-6.5a2.1 2.1 0 0 1 3 3L12 14" />
+      <path d="m9 11 3 3" />
+      <path d="M14 20h6" />
+    </Icon>
+  );
+}

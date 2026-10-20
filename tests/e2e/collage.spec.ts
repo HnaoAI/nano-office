@@ -1,28 +1,18 @@
 // Tests d'interface du ticket T1.5 (copier-coller propre), dans Chromium. Les collages venus d'une
 // autre application sont simulés par un événement `paste` portant le HTML et le texte du
 // presse-papiers ; les copier-coller internes et Ctrl/Cmd+Shift+V passent par le vrai presse-papiers.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import type { DocumentJson } from "../../src/core/types";
-import { editor, settleSelection, start, waitUndoGroup, ydocJson } from "./formatHelpers";
+import {
+  editor,
+  pasteFromOtherApp,
+  settleSelection,
+  start,
+  waitUndoGroup,
+  ydocJson,
+} from "./formatHelpers";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
-
-/** Colle `html` (et son texte) comme le ferait le presse-papiers d'une autre application. */
-async function pasteFromOtherApp(page: Page, html: string, plain = "") {
-  await page.evaluate(
-    ([data, text]) => {
-      const transfer = new DataTransfer();
-      transfer.setData("text/html", data ?? "");
-      transfer.setData("text/plain", text ?? "");
-      document
-        .querySelector(".nano-editor")
-        ?.dispatchEvent(
-          new ClipboardEvent("paste", { clipboardData: transfer, bubbles: true, cancelable: true }),
-        );
-    },
-    [html, plain],
-  );
-}
 
 /** Tous les identifiants de bloc du Y.Doc. */
 function blockIds(json: DocumentJson): unknown[] {

@@ -1,6 +1,6 @@
 // Copier-coller propre (T1.5) : un collage venu d'une autre application garde la structure
-// (paragraphes, gras, italique, titres, listes) mais perd polices, tailles, couleurs, fonds et
-// alignements ; un collage venu de Nano Buro garde toute la mise en forme. Les blocs collés
+// (paragraphes, gras, italique, titres, listes) mais perd polices, tailles, couleurs, surlignages
+// (T1.7), fonds et alignements ; un collage venu de Nano Buro garde toute la mise en forme. Les blocs collés
 // reçoivent toujours de nouveaux identifiants. S'appuie sur les crochets de collage de ProseMirror.
 import { Extension } from "@tiptap/core";
 import {
@@ -133,11 +133,14 @@ function mapFragment(
   return Fragment.from(nodes);
 }
 
+/** Marques retirées d'un collage extérieur : police, taille et couleur ; surlignage (T1.7). */
+const EXTERNAL_MARKS_REMOVED = ["textStyle", "highlight"];
+
 /** Options du nettoyage d'un collage. */
 export interface PasteCleaning {
   /** Vrai pour un collage copié depuis Nano Buro : toute la mise en forme est gardée (critère 5). */
   internal: boolean;
-  /** Police et taille du texte autour du curseur, données au texte collé de l'extérieur (critère 2). */
+  /** Police et taille (sans couleur) autour du curseur, données au texte collé de l'extérieur (critère 2). */
   contextTextStyle: Mark | null;
   /** Vrai pour un collage : les blocs collés reçoivent de nouveaux identifiants (critère 8). */
   newBlockIds: boolean;
@@ -147,15 +150,16 @@ export interface PasteCleaning {
  * Nettoie le contenu collé, déjà lu par le schéma.
  * - Toujours (collage) : retire les identifiants de bloc ; src/editor/blockIds.ts en donne de
  *   nouveaux, sans doublon (critère 8).
- * - Collage extérieur : retire polices et tailles et leur substitue celles du curseur, et retire
- *   l'alignement (critère 2). Couleurs et fonds n'existent pas dans le schéma : ils sont déjà ignorés.
+ * - Collage extérieur : retire polices, tailles, couleurs (marque `textStyle`) et surlignages
+ *   (marque `highlight`, T1.7 critère 7), leur substitue la police et la taille du curseur, et retire
+ *   l'alignement (critère 2). Les fonds n'existent pas dans le schéma : ils sont déjà ignorés.
  */
 export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
   const { internal, contextTextStyle, newBlockIds } = options;
   const content = mapFragment(slice.content, (node) => {
     if (node.isText) {
       if (internal) return node;
-      const marks = node.marks.filter((mark) => mark.type.name !== "textStyle");
+      const marks = node.marks.filter((mark) => !EXTERNAL_MARKS_REMOVED.includes(mark.type.name));
       return node.mark(contextTextStyle ? contextTextStyle.addToSet(marks) : marks);
     }
     const attrs = { ...node.attrs };
@@ -168,11 +172,17 @@ export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
   return new Slice(content, slice.openStart, slice.openEnd);
 }
 
-/** Police et taille au curseur, à donner au texte collé de l'extérieur. */
+/**
+ * Police et taille au curseur, à donner au texte collé de l'extérieur. Sans la couleur : un collage
+ * extérieur n'est jamais coloré, même dans un texte rouge (T1.7, critère 7).
+ */
 function contextTextStyleOf(view: EditorView): Mark | null {
   const { state } = view;
   const marks = state.storedMarks ?? state.selection.$from.marks();
-  return marks.find((mark) => mark.type.name === "textStyle") ?? null;
+  const mark = marks.find((candidate) => candidate.type.name === "textStyle");
+  if (!mark) return null;
+  const attrs = { ...mark.attrs, color: null };
+  return Object.values(attrs).some((value) => value !== null) ? mark.type.create(attrs) : null;
 }
 
 /**

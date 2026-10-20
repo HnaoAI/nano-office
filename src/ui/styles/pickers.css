@@ -1,0 +1,91 @@
+/* Petites fenêtres de la barre de mise en forme : grilles de couleurs (T1.7). Elles suivent le style
+   des messages d'information : surface blanche, rayon 14 px, ombre d'information.
+   Les couleurs des pastilles et du trait sous le « A » sont celles du document, posées en style
+   par src/ui/ColorButtons.tsx depuis src/core/documentColors.ts : elles ne sont jamais écrites ici. */
+.nano-popover-anchor {
+  position: relative;
+  display: flex;
+}
+
+.nano-format-bar .nano-popover-button[aria-expanded="true"] {
+  background: var(--nano-group-bg);
+}
+
+.nano-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  padding: 10px;
+  border-radius: var(--nano-radius-message);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-info);
+}
+
+.nano-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.nano-format-bar .nano-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--nano-separator-strong);
+  border-radius: var(--nano-radius-pill);
+}
+
+/* « Automatique » : la couleur du texte du document. */
+.nano-format-bar .nano-swatch-auto {
+  background: var(--nano-document-text);
+}
+
+/* « Aucun » : une pastille blanche barrée. */
+.nano-format-bar .nano-swatch-none {
+  background:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      var(--nano-text-quiet) calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    var(--nano-surface);
+}
+
+/* Pastille choisie : un anneau noir autour, détaché par un liseré blanc. */
+.nano-format-bar .nano-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 2px;
+}
+
+.nano-format-bar .nano-swatch:focus-visible {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 2px;
+  box-shadow: var(--nano-focus-ring);
+}
+
+/* « A » souligné de la couleur du texte sous le curseur (critère 6). */
+.nano-color-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.nano-color-bar {
+  width: 18px;
+  height: 4px;
+  margin-top: 3px;
+  border-radius: var(--nano-radius-pill);
+}
+
+.nano-color-bar-auto {
+  background: var(--nano-document-text);
+}
+
+/* Sélection de plusieurs couleurs : trait neutre, gris clair. */
+.nano-color-bar-mixed {
+  background: var(--nano-group-bg);
+}
