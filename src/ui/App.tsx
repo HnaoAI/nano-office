@@ -9,6 +9,7 @@ import { usePageSetupDialog } from "./usePageSetupDialog";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
 import { usePrintShortcut } from "./usePrintShortcut";
+import { useWordExport } from "./useWordExport";
 import "./fonts";
 // Ordre des feuilles : les variables d'abord, puis la mise en page, avant les composants qui la précisent.
 import "./styles/tokens.css";
@@ -39,10 +40,12 @@ export function App() {
     saveState,
     dismissMessage,
     imageRejected,
+    showMessage,
     pending,
     activity,
     reloadKeepsDocument,
     noteEdit,
+    noteFileAction,
     recover,
     openAsIs,
     ...file
@@ -51,14 +54,15 @@ export function App() {
   // rouvre le même document (H2).
   useAppUpdate(activity, document !== null, reloadKeepsDocument);
   usePrintShortcut(print);
-  const pageDialog = usePageSetupDialog(document?.ydoc ?? null, noteEdit);
+  const exportWord = useWordExport(document, showMessage, noteFileAction);
+  const pageDialog = usePageSetupDialog(document?.ydoc ?? null, noteEdit, noteFileAction);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
     save: file.save,
     saveAs: file.saveAs,
-    pageSetup: pageDialog.show,
     print,
+    exportWord,
   };
   // Pendant la lecture de la copie de secours, rien n'est modifiable (T0d, critère 4).
   if (!document) {
@@ -94,6 +98,7 @@ export function App() {
           ydoc={document.ydoc}
           onEdit={noteEdit}
           onImageRejected={imageRejected}
+          onPageSetup={pageDialog.show}
         />
       )}
       {pageDialog.current && !pending && (

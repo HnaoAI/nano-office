@@ -37,15 +37,18 @@ function pageStyle(setup: PageSetup): CSSProperties {
  * @param ydoc document Yjs neuf ou lu depuis un fichier, jamais réutilisé pour un autre document
  * @param onEdit appelé à chaque caractère tapé ou mise en forme appliquée (H1, critère 6)
  * @param onImageRejected affiche le message d'une image refusée (T1.9, critère 2) ; fonction stable
+ * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
  */
 export function DocumentEditor({
   ydoc,
   onEdit,
   onImageRejected,
+  onPageSetup,
 }: {
   ydoc: Y.Doc;
   onEdit: () => void;
   onImageRejected: (reasons: ImageRejection[]) => void;
+  onPageSetup: () => void;
 }) {
   // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
   // `onImageRejected` est stable (useDocumentFile), il ne recrée pas la configuration.
@@ -82,7 +85,7 @@ export function DocumentEditor({
   return (
     <>
       <div className="nano-format-row">
-        <Toolbar editor={editor} />
+        <Toolbar editor={editor} onPageSetup={onPageSetup} />
       </div>
       {search && <SearchBar editor={editor} request={search} onClose={() => setSearch(null)} />}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}

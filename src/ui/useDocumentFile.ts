@@ -305,6 +305,8 @@ export function useDocumentFile() {
         : "saved";
 
   // Stable : DocumentEditor le donne à la configuration de l'éditeur, créée une fois par document.
+  const noteFileAction = useCallback(() => noteActivity("fileAction"), [noteActivity]);
+
   const imageRejected = useCallback(
     (reasons: ImageRejection[]) => setMessage(imageRejectedMessage(reasons)),
     [],
@@ -332,6 +334,13 @@ export function useDocumentFile() {
     dismissMessage: () => setMessage(null),
     /** Affiche le message d'une image refusée à l'insertion (T1.9, critère 2). */
     imageRejected,
+    /** Affiche un message, par exemple le résultat d'un export en Word (T2.7). */
+    showMessage: setMessage,
+    /**
+     * Retient une action sur un fichier hors de ce hook (export en Word, T2.7) ou une boîte ouverte
+     * (« Mise en page », T2.5) : un rechargement de mise à jour la ferait disparaître (H1, critère 6).
+     */
+    noteFileAction,
     newDocument,
     open: () => void open(),
     save: () => void save(false),

@@ -239,10 +239,13 @@ export function AltTextIcon() {
   );
 }
 
-/** Feuille et ses marges, du bouton et de la boîte « Mise en page » (T2.5). */
-export function PageSetupIcon() {
+/**
+ * Feuille et ses marges, du bouton « Mise en page… » de la barre et de la boîte (T2.5).
+ * @param size 18 px dans la barre, 22 px dans la boîte
+ */
+export function PageSetupIcon({ size = 18 }: { size?: number }) {
   return (
-    <Icon size={22}>
+    <Icon size={size}>
       <rect x="5" y="3" width="14" height="18" rx="1.5" />
       <path d="M8 7h8M8 11h8M8 15h5" />
     </Icon>

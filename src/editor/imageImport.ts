@@ -118,3 +118,21 @@ export async function prepareImage(blob: Blob): Promise<PreparedImage> {
     bitmap.close();
   }
 }
+
+/**
+ * Image réencodée en PNG, à sa taille : pour un export Word, qui ne lit pas le WebP (T2.7).
+ * @returns le PNG, ou null si le navigateur ne peut pas décoder l'image
+ */
+export async function convertToPng(image: StoredImage): Promise<Uint8Array | null> {
+  try {
+    const bitmap = await createImageBitmap(
+      new Blob([image.data as BlobPart], { type: image.type }),
+    );
+    const { canvas } = draw(bitmap, bitmap.width, bitmap.height);
+    bitmap.close();
+    const blob = await encodeCanvas(canvas, "image/png");
+    return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+  } catch {
+    return null;
+  }
+}

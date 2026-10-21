@@ -79,6 +79,34 @@ test("critère 1 : le bouton « Mise en page » ouvre une boîte avec l'orientat
   await expect(box.getByText("De 0,5 à 5 cm.")).toBeVisible();
 });
 
+test("critère 1 : le bouton « Mise en page… » est dans la barre de mise en forme, et l'en-tête tient sur une ligne à 1 280 px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await start(page);
+  await page.keyboard.type("A");
+  const bar = page.getByRole("toolbar", { name: "Mise en forme" });
+  await expect(bar.getByRole("button", { name: "Mise en page…", exact: true })).toBeVisible();
+  const header = page.getByRole("banner");
+  const files = header.getByRole("toolbar", { name: "Fichier" });
+  await expect(files.getByRole("button")).toHaveText([
+    "Nouveau",
+    "Ouvrir…",
+    "Enregistrer sous…",
+    "Imprimer",
+    "Exporter en Word…",
+    /^Enregistrer/,
+  ]);
+  const brand = await header.locator(".nano-brand").boundingBox();
+  const menu = await files.boundingBox();
+  // Même ligne : le groupe Fichier commence à la hauteur du logo, pas en dessous.
+  expect(
+    Math.abs(
+      (menu?.y ?? 0) + (menu?.height ?? 0) / 2 - ((brand?.y ?? 0) + (brand?.height ?? 0) / 2),
+    ),
+  ).toBeLessThan(20);
+});
+
 test("critère 1 : une marge personnalisée hors de 0,5 à 5 cm ne peut pas être appliquée", async ({
   page,
 }) => {

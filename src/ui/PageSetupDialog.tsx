@@ -92,7 +92,7 @@ export function PageSetupDialog({
         }}
       >
         <span className="nano-dialog-icon" aria-hidden="true">
-          <PageSetupIcon />
+          <PageSetupIcon size={22} />
         </span>
         <div className="nano-dialog-text">
           <h2 id={`${id}-title`}>Mise en page</h2>

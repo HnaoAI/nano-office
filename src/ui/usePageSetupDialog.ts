@@ -8,9 +8,10 @@ import { readPageSetup, writePageSetup, type PageSetup } from "../core/pageSetup
  * État de la boîte « Mise en page » du document affiché.
  * @param ydoc document affiché, ou null pendant le chargement
  * @param onEdit appelé quand un changement est appliqué : du travail est commencé (H1)
+ * @param onOpen appelé à l'ouverture : une mise à jour ne recharge pas la page pendant la saisie (H1)
  * @returns `current` (mise en page lue à l'ouverture, ou null si la boîte est fermée), `show`, `apply`, `close`
  */
-export function usePageSetupDialog(ydoc: Y.Doc | null, onEdit: () => void) {
+export function usePageSetupDialog(ydoc: Y.Doc | null, onEdit: () => void, onOpen: () => void) {
   const [opened, setOpened] = useState<{
     ydoc: Y.Doc;
     setup: PageSetup;
@@ -18,8 +19,10 @@ export function usePageSetupDialog(ydoc: Y.Doc | null, onEdit: () => void) {
   } | null>(null);
 
   const show = useCallback(() => {
-    if (ydoc) setOpened({ ydoc, setup: readPageSetup(ydoc), focus: document.activeElement });
-  }, [ydoc]);
+    if (!ydoc) return;
+    onOpen();
+    setOpened({ ydoc, setup: readPageSetup(ydoc), focus: document.activeElement });
+  }, [ydoc, onOpen]);
 
   const close = useCallback(() => {
     const focus = opened?.focus;

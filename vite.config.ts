@@ -32,6 +32,9 @@ export default defineConfig(({ command }) => ({
       command === "serve" ? DEV_VERSION : formatVersion(new Date(), buildCommit()),
     ),
   },
+  // L'export Word (T2.7) charge `docx` à la demande : sans cette ligne, le serveur de développement
+  // découvrirait la bibliothèque au premier export et rechargerait la page en pleine édition.
+  optimizeDeps: { include: ["docx"] },
   plugins: [
     react(),
     // Application installable et hors ligne (T0e) : manifeste et service worker, générés au build
@@ -63,9 +66,13 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
-        // woff2 : les polices intégrées (U1a) s'affichent hors ligne. Les .woff de secours de
-        // Fontsource ne sont pas mis en cache : Chrome, Edge, Safari et Firefox lisent tous le woff2.
-        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
+        // woff2 : les polices intégrées (U1a) s'affichent hors ligne. Des .woff de Fontsource, seuls
+        // ceux des polices du document en normal, gras et italique (400 et 700) sont mis en cache : l'export
+        // Word les convertit pour les embarquer (T2.7, src/ui/wordAssets.ts), même hors ligne.
+        globPatterns: [
+          "**/*.{js,css,html,svg,png,webmanifest,woff2}",
+          "**/*-latin-{400,700}-{normal,italic}-*.woff",
+        ],
       },
     }),
   ],

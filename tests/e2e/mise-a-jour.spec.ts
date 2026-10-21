@@ -191,6 +191,27 @@ test("critère 6 : un fichier en cours d'ouverture compte comme travail commenc�
   await expect.poll(() => activity(page)).toEqual({ ...NOTHING, fileAction: true });
 });
 
+test("critère 6 : un export en Word en cours (sélecteur ouvert) compte comme travail commencé (T2.7)", async ({
+  page,
+}) => {
+  // Sélecteur resté ouvert : un rechargement le ferait disparaître avec l'export.
+  await page.addInitScript(() => {
+    (window as { showSaveFilePicker?: unknown }).showSaveFilePicker = () => new Promise(() => {});
+  });
+  await start(page);
+  await button(page, "Exporter en Word…").click();
+  await expect.poll(() => activity(page)).toEqual({ ...NOTHING, fileAction: true });
+});
+
+test("critère 6 : la boîte « Mise en page » ouverte compte comme travail commencé (T2.5)", async ({
+  page,
+}) => {
+  await start(page);
+  await button(page, "Mise en page…").click();
+  await expect(page.getByRole("dialog", { name: "Mise en page" })).toBeVisible();
+  await expect.poll(() => activity(page)).toEqual({ ...NOTHING, fileAction: true });
+});
+
 test("H2, critère 1 : un document restauré n'empêche pas la mise à jour, et il est restauré à l'identique après le rechargement", async ({
   page,
 }) => {
