@@ -1,6 +1,6 @@
 // Groupe Fichier de l'en-tête (T0c, style U1a) : Nouveau, Ouvrir…, Enregistrer sous…, Mise en page… (T2.5),
-// Enregistrer.
-import { MOD, SAVE_SHORTCUT } from "./shortcuts";
+// Imprimer (T2.6), Enregistrer.
+import { MOD, PRINT_SHORTCUT, SAVE_SHORTCUT } from "./shortcuts";
 
 /** Actions déclenchées par les boutons. */
 export interface FileMenuActions {
@@ -10,6 +10,8 @@ export interface FileMenuActions {
   saveAs: () => void;
   /** Ouvre la boîte « Mise en page » (T2.5). */
   pageSetup: () => void;
+  /** Ouvre la boîte d'impression du navigateur (T2.6). */
+  print: () => void;
 }
 
 /**
@@ -18,7 +20,7 @@ export interface FileMenuActions {
  * son nom accessible reste « Enregistrer » (U1a, critère 7).
  * @param actions actions fournies par `useDocumentFile`
  */
-export function FileMenu({ newDocument, open, save, saveAs, pageSetup }: FileMenuActions) {
+export function FileMenu({ newDocument, open, save, saveAs, pageSetup, print }: FileMenuActions) {
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
   return (
     <div className="nano-file-menu" role="toolbar" aria-label="Fichier">
@@ -33,6 +35,14 @@ export function FileMenu({ newDocument, open, save, saveAs, pageSetup }: FileMen
       </button>
       <button type="button" onMouseDown={keepFocus} onClick={pageSetup}>
         Mise en page…
+      </button>
+      <button
+        type="button"
+        title={`Imprimer (${PRINT_SHORTCUT}), ou « Enregistrer au format PDF » dans la boîte d'impression`}
+        onMouseDown={keepFocus}
+        onClick={print}
+      >
+        Imprimer
       </button>
       <button
         type="button"

@@ -10,7 +10,7 @@ import { exposeDocumentForTests } from "../editor/devTestHook";
 import { createEditorOptions } from "../editor/editorOptions";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
-import { pageSize, type PageSetup } from "../core/pageSetup";
+import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import { usePageSetup } from "./usePageSetup";
@@ -85,6 +85,8 @@ export function DocumentEditor({
         <Toolbar editor={editor} />
       </div>
       {search && <SearchBar editor={editor} request={search} onClose={() => setSearch(null)} />}
+      {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
+      <style>{printPageRule(pageSetup)}</style>
       <main className="nano-workspace">
         <article
           className="nano-page"

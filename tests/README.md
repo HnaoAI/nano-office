@@ -35,6 +35,7 @@ Même arborescence que `src/`.
   - `interligne.spec.ts` : liste, hauteur de ligne de Word, blocs sélectionnés, Par défaut, sélection mélangée, réouverture, copier-coller, annulation (T2.2)
   - `casse.spec.ts` : menu « Aa » à la souris et au clavier, lettres changées, règles du français, mise en forme et sélection gardées, annulation, phrases (T2.4)
   - `mise-en-page.spec.ts` : boîte « Mise en page », marges hors bornes, Annuler et Échap, largeur A4 et marges à l'échelle, petite fenêtre, réouverture, copie de secours, annulation, sauvegarde automatique (T2.5)
+  - `impression.spec.ts` : bouton « Imprimer » et Ctrl/Cmd+P (Mac, Windows, AltGr), page seule à l'impression, PDF en A4 dans l'orientation du document, document long, polices, couleurs, tableaux et images, titres, recherche et sélection, aucune modification (T2.6)
   - `barre.spec.ts` : bouton, raccourci Mac et Windows à la touche physique, cumul, réouverture, copier-coller, annulation (T2.3)
   - `formatHelpers.ts` : démarrer l'éditeur, attendre son focus après Ouvrir, lire le Y.Doc, sélectionner un texte, coller depuis une autre application, lire le presse-papiers, enregistrer puis rouvrir (lots A et C)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)

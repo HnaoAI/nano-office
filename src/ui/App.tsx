@@ -8,6 +8,7 @@ import { PageSetupDialog } from "./PageSetupDialog";
 import { usePageSetupDialog } from "./usePageSetupDialog";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
+import { usePrintShortcut } from "./usePrintShortcut";
 import "./fonts";
 // Ordre des feuilles : les variables d'abord, puis la mise en page, avant les composants qui la précisent.
 import "./styles/tokens.css";
@@ -19,6 +20,15 @@ import "./styles/images.css";
 import "./styles/search.css";
 import "./styles/messages.css";
 import "./styles/dialog.css";
+import "./styles/print.css";
+
+/**
+ * Ouvre la boîte d'impression du navigateur, qui propose aussi « Enregistrer au format PDF » (T2.6).
+ * N'écrit rien dans le document : imprimer n'est pas une modification (critère 7).
+ */
+function print() {
+  window.print();
+}
 
 /** Composant racine de l'application. */
 export function App() {
@@ -40,6 +50,7 @@ export function App() {
   // Une nouvelle version s'applique au démarrage si rien n'est commencé (H1), et si le rechargement
   // rouvre le même document (H2).
   useAppUpdate(activity, document !== null, reloadKeepsDocument);
+  usePrintShortcut(print);
   const pageDialog = usePageSetupDialog(document?.ydoc ?? null, noteEdit);
   const actions = {
     newDocument: file.newDocument,
@@ -47,6 +58,7 @@ export function App() {
     save: file.save,
     saveAs: file.saveAs,
     pageSetup: pageDialog.show,
+    print,
   };
   // Pendant la lecture de la copie de secours, rien n'est modifiable (T0d, critère 4).
   if (!document) {

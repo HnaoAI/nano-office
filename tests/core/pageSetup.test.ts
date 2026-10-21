@@ -8,6 +8,7 @@ import {
   DEFAULT_PAGE_SETUP,
   formatCm,
   parseCm,
+  printPageRule,
   MARGIN_PRESETS,
   marginChoice,
   PAGE_SETUP_ORIGIN,
@@ -245,5 +246,26 @@ describe("T2.5 : marges tapées à la française", () => {
   it("une marge s'affiche avec une virgule", () => {
     expect(formatCm(1.27)).toBe("1,27");
     expect(formatCm(3)).toBe("3");
+  });
+});
+
+describe("T2.6 : format de la feuille imprimée", () => {
+  it("critère 3 : la règle @page donne le format A4, l'orientation et les marges du document", () => {
+    expect(printPageRule(DEFAULT_PAGE_SETUP)).toBe(
+      "@page { size: A4 portrait; margin: 2.5cm 2.5cm 2.5cm 2.5cm; }",
+    );
+    expect(printPageRule(LANDSCAPE_CUSTOM)).toBe(
+      "@page { size: A4 landscape; margin: 1cm 5cm 4.9cm 0.5cm; }",
+    );
+  });
+
+  it("une valeur invalide n'est jamais écrite dans le CSS", () => {
+    const hostile = {
+      orientation: "portrait; } body { display: none",
+      margins: { top: Number.NaN, bottom: 99, left: -1, right: 1 },
+    } as unknown as PageSetup;
+    expect(printPageRule(hostile)).toBe(
+      "@page { size: A4 portrait; margin: 2.5cm 1cm 2.5cm 2.5cm; }",
+    );
   });
 });

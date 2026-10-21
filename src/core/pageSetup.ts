@@ -170,6 +170,16 @@ export function writePageSetup(ydoc: Y.Doc, setup: PageSetup): void {
 }
 
 /**
+ * Règle `@page` de l'impression (T2.6, critère 3) : A4, orientation et marges du document.
+ * Les valeurs sont relues (`pageSetupFromAttrs`) : rien d'autre qu'un nombre n'est écrit dans le CSS.
+ */
+export function printPageRule(setup: PageSetup): string {
+  const { orientation, margins } = pageSetupFromAttrs(pageSetupAttrs(setup));
+  const { top, right, bottom, left } = margins;
+  return `@page { size: A4 ${orientation}; margin: ${top}cm ${right}cm ${bottom}cm ${left}cm; }`;
+}
+
+/**
  * Document JSON complété par les attributs de mise en page (pour `content`). Le JSON reçu n'est pas
  * modifié ; un document sans réglage reste tel quel, sans `attrs`.
  */

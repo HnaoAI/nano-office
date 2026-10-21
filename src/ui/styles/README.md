@@ -11,4 +11,5 @@ Couleurs, rayons et ombres ne sont écrits que dans `tokens.css` (vérifié par 
 - `images.css` : images du document, sélection et poignées, cadre « Image manquante », fenêtre « Texte de remplacement » (T1.9)
 - `search.css` : barre « Rechercher et remplacer » et occurrences surlignées dans le document (T2.1)
 - `messages.css` : indicateur d'enregistrement et messages (U1b)
+- `print.css` : impression et PDF : seule la page du document, couleurs exactes, titres jamais seuls en bas de page, lignes de tableau entières, ni recherche ni sélection (T2.6)
 - `dialog.css` : boîte de dialogue de la copie de secours sur la page estompée (U1b), boîte « Mise en page » (T2.5)
