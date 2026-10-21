@@ -16,7 +16,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `MessageBar.tsx` : message d'information ou d'alerte, avec puce d'icône, action éventuelle (« Enregistrer sous… », « Enregistrer », « Autoriser ») et bouton de fermeture (U1b, PL3)
 - `FileMenu.tsx` : groupe Fichier : Nouveau, Ouvrir…, Enregistrer sous…, Enregistrer (bouton principal)
 - `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres)
-- `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), barré (T2.3)
+- `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), recherche (T2.1), barré (T2.3)
 - `fonts.ts` : polices intégrées : IBM Plex Sans et Mono de l'interface (U1a), cinq polices du document en quatre graisses (T1.4)
 - `ParagraphStyleSelect.tsx` : liste déroulante « Style du paragraphe » : texte normal, titre 1 à 3 (T1.1)
 - `ListButtons.tsx` : boutons « Liste à puces » et « Liste numérotée » (T1.2)
@@ -29,6 +29,8 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
-- `DocumentEditor.tsx` : barre de mise en forme et éditeur d'un document, relié à un Y.Doc, sur une page centrée
+- `DocumentEditor.tsx` : barre de mise en forme, barre de recherche (T2.1) et éditeur d'un document, relié à un Y.Doc, sur une page centrée
+- `SearchBar.tsx` : barre « Rechercher et remplacer » sous la barre de mise en forme, à droite (T2.1)
+- `useSearchShortcuts.ts` : Ctrl/Cmd+F, Ctrl+H (Windows) et Cmd+Option+F (Mac) sur toute la page, à la touche physique (T2.1)
 - `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, tableau, image)
 - `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

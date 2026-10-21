@@ -5,13 +5,14 @@ import { documentExtensions } from "../../src/core/schema";
 import type { DocumentJson } from "../../src/core/types";
 import { BlockIdGenerator } from "../../src/editor/blockIds";
 import { CleanClipboard } from "../../src/editor/clipboard";
+import { Search } from "../../src/editor/search";
 import { TableNavigation } from "../../src/editor/tables";
 
-/** Éditeur avec le schéma, les identifiants de bloc et le copier-coller propre. */
+/** Éditeur avec le schéma, les identifiants de bloc, le copier-coller propre et la recherche (T2.1). */
 export function createTestEditor(content?: DocumentJson): Editor {
   return new Editor({
     element: document.createElement("div"),
-    extensions: [...documentExtensions, BlockIdGenerator, CleanClipboard, TableNavigation],
+    extensions: [...documentExtensions, BlockIdGenerator, CleanClipboard, TableNavigation, Search],
     enableInputRules: false,
     enablePasteRules: false,
     ...(content ? { content } : {}),

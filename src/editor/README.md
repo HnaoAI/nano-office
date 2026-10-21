@@ -2,13 +2,15 @@
 
 Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `core/schema.ts`.
 
-- `editorOptions.ts` : options de l'éditeur pour un Y.Doc (`createEditorOptions`) : schéma partagé, collaboration Yjs, aucune mise en forme automatique, correcteur orthographique, raccourcis et copier-coller du lot A, images reliées au Y.Doc (T1.9)
+- `editorOptions.ts` : options de l'éditeur pour un Y.Doc (`createEditorOptions`) : schéma partagé, collaboration Yjs, aucune mise en forme automatique, correcteur orthographique, raccourcis et copier-coller du lot A, images reliées au Y.Doc (T1.9), recherche (T2.1)
 - `blockIds.ts` : génère l'identifiant de chaque paragraphe nouveau ou en double (`BlockIdGenerator`, `createBlockIdPlugin`)
 - `platform.ts` : reconnaît un Mac, pour choisir les raccourcis (`isMacPlatform`, T1.1)
 - `blockStyle.ts` : texte normal ou titre 1 à 3, en gardant les attributs du bloc (`setBlockStyle`, `currentBlockStyle`, T1.1)
 - `lists.ts` : listes à puces et numérotées : type de la liste du curseur, Tab et Shift+Tab sur trois niveaux (T1.2)
 - `alignment.ts` : alignement à gauche, centré, à droite ou justifié des paragraphes et titres (`setAlignment`, `currentAlignment`, T1.3)
 - `lineHeight.ts` : interligne des blocs sélectionnés et lecture au curseur (`setLineHeight`, `currentLineHeight`, T2.2)
+- `search.ts` : rechercher et remplacer (T2.1) : plugin qui surligne les occurrences par des décorations, jamais dans le document ; suivante, précédente, remplacer, tout remplacer en une transaction (`Search`, `setSearch`, `goToMatch`, `replaceCurrent`, `replaceAll`)
+- `blockText.ts` : texte d'un bloc aligné sur ses positions, pour la recherche et les majuscules (T2.1, T2.4)
 - `textCase.ts` : majuscules et minuscules de la sélection, marques et sélection gardées, en une transaction (`changeCase`, T2.4)
 - `fontStyle.ts` : police et taille de la sélection ou du texte tapé ensuite, lecture au curseur (`setFontFamily`, `setFontSize`, `currentTextStyle`, T1.4)
 - `textColor.ts` : couleur du texte et surlignage de la sélection ou du texte tapé ensuite, lecture au curseur (`setTextColor`, `setHighlight`, `currentTextColor`, `currentHighlight`, T1.7)

@@ -4,9 +4,7 @@ import type { Editor } from "@tiptap/core";
 import type { Mark, Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import { convertCase, type CaseMode } from "../core/textCase";
-
-/** Caractère qui tient la place d'un nœud sans texte (image en ligne d'une version future). */
-const LEAF_PLACEHOLDER = "￼";
+import { blockText } from "./blockText";
 
 /** Un morceau de texte à remplacer, avec ses marques. */
 interface Replacement {
@@ -14,15 +12,6 @@ interface Replacement {
   to: number;
   text: string;
   marks: readonly Mark[];
-}
-
-/** Texte d'un bloc, où l'indice d'un caractère est sa position dans le bloc. */
-function blockText(block: ProseMirrorNode): string {
-  let text = "";
-  block.forEach((child) => {
-    text += child.isText ? (child.text ?? "") : LEAF_PLACEHOLDER.repeat(child.nodeSize);
-  });
-  return text;
 }
 
 /** Morceaux de texte du bloc qui commence à `contentStart`, compris dans `[from, to)`, à convertir. */

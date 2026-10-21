@@ -9,6 +9,7 @@ import { BlockIdGenerator } from "./blockIds";
 import { CleanClipboard } from "./clipboard";
 import { createImageExtensions, type ImageRejectedHandler } from "./images";
 import { FormatShortcuts } from "./keyboardShortcuts";
+import { Search } from "./search";
 import { TableNavigation } from "./tables";
 
 /**
@@ -25,6 +26,7 @@ import { TableNavigation } from "./tables";
  * - On peut toujours écrire avant ou après un tableau (`TableNavigation`, T1.8).
  * - Les images sont affichées depuis le Y.Doc, insérées par le bouton, un dépôt ou un collage (T1.9) :
  *   le nœud image du schéma est remplacé par sa version reliée au document, à la même place.
+ * - La recherche surligne ses occurrences par des décorations, hors du document (`Search`, T2.1).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
@@ -44,6 +46,7 @@ export function createEditorOptions(
       FormatShortcuts,
       CleanClipboard,
       TableNavigation,
+      Search,
       Collaboration.configure({ document: ydoc, field: YJS_FRAGMENT_NAME }),
     ],
     enableInputRules: false,

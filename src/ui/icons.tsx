@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -114,6 +114,24 @@ export function CloseIcon() {
   return (
     <Icon size={16}>
       <path d="M6 6l12 12M18 6 6 18" />
+    </Icon>
+  );
+}
+
+/** Chevron vers le haut : occurrence précédente de la recherche (T2.1). */
+export function ChevronUpIcon() {
+  return (
+    <Icon>
+      <path d="m6 15 6-6 6 6" />
+    </Icon>
+  );
+}
+
+/** Chevron vers le bas : occurrence suivante de la recherche (T2.1). */
+export function ChevronDownIcon() {
+  return (
+    <Icon>
+      <path d="m6 9 6 6 6-6" />
     </Icon>
   );
 }
