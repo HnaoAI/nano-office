@@ -45,10 +45,11 @@ function imageEditor(content: DocumentJson, ydoc = new Y.Doc()): Editor {
   });
 }
 
-/** Éditeur prêt, comme après un premier clic de l'utilisateur (voir « sélection de départ »). */
+/** Éditeur prêt, comme après une première touche de l'utilisateur (voir « sélection de départ »). */
 function usedEditor(content: DocumentJson, ydoc = new Y.Doc()): Editor {
   const editor = imageEditor(content, ydoc);
-  editor.view.dom.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+  // Une touche plutôt qu'un clic : jsdom ne sait pas situer un clic dans la page (elementFromPoint).
+  editor.view.dom.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift", bubbles: true }));
   return editor;
 }
 
