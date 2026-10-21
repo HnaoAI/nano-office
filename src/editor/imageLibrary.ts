@@ -9,6 +9,7 @@ import { IMAGES_MAP_NAME, readImage, storeImage, type StoredImage } from "../cor
 export class ImageLibrary {
   private readonly urls = new Map<string, string>();
   private readonly listeners = new Map<string, Set<() => void>>();
+  private attached = 0;
   private readonly onMapChange = (event: Y.YMapEvent<unknown>) => {
     for (const hash of event.keysChanged) {
       this.listeners.get(hash)?.forEach((listener) => {
@@ -20,9 +21,12 @@ export class ImageLibrary {
   /** @param ydoc Y.Doc du document affiché, celui de l'extension de collaboration */
   constructor(private readonly ydoc: Y.Doc) {}
 
-  /** Commence à suivre le Y.Doc, à l'ouverture de l'éditeur. */
+  /**
+   * Commence à suivre le Y.Doc, à l'ouverture d'un éditeur. Compté : React peut créer le nouvel éditeur
+   * avant de détruire l'ancien (useEditor de Tiptap diffère la destruction), qui partagent la bibliothèque.
+   */
   attach(): void {
-    this.ydoc.getMap(IMAGES_MAP_NAME).observe(this.onMapChange);
+    if (this.attached++ === 0) this.ydoc.getMap(IMAGES_MAP_NAME).observe(this.onMapChange);
   }
 
   /** Range une image (une seule fois, critère 6) et renvoie son empreinte. */
@@ -71,15 +75,16 @@ export class ImageLibrary {
   }
 
   /**
-   * Libère les adresses `blob:` et arrête l'écoute du Y.Doc, à la fermeture de l'éditeur. La
-   * bibliothèque peut être rattachée ensuite (React recrée l'éditeur en mode strict).
+   * À la fermeture d'un éditeur. Quand le dernier se ferme, libère les adresses `blob:` et arrête
+   * l'écoute du Y.Doc. INVARIANT : jamais tant qu'un éditeur affiche encore ces adresses, sinon ses
+   * images deviendraient vides.
    */
   detach(): void {
+    if (this.attached === 0 || --this.attached > 0) return;
     this.ydoc.getMap(IMAGES_MAP_NAME).unobserve(this.onMapChange);
     this.urls.forEach((url) => {
       URL.revokeObjectURL(url);
     });
     this.urls.clear();
-    this.listeners.clear();
   }
 }

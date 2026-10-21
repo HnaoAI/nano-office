@@ -86,8 +86,10 @@
   display: none;
 }
 
-/* Petite fenêtre « Texte de remplacement ». */
+/* Petite fenêtre « Texte de remplacement », calée à droite : son bouton est au bout de la barre. */
 .nano-alt-text {
+  left: auto;
+  right: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;

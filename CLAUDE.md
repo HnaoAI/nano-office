@@ -62,10 +62,16 @@ CSS `--nano-…`. Un écart à la charte est une question pour le product owner,
 Fichier JSON en UTF-8 :
 
 - `format` : toujours `"nano-office"`
-- `version` : entier, actuellement `1`
+- `version` : entier, actuellement `2` (depuis T1.9 ; un fichier version 1 s'ouvre et est migré, voir `src/core/migrations.ts`)
 - `id` : identifiant unique du document (UUID), créé avec le document et conservé à chaque enregistrement
 - `content` : le document au format JSON de Tiptap (lisible, sert de secours)
-- `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`)
+- `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`), sans le contenu des images
+- `images` (version 2) : les images utilisées par le document, chacune une seule fois, sous l'empreinte SHA-256
+  de son contenu : `{ "<empreinte>": { "type": "image/png", "data": "<base64>" } }`. `content` et `ydoc` n'en
+  gardent que l'empreinte (attribut `hash` du nœud image). Une image retirée du document n'est plus enregistrée.
+
+Dans l'application, les images vivent dans la `Y.Map` « images » du `Y.Doc`, donc dans la copie de secours.
+Une référence sans image (fichier modifié à la main) s'affiche « Image manquante », sans bloquer l'ouverture.
 
 À l'ouverture, `ydoc` est la source de vérité, vérifiée par `content` : s'ils diffèrent, utiliser `content`.
 Si `content` est inutilisable, le fichier est refusé (`corrupted`), même si `ydoc` contient du texte :
