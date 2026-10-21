@@ -43,8 +43,8 @@ CSS `--nano-…`. Un écart à la charte est une question pour le product owner,
 
 ## Règles produit (non négociables)
 
-1. Aucune publicité, bannière, bouton IA ou invitation à payer.
-2. Fonctionnement hors ligne. Aucune donnée de document n'est envoyée sur le réseau. Seuls les fichiers de l'application elle-même (mises à jour de la PWA) peuvent être téléchargés.
+1. Aucune publicité, bannière ou invitation à payer. Aucun assistant IA imposé : l'assistant (T3.1) est facultatif, désactivé par défaut, et invisible tant qu'il est éteint.
+2. Fonctionnement hors ligne. Aucune donnée de document n'est envoyée sur le réseau, sauf le texte sélectionné, envoyé à l'assistant IA choisi par l'utilisateur, avec sa propre clé, et seulement après un clic explicite (T3.1). Seuls les fichiers de l'application elle-même (mises à jour de la PWA) peuvent être téléchargés.
 3. **Ne jamais perdre un document** : écriture atomique, copie de secours, alerte avant fermeture si des modifications ne sont pas enregistrées.
 4. Le contenu du document vit dans un `Y.Doc` (Yjs).
 5. Chaque bloc (paragraphe, titre, élément de liste, cellule) porte un identifiant stable, conservé après enregistrement et réouverture.
@@ -127,6 +127,7 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **D. Images** | T1.9 images, avec le format `.nano` version 2 | #46 |
 | **E. Écrire plus vite** | T2.1 rechercher et remplacer, T2.2 interligne, T2.3 barré, T2.4 majuscules et minuscules | #55, #56, #57, #58 |
 | **F. La page** | T2.5 page A4 et marges, T2.6 imprimer et PDF, T2.7 exporter en Word | #59, #60, #61 |
+| **G. Assistant** | T3.1 assistant IA facultatif (corriger, traduire), avec choix des modifications | #66 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -198,3 +199,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-21 : L'interligne est enregistré à la valeur de Word (`"1.15"`) dans l'attribut de bloc `lineHeight`, et affiché à 1,2 fois cette valeur, sans changement de version du format.
 - 2026-10-21 : Mise en page (T2.5) rangée dans la `Y.Map` « page » du Y.Doc, car y-tiptap ignore les attributs du nœud `doc`. Dans le fichier, elle est écrite en attributs du nœud `doc` de `content`, sans changement de version. Le bouton « Mise en page… » est en fin de barre de mise en forme, pour que l'en-tête tienne sur une ligne.
 - 2026-10-21 : La licence Zlib est ajoutée aux licences acceptées, pour tous les projets : elle est aussi permissive que MIT. Elle permet `pako`, utilisé par la bibliothèque `docx` de l'export Word (T2.7).
+- 2026-10-21 : Assistant IA facultatif (T3.1, lot G, après le lot F). Les règles produit 1 et 2 sont modifiées : il est désactivé par défaut, invisible tant qu'il est éteint, et n'envoie que le texte sélectionné, après un clic, au fournisseur choisi (Claude ou Gemini), avec la clé d'API de l'utilisateur, gardée sur l'ordinateur et jamais dans un fichier. Chaque modification proposée s'accepte ou se refuse une par une, comme dans Cursor. Un abonnement claude.ai ou Gemini ne peut pas être relié à une autre application : il faut une clé d'API.
