@@ -1,5 +1,6 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
-// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique | alignement (T1.3) | listes (T1.2).
+// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, couleur du texte et surlignage
+// (T1.7) | alignement (T1.3) | listes (T1.2) | tableau (T1.8).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
@@ -7,11 +8,15 @@ import { currentAlignment } from "../editor/alignment";
 import { currentBlockStyle } from "../editor/blockStyle";
 import { currentTextStyle } from "../editor/fontStyle";
 import { currentListType } from "../editor/lists";
+import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
+import { currentHighlight, currentTextColor } from "../editor/textColor";
 import { RedoIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
+import { ColorButtons } from "./ColorButtons";
 import { FontSelects } from "./FontSelects";
 import { ListButtons } from "./ListButtons";
 import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
+import { TableButtons } from "./TableButtons";
 import { MOD } from "./shortcuts";
 
 /**
@@ -34,6 +39,11 @@ export function Toolbar({ editor }: { editor: Editor }) {
       listType: currentListType(current.state),
       alignment: currentAlignment(current.state),
       textStyle: currentTextStyle(current.state),
+      textColor: currentTextColor(current.state),
+      highlight: currentHighlight(current.state),
+      inTable: isInTable(current.state),
+      headerRow: headerRowActive(current.state),
+      tableDeletions: tableDeletions(current.state),
     }),
   });
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -86,10 +96,18 @@ export function Toolbar({ editor }: { editor: Editor }) {
       >
         I
       </button>
+      <ColorButtons editor={editor} textColor={state.textColor} highlight={state.highlight} />
       <div className="nano-separator" aria-hidden="true" />
       <AlignmentButtons editor={editor} active={state.alignment} />
       <div className="nano-separator" aria-hidden="true" />
       <ListButtons editor={editor} active={state.listType} />
+      <div className="nano-separator" aria-hidden="true" />
+      <TableButtons
+        editor={editor}
+        inTable={state.inTable}
+        headerRow={state.headerRow}
+        canDelete={state.tableDeletions}
+      />
     </div>
   );
 }

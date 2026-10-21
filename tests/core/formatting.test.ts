@@ -200,8 +200,114 @@ describe("T1.4 : police et taille", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const attrs = jsonFromYdoc(result.ydoc).content?.[0]?.content?.[0]?.marks?.[0]?.attrs;
-    expect(attrs).toEqual({ fontFamily: "Futura Nova 2030", fontSize: "13pt" });
+    expect(attrs).toEqual({ fontFamily: "Futura Nova 2030", fontSize: "13pt", color: null });
     // Et il est réécrit tel quel à l'enregistrement suivant.
     expect(serializeDocument({ id: "doc-1", ydoc: result.ydoc })).toContain("Futura Nova 2030");
+  });
+});
+
+describe("T1.7 : couleur du texte et surlignage", () => {
+  it("critère 7 et 9 : aller-retour de la couleur et du surlignage, dans content et dans ydoc", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { id: "p-1" },
+          content: [
+            { type: "text", text: "Rendez-vous le " },
+            {
+              type: "text",
+              text: "12 mai",
+              marks: [{ type: "highlight", attrs: { color: "#FFF176" } }],
+            },
+            { type: "text", text: " : " },
+            {
+              type: "text",
+              text: "45 € 😀",
+              marks: [
+                { type: "bold" },
+                {
+                  type: "textStyle",
+                  attrs: { color: "#C62828", fontFamily: "EB Garamond", fontSize: "14pt" },
+                },
+                { type: "highlight", attrs: { color: "#C5E1A5" } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const text = serializeDocument({ id: createDocumentId(), ydoc: ydocFromJson(json) });
+    const saved = JSON.parse(text) as { version: number; content: DocumentJson };
+    expect(saved.version).toBe(1);
+    expect(JSON.stringify(saved.content)).toContain('"color":"#C62828"');
+    const marks = roundTrip(json).content?.[0]?.content?.map((part) => part.marks);
+    expect(marks?.[1]).toEqual([{ type: "highlight", attrs: { color: "#FFF176" } }]);
+    const byType = Object.fromEntries((marks?.[3] ?? []).map((mark) => [mark.type, mark.attrs]));
+    expect(Object.keys(byType).sort()).toEqual(["bold", "highlight", "textStyle"]);
+    expect(byType.textStyle).toEqual({
+      color: "#C62828",
+      fontFamily: "EB Garamond",
+      fontSize: "14pt",
+    });
+    expect(byType.highlight).toEqual({ color: "#C5E1A5" });
+  });
+});
+
+describe("T1.8 : tableaux", () => {
+  const cell = (type: string, id: string, text: string): DocumentJson => ({
+    type,
+    attrs: { id },
+    content: [paragraph(`${id}-p`, { text })],
+  });
+
+  it("critère 6 et 9 : aller-retour d'un tableau, chaque cellule garde son identifiant, version 1", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [cell("tableHeader", "h-1", "Poste"), cell("tableHeader", "h-2", "Montant")],
+            },
+            {
+              type: "tableRow",
+              content: [cell("tableCell", "c-1", "Courses 🛒"), cell("tableCell", "c-2", "350 €")],
+            },
+          ],
+        },
+        paragraph("p-1", { text: "Après le tableau" }),
+      ],
+    };
+    const text = serializeDocument({ id: createDocumentId(), ydoc: ydocFromJson(json) });
+    expect((JSON.parse(text) as { version: number }).version).toBe(1);
+    const reread = roundTrip(json);
+    const ids: unknown[] = [];
+    const visit = (node: DocumentJson) => {
+      if (node.type === "tableCell" || node.type === "tableHeader") ids.push(node.attrs?.id);
+      node.content?.forEach(visit);
+    };
+    visit(reread);
+    expect(ids).toEqual(["h-1", "h-2", "c-1", "c-2"]);
+    expect(reread.content?.map((block) => block.type)).toEqual(["table", "paragraph"]);
+  });
+
+  it("critère 10 : un tableau de 50 lignes et 10 colonnes s'enregistre et se relit", () => {
+    const rows = Array.from({ length: 50 }, (_, r) => ({
+      type: "tableRow",
+      content: Array.from({ length: 10 }, (_, c) =>
+        cell(
+          r === 0 ? "tableHeader" : "tableCell",
+          `c-${String(r)}-${String(c)}`,
+          `${String(r)}×${String(c)}`,
+        ),
+      ),
+    }));
+    const json: DocumentJson = { type: "doc", content: [{ type: "table", content: rows }] };
+    const reread = roundTrip(json);
+    expect(reread.content?.[0]?.content).toHaveLength(50);
   });
 });

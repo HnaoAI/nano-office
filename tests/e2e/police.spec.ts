@@ -8,6 +8,7 @@ import {
   button,
   editor,
   saveAndReopen,
+  selectText,
   settleSelection,
   start,
   waitUndoGroup,
@@ -46,29 +47,6 @@ function styleOfText(page: Page, text: string) {
 /** Taille en pixels, arrondie au dixième, d'une taille en points. */
 function px(points: number): number {
   return Math.round(((points * 4) / 3) * 10) / 10;
-}
-
-/** Sélectionne le texte exact `text` dans l'éditeur (double-clic impossible sur plusieurs mots). */
-async function selectText(page: Page, text: string) {
-  await page.evaluate((target) => {
-    const root = document.querySelector(".nano-editor");
-    if (!root) throw new Error("éditeur absent");
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const index = node.textContent?.indexOf(target) ?? -1;
-      if (index >= 0) {
-        const range = document.createRange();
-        range.setStart(node, index);
-        range.setEnd(node, index + target.length);
-        const selection = window.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-        return;
-      }
-    }
-    throw new Error(`texte absent : ${target}`);
-  }, text);
-  await settleSelection(page);
 }
 
 test("critère 1 : la liste propose les cinq polices intégrées, chacune affichée dans sa police", async ({

@@ -1,5 +1,5 @@
-// Police et taille du texte (T1.4) : polices intégrées, tailles proposées, et attributs `fontFamily`
-// et `fontSize` de la marque `textStyle` du schéma. Données et rendu HTML seulement, sans navigateur.
+// Police et taille du texte (T1.4) : polices intégrées, tailles proposées, et attributs `fontFamily`,
+// `fontSize` et `color` (T1.7) de la marque `textStyle` du schéma. Données et rendu HTML seulement, sans navigateur.
 import { Extension } from "@tiptap/core";
 
 /**
@@ -64,11 +64,23 @@ function firstFamily(cssValue: string): string | null {
 }
 
 /**
- * Attributs `fontFamily` (nom de la police) et `fontSize` (`14pt`) de la marque `textStyle`.
+ * Vrai si `value` peut être écrit sans risque dans un style CSS : une couleur ne doit pas pouvoir
+ * ajouter une autre propriété (`;`) ou un bloc (`{`).
+ */
+export function isSafeCssValue(value: unknown): value is string {
+  return typeof value === "string" && value.trim() !== "" && !/[;{}]/.test(value);
+}
+
+/**
+ * Attributs `fontFamily` (nom de la police), `fontSize` (`14pt`) et `color` (`#C62828`, T1.7) de la
+ * marque `textStyle`.
  * Écrit à la main plutôt qu'avec FontFamily et FontSize de Tiptap, qui écriraient le nom tel quel dans
  * le style, sans police de secours : une police inconnue s'afficherait alors en Times.
  * Le nom exact est aussi rendu dans `data-font`, relu au collage interne (T1.5) : il survit même
  * pour une police inconnue, que le style remplace.
+ * La couleur est écrite à la main plutôt qu'avec l'extension Color de Tiptap pour la même raison :
+ * le navigateur réécrit `#C62828` en `rgb(198, 40, 40)` dans le style copié, et la couleur relue au
+ * collage interne ne serait plus celle de la palette. Elle est donc aussi rendue dans `data-color`.
  */
 export const TextStyleAttributes = Extension.create({
   name: "textStyleAttributes",
@@ -93,6 +105,15 @@ export const TextStyleAttributes = Extension.create({
             renderHTML: (attributes) => {
               const points = fontSizePoints(attributes.fontSize);
               return points === null ? {} : { style: `font-size: ${fontSizeValue(points)}` };
+            },
+          },
+          color: {
+            default: null,
+            parseHTML: (element) =>
+              element.getAttribute("data-color") ?? (element.style.color || null),
+            renderHTML: (attributes) => {
+              const color: unknown = attributes.color;
+              return isSafeCssValue(color) ? { "data-color": color, style: `color: ${color}` } : {};
             },
           },
         },

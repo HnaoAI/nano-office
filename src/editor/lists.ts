@@ -3,6 +3,7 @@
 import type { Editor } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";
+import { isInTable } from "@tiptap/pm/tables";
 import { MAX_LIST_DEPTH } from "../core/schema";
 
 /** Type d'une liste : à puces ou numérotée. */
@@ -59,20 +60,24 @@ export function toggleList(editor: Editor, type: ListType): boolean {
 /**
  * Tab dans une liste : décale les éléments sélectionnés d'un niveau vers la droite, sauf si l'un
  * d'eux est déjà au niveau 3 (T1.2, critère 5).
- * @returns vrai si le curseur est dans une liste (la touche est alors consommée, même sans effet)
+ * Dans une cellule de tableau, si l'élément ne peut pas être décalé (premier élément, niveau 3), la
+ * touche est laissée au tableau, qui passe à la cellule suivante (T1.8, critère 3).
+ * @returns vrai si le curseur est dans une liste (la touche est alors consommée, même sans effet),
+ *   sauf dans une cellule quand rien n'est décalé
  */
 export function indentListItem(editor: Editor): boolean {
   const depth = selectionListDepth(editor.state);
   if (depth === 0) return false;
-  if (depth < MAX_LIST_DEPTH) editor.commands.sinkListItem("listItem");
-  return true;
+  const sunk = depth < MAX_LIST_DEPTH && editor.commands.sinkListItem("listItem");
+  return sunk || !isInTable(editor.state);
 }
 
 /**
  * Shift+Tab dans une liste : décale les éléments d'un niveau vers la gauche. Au premier niveau,
  * rien ne change : l'élément reste dans la liste (pour en sortir, Entrée sur un élément vide ou le
- * bouton de la liste).
- * @returns vrai si le curseur est dans une liste
+ * bouton de la liste). Dans une cellule de tableau, la touche passe alors au tableau, qui revient à
+ * la cellule précédente (T1.8, critère 3).
+ * @returns vrai si le curseur est dans une liste, sauf au premier niveau dans une cellule
  */
 export function outdentListItem(editor: Editor): boolean {
   const { $from } = editor.state.selection;
@@ -81,6 +86,6 @@ export function outdentListItem(editor: Editor): boolean {
     if ($from.node(d).type.name === "listItem") depth++;
   }
   if (depth === 0) return false;
-  if (depth > 1) editor.commands.liftListItem("listItem");
-  return true;
+  if (depth > 1) return editor.commands.liftListItem("listItem") || !isInTable(editor.state);
+  return !isInTable(editor.state);
 }

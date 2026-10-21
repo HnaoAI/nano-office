@@ -1,28 +1,18 @@
 // Tests d'interface du ticket T1.5 (copier-coller propre), dans Chromium. Les collages venus d'une
 // autre application sont simulés par un événement `paste` portant le HTML et le texte du
 // presse-papiers ; les copier-coller internes et Ctrl/Cmd+Shift+V passent par le vrai presse-papiers.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import type { DocumentJson } from "../../src/core/types";
-import { editor, settleSelection, start, waitUndoGroup, ydocJson } from "./formatHelpers";
+import {
+  editor,
+  pasteFromOtherApp,
+  settleSelection,
+  start,
+  waitUndoGroup,
+  ydocJson,
+} from "./formatHelpers";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
-
-/** Colle `html` (et son texte) comme le ferait le presse-papiers d'une autre application. */
-async function pasteFromOtherApp(page: Page, html: string, plain = "") {
-  await page.evaluate(
-    ([data, text]) => {
-      const transfer = new DataTransfer();
-      transfer.setData("text/html", data ?? "");
-      transfer.setData("text/plain", text ?? "");
-      document
-        .querySelector(".nano-editor")
-        ?.dispatchEvent(
-          new ClipboardEvent("paste", { clipboardData: transfer, bubbles: true, cancelable: true }),
-        );
-    },
-    [html, plain],
-  );
-}
 
 /** Tous les identifiants de bloc du Y.Doc. */
 function blockIds(json: DocumentJson): unknown[] {
@@ -89,7 +79,8 @@ test("critère 3 : Ctrl/Cmd+Shift+V colle du texte brut, sans mise en forme, en 
   await expect(target.locator("h1, strong, ol, li")).toHaveCount(0);
 });
 
-test("critère 4 : images, vidéos, tableaux et scripts sont ignorés ou convertis en texte, sans erreur", async ({
+// Depuis T1.8 (critère 7), un tableau collé reste un tableau : il n'est plus converti en texte.
+test("critère 4 : images, vidéos et scripts sont ignorés, un tableau reste un tableau (T1.8), sans erreur", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -102,7 +93,8 @@ test("critère 4 : images, vidéos, tableaux et scripts sont ignorés ou convert
   await expect(target).toContainText("Avant");
   await expect(target).toContainText("Case 1");
   await expect(target).toContainText("Après");
-  await expect(target.locator("img, video, table, script")).toHaveCount(0);
+  await expect(target.locator("img, video, script")).toHaveCount(0);
+  await expect(target.locator("table td")).toHaveText(["Case 1", "Case 2"]);
   expect(await page.evaluate(() => (window as { __pirate?: boolean }).__pirate)).toBeUndefined();
   expect(errors).toEqual([]);
 });

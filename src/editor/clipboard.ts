@@ -1,6 +1,6 @@
 // Copier-coller propre (T1.5) : un collage venu d'une autre application garde la structure
-// (paragraphes, gras, italique, titres, listes) mais perd polices, tailles, couleurs, fonds et
-// alignements ; un collage venu de Nano Buro garde toute la mise en forme. Les blocs collés
+// (paragraphes, gras, italique, titres, listes) mais perd polices, tailles, couleurs, surlignages
+// (T1.7), fonds et alignements ; un collage venu de Nano Buro garde toute la mise en forme. Les blocs collés
 // reçoivent toujours de nouveaux identifiants. S'appuie sur les crochets de collage de ProseMirror.
 import { Extension } from "@tiptap/core";
 import {
@@ -14,6 +14,13 @@ import {
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
+import { CellSelection, isInTable } from "@tiptap/pm/tables";
+import {
+  addTableBordersForEmail,
+  flattenNestedTables,
+  flattenTablesForCell,
+  splitMergedCells,
+} from "./tablePaste";
 
 /**
  * Attribut posé sur le HTML copié depuis Nano Buro, pour reconnaître un collage interne (critère 5),
@@ -46,6 +53,7 @@ class NanoClipboardSerializer extends DOMSerializer {
       for (const child of Array.from(result.children)) {
         child.setAttribute(NANO_CLIPBOARD_ATTRIBUTE, "");
       }
+      addTableBordersForEmail(result);
     }
     return result;
   }
@@ -110,13 +118,20 @@ function convertWordLists(body: HTMLElement): void {
 
 /**
  * Prépare le HTML d'un collage venu d'une autre application, avant sa lecture par le schéma :
- * listes de Word en vraies listes. Le reste (styles, images, tableaux, scripts) est trié ensuite :
- * ce que le schéma ne connaît pas est ignoré ou gardé comme simple texte (critère 4).
+ * listes de Word en vraies listes, tableaux imbriqués aplatis et cellules fusionnées séparées (T1.8). Le reste (styles,
+ * images, scripts) est trié ensuite : ce que le schéma ne connaît pas est ignoré ou gardé comme
+ * simple texte (critère 4). Les tableaux restent des tableaux (T1.8).
  */
 export function prepareExternalHtml(html: string): string {
-  if (!/mso-list/i.test(html)) return html;
+  const wordLists = /mso-list/i.test(html);
+  const tables = /<table/i.test(html);
+  if (!wordLists && !tables) return html;
   const doc = new DOMParser().parseFromString(html, "text/html");
-  convertWordLists(doc.body);
+  if (wordLists) convertWordLists(doc.body);
+  if (tables) {
+    flattenNestedTables(doc.body);
+    splitMergedCells(doc.body);
+  }
   return doc.body.innerHTML;
 }
 
@@ -133,11 +148,17 @@ function mapFragment(
   return Fragment.from(nodes);
 }
 
+/** Marques retirées d'un collage extérieur : police, taille et couleur ; surlignage (T1.7). */
+const EXTERNAL_MARKS_REMOVED = ["textStyle", "highlight"];
+
+/** Attributs d'une cellule collée de l'extérieur : sans fusion, largeur ni alignement propres. */
+const EXTERNAL_CELL_ATTRS = { colspan: 1, rowspan: 1, colwidth: null, align: null };
+
 /** Options du nettoyage d'un collage. */
 export interface PasteCleaning {
   /** Vrai pour un collage copié depuis Nano Buro : toute la mise en forme est gardée (critère 5). */
   internal: boolean;
-  /** Police et taille du texte autour du curseur, données au texte collé de l'extérieur (critère 2). */
+  /** Police et taille (sans couleur) autour du curseur, données au texte collé de l'extérieur (critère 2). */
   contextTextStyle: Mark | null;
   /** Vrai pour un collage : les blocs collés reçoivent de nouveaux identifiants (critère 8). */
   newBlockIds: boolean;
@@ -147,15 +168,17 @@ export interface PasteCleaning {
  * Nettoie le contenu collé, déjà lu par le schéma.
  * - Toujours (collage) : retire les identifiants de bloc ; src/editor/blockIds.ts en donne de
  *   nouveaux, sans doublon (critère 8).
- * - Collage extérieur : retire polices et tailles et leur substitue celles du curseur, et retire
- *   l'alignement (critère 2). Couleurs et fonds n'existent pas dans le schéma : ils sont déjà ignorés.
+ * - Collage extérieur : retire polices, tailles, couleurs (marque `textStyle`) et surlignages
+ *   (marque `highlight`, T1.7 critère 7), leur substitue la police et la taille du curseur, et retire
+ *   l'alignement (critère 2), et la fusion, la largeur et l'alignement des cellules (T1.8). Les fonds
+ *   n'existent pas dans le schéma : ils sont déjà ignorés.
  */
 export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
   const { internal, contextTextStyle, newBlockIds } = options;
   const content = mapFragment(slice.content, (node) => {
     if (node.isText) {
       if (internal) return node;
-      const marks = node.marks.filter((mark) => mark.type.name !== "textStyle");
+      const marks = node.marks.filter((mark) => !EXTERNAL_MARKS_REMOVED.includes(mark.type.name));
       return node.mark(contextTextStyle ? contextTextStyle.addToSet(marks) : marks);
     }
     const attrs = { ...node.attrs };
@@ -163,16 +186,24 @@ export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
       attrs[BLOCK_ID_ATTRIBUTE] = null;
     }
     if (!internal && "textAlign" in attrs) attrs.textAlign = null;
+    // Cellule venue d'ailleurs : ni largeur de colonne ni alignement de cellule (T1.8, critère 5 et 7).
+    if (!internal && "colwidth" in attrs) Object.assign(attrs, EXTERNAL_CELL_ATTRS);
     return node.type.create(attrs, node.content, node.marks);
   });
   return new Slice(content, slice.openStart, slice.openEnd);
 }
 
-/** Police et taille au curseur, à donner au texte collé de l'extérieur. */
+/**
+ * Police et taille au curseur, à donner au texte collé de l'extérieur. Sans la couleur : un collage
+ * extérieur n'est jamais coloré, même dans un texte rouge (T1.7, critère 7).
+ */
 function contextTextStyleOf(view: EditorView): Mark | null {
   const { state } = view;
   const marks = state.storedMarks ?? state.selection.$from.marks();
-  return marks.find((mark) => mark.type.name === "textStyle") ?? null;
+  const mark = marks.find((candidate) => candidate.type.name === "textStyle");
+  if (!mark) return null;
+  const attrs = { ...mark.attrs, color: null };
+  return Object.values(attrs).some((value) => value !== null) ? mark.type.create(attrs) : null;
 }
 
 /**
@@ -197,7 +228,9 @@ export function createClipboardPlugin(schema: Schema): Plugin {
         const dragging = view.dragging !== null;
         const internal = pastedFromNanoBuro || dragging;
         pastedFromNanoBuro = false;
-        return cleanPastedSlice(slice, {
+        const { selection } = view.state;
+        const inCell = !(selection instanceof CellSelection) && isInTable(view.state);
+        return cleanPastedSlice(inCell ? flattenTablesForCell(slice) : slice, {
           internal,
           contextTextStyle: contextTextStyleOf(view),
           newBlockIds: !dragging,

@@ -39,6 +39,33 @@ ne doit jamais faire (règle produit 2).
 
 Contrastes : le texte discret `#5F5F5C` reste lisible sur `#ECECEA` (environ 5,4:1). Ne pas l'éclaircir.
 
+## Couleurs du document
+
+Les seules couleurs à l'écran sont celles du document, jamais celles de l'interface (T1.7) : les boutons
+restent monochromes, seuls le trait sous le « A » du bouton « Couleur du texte » et les pastilles des
+grilles montrent les couleurs. Les deux palettes sont fixes (`src/core/documentColors.ts`).
+
+| Couleur du texte | Valeur | | Surlignage | Valeur |
+|---|---|---|---|---|
+| Automatique | couleur du texte du document | | Aucun | pastille blanche barrée |
+| Gris | `#6B6B68` | | Jaune | `#FFF176` |
+| Rouge | `#C62828` | | Vert | `#C5E1A5` |
+| Orange | `#D84315` | | Bleu | `#B3E5FC` |
+| Vert | `#2E7D32` | | Rose | `#F8BBD0` |
+| Bleu | `#1565C0` | | | |
+| Violet | `#6A1B9A` | | | |
+
+Grille de pastilles : surface `#FFFFFF`, rayon 14 px et ombre d'information, comme un message
+d'information ; pastilles rondes de 28 px, bordure du séparateur fort, anneau noir autour de la pastille
+choisie. Le trait sous le « A » est gris clair quand la sélection mélange plusieurs couleurs.
+
+## Tableaux
+
+Le tableau occupe la largeur de la page, colonnes de même largeur, bordures de 1 px du séparateur fort
+`#D4D4D1`, en-tête en gras (600), sans fond de couleur (T1.8). La grille d'insertion (8 × 8 cases)
+et le groupe « Tableau » de la barre reprennent le style des grilles de couleurs et des boutons de la
+barre : icônes au trait, bouton « Ligne d'en-tête » activé sur fond `#E2E2DF`.
+
 ## Typographie
 
 - **Interface et texte par défaut** : IBM Plex Sans (400, 500, 600, italique 400).
