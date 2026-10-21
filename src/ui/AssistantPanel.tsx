@@ -4,7 +4,6 @@
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 import { useEffect, useState } from "react";
-import { focusEditor } from "../editor/focus";
 import { insertParagraphsAfter, replaceWithParagraphs } from "../editor/assistantEdits";
 import {
   acceptSuggestions,
@@ -153,6 +152,7 @@ function CloseButton({ label, onClick }: { label: string; onClick: () => void })
       className="nano-message-close"
       aria-label={label}
       title={label}
+      onMouseDown={keepFocus}
       onClick={onClick}
     >
       <CloseIcon />
@@ -238,14 +238,14 @@ function TranslationPanel({
   onDismiss: () => void;
 }) {
   const [copied, setCopied] = useState<boolean | null>(null);
-  // Relu à chaque transaction : la sélection d'origine suit le document, ou disparaît.
-  const range = useEditorState({ editor, selector: () => translation.range() });
+  // Relu à chaque transaction : les paragraphes d'origine suivent le document, ou disparaissent.
+  const ranges = useEditorState({ editor, selector: () => translation.ranges() });
   const apply = (how: "replace" | "insert") => {
-    if (!range) return;
-    if (how === "replace") replaceWithParagraphs(editor, range, translation.paragraphs);
-    else insertParagraphsAfter(editor, range, translation.paragraphs);
+    if (!ranges) return;
+    if (how === "replace") {
+      replaceWithParagraphs(editor, ranges, translation.paragraphs, translation.aligned);
+    } else insertParagraphsAfter(editor, ranges, translation.paragraphs);
     onDismiss();
-    focusEditor(editor);
   };
   return (
     <div className="nano-assistant-row">
@@ -264,7 +264,7 @@ function TranslationPanel({
         </div>
         <CloseButton label="Fermer la traduction" onClick={onDismiss} />
         <div className="nano-translation-buttons">
-          {!range && <span className="nano-translation-note">Le texte d'origine a changé.</span>}
+          {!ranges && <span className="nano-translation-note">Le texte d'origine a changé.</span>}
           <button
             type="button"
             className="nano-message-secondary"
@@ -280,7 +280,7 @@ function TranslationPanel({
           <button
             type="button"
             className="nano-message-secondary"
-            disabled={!range}
+            disabled={!ranges}
             onMouseDown={keepFocus}
             onClick={() => apply("insert")}
           >
@@ -289,7 +289,7 @@ function TranslationPanel({
           <button
             type="button"
             className="nano-message-action"
-            disabled={!range}
+            disabled={!ranges}
             onMouseDown={keepFocus}
             onClick={() => apply("replace")}
           >

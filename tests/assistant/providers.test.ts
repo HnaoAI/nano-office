@@ -97,6 +97,30 @@ describe("T3.1 : Claude (Anthropic)", () => {
     }
   });
 
+  it("critère 14 : un crédit Anthropic épuisé (400 « credit balance ») est un quota atteint", async () => {
+    const { fetcher } = fakeFetch(() =>
+      json(
+        {
+          type: "error",
+          error: {
+            type: "invalid_request_error",
+            message: "Your credit balance is too low to access the Anthropic API.",
+          },
+        },
+        400,
+      ),
+    );
+    const provider = createProvider({
+      provider: "anthropic",
+      model: "m",
+      apiKey: "k",
+      fetch: fetcher,
+    });
+    expect(await failureOf(sendWithTimeout(provider, REQUEST, new AbortController().signal))).toBe(
+      "quota",
+    );
+  });
+
   it("critère 14 : une réponse sans texte, coupée ou refusée n'est pas lue", async () => {
     const bodies: [unknown, string][] = [
       [{ content: [], stop_reason: "end_turn" }, "unreadable"],

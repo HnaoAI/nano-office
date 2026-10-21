@@ -1,7 +1,7 @@
 // Tests des réglages de l'assistant (src/storage/assistantSettingsStore.ts, T3.1, critères 1, 3 et 4) :
 // valeurs par défaut, réglages abîmés, clé rangée à part, « Oublier la clé ».
 import { describe, expect, it } from "vitest";
-import { DEFAULT_MODELS } from "../../src/core/assistant";
+import { DEFAULT_ASSISTANT_SETTINGS, DEFAULT_MODELS } from "../../src/core/assistant";
 import {
   ASSISTANT_KEYS_KEY,
   ASSISTANT_SETTINGS_KEY,
@@ -79,5 +79,16 @@ describe("T3.1 : réglages de l'assistant", () => {
     expect(loadAssistantSettings(null).enabled).toBe(false);
     expect(loadAssistantKeys(null)).toEqual({});
     expect(() => saveAssistantKeys({ anthropic: "x" }, null)).not.toThrow();
+  });
+
+  it("un stockage plein ou refusé n'empêche pas d'enregistrer", () => {
+    const full = {
+      ...memoryStorage(),
+      setItem: () => {
+        throw new DOMException("plein", "QuotaExceededError");
+      },
+    };
+    expect(() => saveAssistantSettings(DEFAULT_ASSISTANT_SETTINGS, full)).not.toThrow();
+    expect(() => saveAssistantKeys({ anthropic: "x" }, full)).not.toThrow();
   });
 });

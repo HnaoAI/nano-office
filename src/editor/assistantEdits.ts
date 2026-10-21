@@ -41,7 +41,8 @@ export function selectedParagraphs(state: EditorState): SelectedParagraph[] {
       return false;
     });
   }
-  return result;
+  // Une sélection de cellules donne la cellule de tête en premier : remise dans l'ordre du texte.
+  return result.sort((a, b) => a.from - b.from);
 }
 
 /**
@@ -105,35 +106,63 @@ function paragraphNodes(paragraphs: string[]) {
   }));
 }
 
+/** Remplace le texte d'une plage dans son bloc, avec la mise en forme de son premier caractère. */
+function replaceText(tr: Transaction, range: DocRange, text: string): void {
+  const marks = tr.doc.nodeAt(range.from)?.marks ?? [];
+  if (text === "") tr.delete(range.from, range.to);
+  else tr.replaceWith(range.from, range.to, tr.doc.type.schema.text(text, marks));
+}
+
 /**
- * « Remplacer la sélection » par la traduction, en une étape d'annulation (critère 12). Un seul
- * paragraphe reste dans le bloc, avec la mise en forme du premier caractère remplacé ; plusieurs
- * paragraphes remplacent la sélection par autant de paragraphes.
+ * « Remplacer la sélection » par la traduction, en une étape d'annulation (critère 12).
+ * Chaque paragraphe envoyé reçoit sa traduction dans son propre bloc, avec la mise en forme de son
+ * premier caractère : titres, listes, cellules et alignements restent en place, et les blocs non
+ * envoyés (images, tableaux) ne sont jamais touchés.
+ * Réponse non alignée : un seul paragraphe envoyé est coupé en autant de paragraphes ; sinon toute la
+ * traduction va dans le premier paragraphe et le texte des suivants est retiré, sans retirer leurs blocs.
+ * @param ranges plages des paragraphes envoyés, dans l'ordre du texte
+ * @param aligned vrai si la réponse donne un paragraphe par paragraphe envoyé
  */
-export function replaceWithParagraphs(editor: Editor, range: DocRange, paragraphs: string[]): void {
+export function replaceWithParagraphs(
+  editor: Editor,
+  ranges: DocRange[],
+  paragraphs: string[],
+  aligned: boolean,
+): void {
   const { state } = editor;
-  const [single] = paragraphs;
-  if (paragraphs.length === 1 && single !== undefined) {
-    const marks = state.doc.nodeAt(range.from)?.marks ?? [];
-    const tr =
-      single === ""
-        ? state.tr.delete(range.from, range.to)
-        : state.tr.replaceWith(range.from, range.to, state.schema.text(single, marks));
-    dispatchAsOneStep(editor, tr);
-    return;
+  const [only] = ranges;
+  if (!only) return;
+  const tr = state.tr;
+  if (ranges.length === 1 && paragraphs.length > 1) {
+    // Paragraphes ouverts aux deux bouts : le premier continue le texte avant la sélection, le dernier
+    // reprend le texte qui la suit, sans paragraphe vide en plus.
+    const nodes = paragraphNodes(paragraphs).map((json) => state.schema.nodeFromJSON(json));
+    tr.replace(only.from, only.to, new Slice(Fragment.from(nodes), 1, 1));
+  } else {
+    const texts =
+      aligned && paragraphs.length === ranges.length
+        ? paragraphs
+        : ranges.map((_, index) => (index === 0 ? paragraphs.join(" ") : ""));
+    // De la fin vers le début : chaque remplacement laisse intactes les positions qui le précèdent.
+    for (let index = ranges.length - 1; index >= 0; index -= 1) {
+      const range = ranges[index];
+      if (range) replaceText(tr, range, texts[index] ?? "");
+    }
   }
-  // Paragraphes ouverts aux deux bouts : le premier continue le texte avant la sélection, le dernier
-  // reprend le texte qui la suit, sans paragraphe vide en plus.
-  const nodes = paragraphNodes(paragraphs).map((json) => state.schema.nodeFromJSON(json));
-  const tr = state.tr.replace(range.from, range.to, new Slice(Fragment.from(nodes), 1, 1));
   dispatchAsOneStep(editor, tr);
 }
 
 /**
- * « Insérer après » : la traduction en nouveaux paragraphes, après le bloc où finit la sélection
+ * « Insérer après » : la traduction en nouveaux paragraphes, après le bloc du dernier paragraphe envoyé
  * (dans le même élément de liste ou la même cellule), en une étape d'annulation (critère 12).
  */
-export function insertParagraphsAfter(editor: Editor, range: DocRange, paragraphs: string[]): void {
+export function insertParagraphsAfter(
+  editor: Editor,
+  ranges: DocRange[],
+  paragraphs: string[],
+): void {
+  const range = ranges[ranges.length - 1];
+  if (!range) return;
   const { state } = editor;
   const $end = state.doc.resolve(range.to);
   const position = $end.parent.isTextblock ? $end.after() : range.to;

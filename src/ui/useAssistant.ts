@@ -21,14 +21,17 @@ import {
   type DocRange,
   type SelectedParagraph,
 } from "../editor/assistantEdits";
+import { focusEditor } from "../editor/focus";
 import { clearSuggestions, showSuggestions, suggestionsFor } from "../editor/suggestions";
 import type { AssistantConfig } from "./useAssistantSettings";
 
-/** Traduction affichée dans le panneau, avec la sélection d'origine suivie dans le document. */
+/** Traduction affichée dans le panneau, avec les paragraphes d'origine suivis dans le document. */
 export interface Translation {
   paragraphs: string[];
-  /** Sélection traduite, à jour ; null si son texte a changé depuis (critère 10). */
-  range: () => DocRange | null;
+  /** Vrai si la réponse donne un paragraphe traduit par paragraphe envoyé. */
+  aligned: boolean;
+  /** Paragraphes traduits, à jour et dans l'ordre du texte ; null si leur texte a changé (critère 10). */
+  ranges: () => DocRange[] | null;
 }
 
 /** Ce que montre le panneau de l'assistant, en plus des propositions de l'éditeur. */
@@ -50,6 +53,17 @@ function subscribeOnline(callback: () => void) {
 /** Vrai quand le navigateur se dit en ligne (critère 5 : boutons grisés hors ligne). */
 export function useOnline(): boolean {
   return useSyncExternalStore(subscribeOnline, () => navigator.onLine);
+}
+
+/**
+ * Raison d'un abandon sans message : assistant éteint ou panneau fermé. Seul un abandon demandé par
+ * l'utilisateur (Échap, « Annuler ») affiche « Demande annulée ».
+ */
+const SILENT_ABORT = "silent";
+
+/** Vrai si une boîte de dialogue (Réglages, Mise en page) est ouverte : Échap lui revient. */
+function dialogOpen(): boolean {
+  return document.querySelector('[role="dialog"]') !== null;
 }
 
 function message(kind: AssistantFailureKind, details?: AssistantFailureDetails): AssistantStatus {
@@ -77,18 +91,20 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
 
   const cancel = useCallback(() => controller.current?.abort(), []);
 
+  // Le bouton qui ferme le panneau disparaît avec lui : le focus revient dans le texte.
   const dismiss = useCallback(() => {
-    cancel();
+    controller.current?.abort(SILENT_ABORT);
     release();
     clearSuggestions(editor);
     setStatus({ kind: "idle" });
-  }, [cancel, release, editor]);
+    focusEditor(editor);
+  }, [release, editor]);
 
-  // Assistant éteint, ou éditeur remplacé (autre document) : la demande en cours est abandonnée et
-  // le panneau se ferme (critères 4 et 10).
+  // Assistant éteint : la demande en cours est abandonnée et le panneau se ferme (critère 4). Un autre
+  // document remplace tout le composant (clé de DocumentEditor), ce qui passe par l'effet suivant.
   useEffect(() => {
     if (config) return;
-    controller.current?.abort();
+    controller.current?.abort(SILENT_ABORT);
     release();
     clearSuggestions(editor);
     // Fermeture du panneau quand l'assistant s'éteint : rien d'autre ne la déclencherait.
@@ -97,18 +113,18 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
   }, [config, editor, release]);
   useEffect(
     () => () => {
-      controller.current?.abort();
+      controller.current?.abort(SILENT_ABORT);
       stopWatching.current?.();
     },
     [],
   );
 
-  // Échap annule la demande en cours (critère 5), où que soit le focus.
+  // Échap annule la demande en cours (critère 5), où que soit le focus, sauf dans une boîte de dialogue.
   const pending = status.kind === "pending";
   useEffect(() => {
     if (!pending) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || dialogOpen()) return;
       event.preventDefault();
       event.stopPropagation();
       controller.current?.abort();
@@ -120,10 +136,11 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
   const run = useCallback(
     async (task: AssistantTask) => {
       if (!config || controller.current) return;
+      const sent = selectedParagraphs(editor.state);
+      // Sélection sans texte (une image seule, des espaces) : le panneau affiché reste tel quel.
+      if (sent.length === 0) return;
       release();
       clearSuggestions(editor);
-      const sent = selectedParagraphs(editor.state);
-      if (sent.length === 0) return;
       const words = countWords(sent.map((paragraph) => paragraph.text).join("\n"));
       if (words > MAX_ASSISTANT_WORDS) {
         setStatus(message("too-long", { words }));
@@ -134,16 +151,13 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
         return;
       }
       // Texte suivi pendant la demande : modifié entre-temps, la réponse n'est pas appliquée. Une
-      // traduction suit la sélection ; une correction suit les blocs entiers, puis chaque paragraphe.
-      const { from, to } = editor.state.selection;
+      // traduction suit les paragraphes envoyés ; une correction suit leurs blocs entiers, puis eux.
+      const paragraphRanges = sent.map(({ from, to }) => ({ from, to }));
       const watch = watchRanges(
         editor,
         task === "translate"
-          ? [{ from, to }]
-          : [
-              ...sent.map((paragraph) => paragraph.block),
-              ...sent.map(({ from: start, to: end }) => ({ from: start, to: end })),
-            ],
+          ? paragraphRanges
+          : [...sent.map((paragraph) => paragraph.block), ...paragraphRanges],
       );
       stopWatching.current = watch.stop;
       const abort = new AbortController();
@@ -164,6 +178,8 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
           ),
           abort.signal,
         );
+        // Réponse arrivée juste après un abandon : elle n'est pas montrée.
+        if (abort.signal.aborted) throw new AssistantFailure("cancelled", details);
         const parsed = parseParagraphs(raw, sent.length);
         if (!parsed) throw new AssistantFailure("unreadable", details);
         const ranges = watch.current();
@@ -173,7 +189,8 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
             kind: "translation",
             translation: {
               paragraphs: parsed.paragraphs,
-              range: () => watch.current()?.[0] ?? null,
+              aligned: parsed.aligned,
+              ranges: () => watch.current(),
             },
           });
           return;
@@ -193,10 +210,13 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
           });
           return;
         }
+        // La sélection se replie à sa fin : son surlignage cacherait les marques de suggestion.
+        editor.commands.setTextSelection(editor.state.selection.to);
         showSuggestions(editor, suggestionsFor(current, changes));
         setStatus({ kind: "idle" });
       } catch (error) {
         release();
+        if (abort.signal.reason === SILENT_ABORT) return;
         const failure =
           error instanceof AssistantFailure ? error : new AssistantFailure("failed", details);
         setStatus(message(failure.kind, failure.details));

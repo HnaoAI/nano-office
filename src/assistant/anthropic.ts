@@ -15,12 +15,27 @@ interface MessagesResponse {
 }
 
 /**
+ * Vrai si une réponse 400 dit que le crédit du compte est épuisé : Anthropic ne répond pas 402 ou 429
+ * dans ce cas, fréquent avec une clé neuve (critère 14).
+ */
+async function creditTooLow(response: Response): Promise<boolean> {
+  try {
+    const body = (await response.clone().json()) as { error?: { message?: unknown } };
+    const text = body.error?.message;
+    return typeof text === "string" && /credit balance/i.test(text);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Fournisseur Claude.
  * - `anthropic-dangerous-direct-browser-access` est l'en-tête prévu pour un appel depuis le navigateur
  *   avec la clé de l'utilisateur (critère 13).
  * - La réponse est demandée au format JSON du schéma (`output_config.format`), avec un effort faible :
  *   corriger et traduire n'ont pas besoin d'un long raisonnement.
- * - 529 (service surchargé) et les erreurs 5xx deviennent « busy » ; 401 et 403 « auth » ; 429 « quota ».
+ * - 529 (service surchargé) et les erreurs 5xx deviennent « busy » ; 401 et 403 « auth » ; 429 et
+ *   un crédit épuisé (400) « quota ».
  */
 export function createAnthropicProvider(
   model: string,
@@ -52,6 +67,9 @@ export function createAnthropicProvider(
         }),
       });
       const details = { provider: "anthropic" as const, model };
+      if (response.status === 400 && (await creditTooLow(response))) {
+        throw new AssistantFailure("quota", details);
+      }
       if (!response.ok) throw failureForStatus(response.status, details);
       let body: MessagesResponse;
       try {

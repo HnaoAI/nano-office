@@ -130,6 +130,9 @@ test.describe("T3.1 : réglages", () => {
     await button(page, "Réglages").click();
     dialog = page.getByRole("dialog", { name: "Réglages" });
     await dialog.getByRole("button", { name: "Oublier la clé" }).click();
+    // L'interrupteur suit l'assistant, éteint avec la clé ; rallumé, il ne montre plus aucune clé.
+    await expect(dialog.getByRole("switch")).not.toBeChecked();
+    await dialog.getByRole("switch").check();
     await expect(dialog.getByLabel("Clé d'API Claude")).toHaveValue("");
     expect(
       await page.evaluate(() => localStorage.getItem("nano-office:assistant-keys")),
@@ -407,6 +410,28 @@ test.describe("T3.1 : traduire", () => {
     await expect.poll(() => documentText(page)).toBe("Le chat dort.");
   });
 
+  test("critère 12 : tout sélectionner puis « Remplacer la sélection » garde le titre et les paragraphes", async ({
+    page,
+  }) => {
+    await enableAssistant(page);
+    await fakeProvider(page, "anthropic", () => ({
+      paragraphs: ["The cat sleeps.", "It dreams."],
+    }));
+    await start(page);
+    await page.keyboard.press("Control+Shift+Digit1");
+    await page.keyboard.type("Le chat dort.");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Il rêve.");
+    await waitUndoGroup(page);
+    await page.keyboard.press("ControlOrMeta+A");
+    await button(page, "Traduire en anglais").click();
+    const panel = page.getByRole("region", { name: "Traduction en anglais" });
+    await panel.getByRole("button", { name: "Remplacer la sélection" }).click();
+    await expect.poll(() => documentText(page)).toBe("The cat sleeps.\nIt dreams.");
+    const json = await ydocJson(page);
+    expect((json.content ?? []).map((block) => block.type)).toEqual(["heading", "paragraph"]);
+  });
+
   test("critère 12 : « Insérer après » ajoute la traduction après la sélection, et « Copier » la copie", async ({
     page,
     context,
@@ -481,6 +506,37 @@ test.describe("T3.1 : erreurs", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("status").filter({ hasText: "Demande annulée" })).toBeVisible();
     await expect(button(page, "Corriger")).toBeEnabled();
+    expect(await documentText(page)).toBe(FAULTY);
+  });
+
+  test("critère 4 : éteindre l'assistant pendant une demande l'abandonne sans message", async ({
+    page,
+  }) => {
+    await enableAssistant(page);
+    await fakeProvider(page, "anthropic", () => ({ hang: true }));
+    await start(page);
+    await writeAndCorrect(page, FAULTY);
+    await expect(
+      page.getByRole("status").filter({ hasText: "Correction en cours…" }),
+    ).toBeVisible();
+    await button(page, "Réglages").click();
+    const dialog = page.getByRole("dialog", { name: "Réglages" });
+    // Échap ferme la boîte, sans annuler la demande en arrière-plan.
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      page.getByRole("status").filter({ hasText: "Correction en cours…" }),
+    ).toBeVisible();
+    await button(page, "Réglages").click();
+    await dialog.getByRole("switch").uncheck();
+    await dialog.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(assistantGroup(page)).toHaveCount(0);
+    await button(page, "Réglages").click();
+    await dialog.getByRole("switch").check();
+    await dialog.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(assistantGroup(page)).toBeVisible();
+    await expect(page.getByText("Demande annulée")).toHaveCount(0);
+    await expect(page.getByText("Correction en cours…")).toHaveCount(0);
     expect(await documentText(page)).toBe(FAULTY);
   });
 

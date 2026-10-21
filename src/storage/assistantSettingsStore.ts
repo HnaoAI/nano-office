@@ -70,13 +70,25 @@ export function loadAssistantSettings(
   };
 }
 
+/**
+ * Écrit une valeur. Un stockage plein ou refusé (navigation privée) n'interrompt pas « Enregistrer » :
+ * les réglages valent alors jusqu'à la fermeture de la page.
+ */
+function writeItem(storage: KeyValueStorage | null, key: string, value: string): void {
+  try {
+    storage?.setItem(key, value);
+  } catch {
+    // Rien à faire : les réglages restent en mémoire pour cette page.
+  }
+}
+
 /** Enregistre les réglages (sans aucune clé). */
 export function saveAssistantSettings(
   settings: AssistantSettings,
   storage: KeyValueStorage | null = defaultStorage(),
 ): void {
   const { enabled, provider, models } = settings;
-  storage?.setItem(ASSISTANT_SETTINGS_KEY, JSON.stringify({ enabled, provider, models }));
+  writeItem(storage, ASSISTANT_SETTINGS_KEY, JSON.stringify({ enabled, provider, models }));
 }
 
 /** Clés d'API enregistrées. */
@@ -102,7 +114,7 @@ export function saveAssistantKeys(
     Object.entries(keys).filter(([, value]) => typeof value === "string" && value.trim() !== ""),
   );
   if (Object.keys(kept).length === 0) storage?.removeItem(ASSISTANT_KEYS_KEY);
-  else storage?.setItem(ASSISTANT_KEYS_KEY, JSON.stringify(kept));
+  else writeItem(storage, ASSISTANT_KEYS_KEY, JSON.stringify(kept));
 }
 
 /** « Oublier la clé » : efface toutes les clés d'API de cet ordinateur (critère 3). */

@@ -169,6 +169,7 @@ export function SettingsDialog({
               type="button"
               onClick={() => {
                 setDraftKeys({});
+                setEnabled(false);
                 onForgetKeys();
               }}
             >

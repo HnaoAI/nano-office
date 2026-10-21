@@ -4,6 +4,7 @@
 // gardée, refuser, disparition quand le texte change, texte sélectionné, traduction insérée.
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@tiptap/core";
+import { CellSelection } from "@tiptap/pm/tables";
 import { correctionChanges, parseParagraphs } from "../../src/core/assistant";
 import type { DocumentJson } from "../../src/core/types";
 import {
@@ -62,6 +63,17 @@ function shown(target: Editor, count: number) {
 }
 
 /** Morceaux de texte du premier paragraphe et leurs marques. */
+/** Texte de chaque bloc de texte, dans l'ordre (listes et tableaux compris). */
+function blockTexts(target: Editor): string[] {
+  const texts: string[] = [];
+  target.state.doc.descendants((node) => {
+    if (!node.isTextblock) return true;
+    texts.push(node.textContent);
+    return false;
+  });
+  return texts;
+}
+
 function runs(target: Editor): [string, string[]][] {
   const result: [string, string[]][] = [];
   target.state.doc.firstChild?.forEach((child) => {
@@ -225,7 +237,7 @@ describe("T3.1 : traduction insérée dans l'éditeur", () => {
     const target = start(
       docOf(textNode("Avant "), textNode("bonjour", "bold"), textNode(" après")),
     );
-    replaceWithParagraphs(target, { from: 7, to: 14 }, ["hello"]);
+    replaceWithParagraphs(target, [{ from: 7, to: 14 }], ["hello"], true);
     expect(runs(target)).toEqual([
       ["Avant ", []],
       ["hello", ["bold"]],
@@ -235,13 +247,107 @@ describe("T3.1 : traduction insérée dans l'éditeur", () => {
 
   it("critère 12 : remplacer par plusieurs paragraphes coupe le bloc sans paragraphe vide", () => {
     const target = start(paragraphs("Un. Deux."));
-    replaceWithParagraphs(target, { from: 1, to: 10 }, ["One.", "Two."]);
+    replaceWithParagraphs(target, [{ from: 1, to: 10 }], ["One.", "Two."], false);
     expect(target.getText({ blockSeparator: "\n" })).toBe("One.\nTwo.");
   });
 
   it("critère 12 : insérer après ajoute des paragraphes après le bloc de la sélection", () => {
     const target = start(paragraphs("Bonjour.", "Suite."));
-    insertParagraphsAfter(target, { from: 1, to: 9 }, ["Hello.", "Again."]);
+    insertParagraphsAfter(target, [{ from: 1, to: 9 }], ["Hello.", "Again."]);
     expect(target.getText({ blockSeparator: "\n" })).toBe("Bonjour.\nHello.\nAgain.\nSuite.");
+  });
+
+  it("critère 12 : tout sélectionner puis remplacer garde le titre, son alignement, son gras et son identifiant", () => {
+    const target = start({
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { id: "h-1", level: 1, textAlign: "center" },
+          content: [{ type: "text", text: "Le chat dort.", marks: [{ type: "bold" }] }],
+        },
+        { type: "paragraph", attrs: { id: "p-1" }, content: [{ type: "text", text: "Il rêve." }] },
+      ],
+    });
+    target.commands.selectAll();
+    const sent = selectedParagraphs(target.state);
+    replaceWithParagraphs(target, sent, ["The cat sleeps.", "It dreams."], true);
+    const json = target.getJSON();
+    expect(json.content?.[0]).toEqual({
+      type: "heading",
+      attrs: expect.objectContaining({ id: "h-1", level: 1, textAlign: "center" }) as unknown,
+      content: [{ type: "text", text: "The cat sleeps.", marks: [{ type: "bold" }] }],
+    });
+    expect(json.content?.[1]?.type).toBe("paragraph");
+    expect(json.content?.[1]?.attrs?.id).toBe("p-1");
+    expect(target.getText({ blockSeparator: "\n" })).toBe("The cat sleeps.\nIt dreams.");
+  });
+
+  it("critère 12 : remplacer une liste traduit chaque élément à sa place", () => {
+    const item = (id: string, text: string): DocumentJson => ({
+      type: "listItem",
+      attrs: { id },
+      content: [{ type: "paragraph", attrs: { id: `${id}-p` }, content: [{ type: "text", text }] }],
+    });
+    const target = start({
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [item("l-1", "Pain"), item("l-2", "Lait"), item("l-3", "Œufs")],
+        },
+      ],
+    });
+    target.commands.selectAll();
+    const sent = selectedParagraphs(target.state);
+    replaceWithParagraphs(target, sent, ["Bread", "Milk", "Eggs"], true);
+    const list = target.state.doc.firstChild;
+    expect(list?.type.name).toBe("bulletList");
+    expect(list?.childCount).toBe(3);
+    expect(blockTexts(target)).toEqual(["Bread", "Milk", "Eggs"]);
+  });
+
+  it("critère 12 : une réponse non alignée remplace dans le premier paragraphe et vide les autres, sans toucher aux blocs", () => {
+    const target = start(paragraphs("Un.", "Deux.", "Trois."));
+    target.commands.selectAll();
+    const sent = selectedParagraphs(target.state);
+    replaceWithParagraphs(target, sent, ["One.", "Two."], false);
+    expect(target.state.doc.childCount).toBe(3);
+    expect(target.getText({ blockSeparator: "\n" })).toBe("One. Two.\n\n");
+  });
+
+  it("critère 12 : une sélection de cellules est envoyée dans l'ordre du texte et remplacée cellule par cellule", () => {
+    const cell = (id: string, text: string): DocumentJson => ({
+      type: "tableCell",
+      attrs: { id },
+      content: [{ type: "paragraph", attrs: { id: `${id}-p` }, content: [{ type: "text", text }] }],
+    });
+    const target = start({
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            { type: "tableRow", content: [cell("c-1", "un"), cell("c-2", "deux")] },
+            { type: "tableRow", content: [cell("c-3", "trois"), cell("c-4", "quatre")] },
+          ],
+        },
+      ],
+    });
+    const cells: number[] = [];
+    target.state.doc.descendants((node, pos) => {
+      if (node.type.name === "tableCell") cells.push(pos);
+      return true;
+    });
+    const [first, , , last] = cells;
+    if (first === undefined || last === undefined) throw new Error("tableau incomplet");
+    target.view.dispatch(
+      target.state.tr.setSelection(CellSelection.create(target.state.doc, first, last)),
+    );
+    const sent = selectedParagraphs(target.state);
+    expect(sent.map((paragraph) => paragraph.text)).toEqual(["un", "deux", "trois", "quatre"]);
+    replaceWithParagraphs(target, sent, ["one", "two", "three", "four"], true);
+    // Le paragraphe vide final est celui que l'éditeur ajoute toujours après un tableau.
+    expect(blockTexts(target)).toEqual(["one", "two", "three", "four", ""]);
   });
 });

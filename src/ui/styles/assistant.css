@@ -230,10 +230,16 @@
     display: none;
   }
 
-  .nano-editor .nano-suggest-removed,
-  .nano-editor .nano-suggest-removed * {
+  /* Le texte d'origine s'imprime tel quel : `revert` rend aux marques du document (barré, souligné)
+     leur décoration, que `inherit` aurait effacée. */
+  .nano-editor .nano-suggest-removed {
     color: inherit;
-    text-decoration: inherit;
+    text-decoration: none;
+  }
+
+  .nano-editor .nano-suggest-removed * {
+    color: revert;
+    text-decoration: revert;
   }
 
   .nano-editor .nano-suggest-active {

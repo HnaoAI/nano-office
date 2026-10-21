@@ -4,7 +4,7 @@ import type { AssistantTask } from "../core/assistant";
 
 /**
  * Boutons de l'assistant, grisés sans sélection, hors ligne ou pendant une demande (critère 5).
- * @param hasSelection vrai si du texte est sélectionné
+ * @param hasSelection vrai si la sélection contient du texte (une image seule ne compte pas)
  * @param online vrai si le navigateur est en ligne
  * @param pending vrai pendant une demande ; Échap l'annule
  * @param onRun lance une demande, sur un clic seulement (critère 13)

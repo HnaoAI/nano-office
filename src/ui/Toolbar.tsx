@@ -72,6 +72,9 @@ export function Toolbar({
       headerRow: headerRowActive(current.state),
       tableDeletions: tableDeletions(current.state),
       hasSelection: !current.state.selection.empty,
+      hasSelectedText: current.state.selection.ranges.some(
+        ({ $from, $to }) => current.state.doc.textBetween($from.pos, $to.pos, " ").trim() !== "",
+      ),
       imageAlt: selectedImage(current.state)?.alt ?? null,
     }),
   });
@@ -165,7 +168,7 @@ export function Toolbar({
       {assistant && (
         <>
           <div className="nano-separator" aria-hidden="true" />
-          <AssistantButtons hasSelection={state.hasSelection} {...assistant} />
+          <AssistantButtons hasSelection={state.hasSelectedText} {...assistant} />
         </>
       )}
     </div>
