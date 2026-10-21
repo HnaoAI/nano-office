@@ -1,7 +1,8 @@
-// Alignement des paragraphes et des titres (T1.3) : commande et lecture de l'état, sur les
+// Alignement des paragraphes, des titres (T1.3) et des images (T1.9) : commande et lecture de l'état, sur les
 // commandes de l'extension TextAlign de Tiptap.
 import type { Editor } from "@tiptap/core";
 import type { EditorState } from "@tiptap/pm/state";
+import { IMAGE_NODE } from "../core/images";
 import type { TextAlignment } from "../core/schema";
 
 /**
@@ -19,7 +20,7 @@ export function currentAlignment(state: EditorState): TextAlignment | null {
   const { from, to } = state.selection;
   const found = new Set<TextAlignment>();
   state.doc.nodesBetween(from, to, (node) => {
-    if (!node.isTextblock) return true;
+    if (!node.isTextblock && node.type.name !== IMAGE_NODE) return true;
     const value = node.attrs.textAlign as TextAlignment | null | undefined;
     found.add(value ?? "left");
     return false;

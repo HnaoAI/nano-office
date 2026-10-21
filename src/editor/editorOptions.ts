@@ -3,9 +3,11 @@
 import type { EditorOptions } from "@tiptap/core";
 import Collaboration from "@tiptap/extension-collaboration";
 import type * as Y from "yjs";
+import { ImageNode } from "../core/imageSchema";
 import { documentExtensions, YJS_FRAGMENT_NAME } from "../core/schema";
 import { BlockIdGenerator } from "./blockIds";
 import { CleanClipboard } from "./clipboard";
+import { createImageExtensions, type ImageRejectedHandler } from "./images";
 import { FormatShortcuts } from "./keyboardShortcuts";
 import { TableNavigation } from "./tables";
 
@@ -21,15 +23,23 @@ import { TableNavigation } from "./tables";
  * - Les raccourcis de mise en forme sont reconnus à la touche physique (`FormatShortcuts`).
  * - Le copier-coller garde la structure et retire la mise en forme d'origine (`CleanClipboard`, T1.5).
  * - On peut toujours écrire avant ou après un tableau (`TableNavigation`, T1.8).
+ * - Les images sont affichées depuis le Y.Doc, insérées par le bouton, un dépôt ou un collage (T1.9) :
+ *   le nœud image du schéma est remplacé par sa version reliée au document, à la même place.
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
  *   jamais complété par `setContent` (voir l'INVARIANT de CLAUDE.md)
+ * @param onImageRejected affiche le message d'une image refusée (T1.9, critère 2)
  */
-export function createEditorOptions(ydoc: Y.Doc): Partial<EditorOptions> {
+export function createEditorOptions(
+  ydoc: Y.Doc,
+  onImageRejected: ImageRejectedHandler = () => undefined,
+): Partial<EditorOptions> {
+  const images = createImageExtensions(ydoc, onImageRejected);
   return {
     extensions: [
-      ...documentExtensions,
+      ...documentExtensions.map((extension) => (extension === ImageNode ? images.node : extension)),
+      images.plugin,
       BlockIdGenerator,
       FormatShortcuts,
       CleanClipboard,

@@ -3,10 +3,11 @@
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useEffectEvent, useMemo } from "react";
 import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { createEditorOptions } from "../editor/editorOptions";
+import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
 import { Toolbar } from "./Toolbar";
 
@@ -16,9 +17,24 @@ import { Toolbar } from "./Toolbar";
  * recrée ce composant (attribut `key`) pour chaque nouveau Y.Doc, avec un historique d'annulation vide (T0c).
  * @param ydoc document Yjs neuf ou lu depuis un fichier, jamais réutilisé pour un autre document
  * @param onEdit appelé à chaque caractère tapé ou mise en forme appliquée (H1, critère 6)
+ * @param onImageRejected affiche le message d'une image refusée (T1.9, critère 2) ; fonction stable
  */
-export function DocumentEditor({ ydoc, onEdit }: { ydoc: Y.Doc; onEdit: () => void }) {
-  const editor = useEditor({ ...createEditorOptions(ydoc), autofocus: true }, [ydoc]);
+export function DocumentEditor({
+  ydoc,
+  onEdit,
+  onImageRejected,
+}: {
+  ydoc: Y.Doc;
+  onEdit: () => void;
+  onImageRejected: (reason: ImageRejection) => void;
+}) {
+  // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
+  // `onImageRejected` est stable (useDocumentFile), il ne recrée pas la configuration.
+  const options = useMemo(
+    () => createEditorOptions(ydoc, onImageRejected),
+    [ydoc, onImageRejected],
+  );
+  const editor = useEditor({ ...options, autofocus: true }, [ydoc]);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {
     if (isUserEdit(transaction)) onEdit();

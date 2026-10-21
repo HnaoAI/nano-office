@@ -13,6 +13,7 @@ import "./styles/layout.css";
 import "./styles/toolbar.css";
 import "./styles/pickers.css";
 import "./styles/tables.css";
+import "./styles/images.css";
 import "./styles/messages.css";
 import "./styles/dialog.css";
 
@@ -24,6 +25,7 @@ export function App() {
     message,
     saveState,
     dismissMessage,
+    imageRejected,
     pending,
     activity,
     reloadKeepsDocument,
@@ -70,7 +72,12 @@ export function App() {
         />
       ) : (
         // Une clé par Y.Doc : « Nouveau » et « Ouvrir » recréent l'éditeur (T0c, critère 10).
-        <DocumentEditor key={document.ydoc.guid} ydoc={document.ydoc} onEdit={noteEdit} />
+        <DocumentEditor
+          key={document.ydoc.guid}
+          ydoc={document.ydoc}
+          onEdit={noteEdit}
+          onImageRejected={imageRejected}
+        />
       )}
       <footer className="nano-footer">
         <span>{backupLinked ? "Copie de secours à jour" : ""}</span>

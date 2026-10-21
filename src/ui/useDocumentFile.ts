@@ -26,10 +26,12 @@ import { cancelReloadForUpdate } from "./useAppUpdate";
 import {
   DISCARD_QUESTION,
   READ_ERROR,
+  imageRejectedMessage,
   recoveredMessage,
   saveMessage,
   type FileMessage,
 } from "./fileMessages";
+import type { ImageRejection } from "../editor/imageImport";
 import { useAutoSave } from "./useAutoSave";
 import { useBackup } from "./useBackup";
 import { useSaveShortcut } from "./useSaveShortcut";
@@ -294,6 +296,12 @@ export function useDocumentFile() {
         ? null
         : "saved";
 
+  // Stable : DocumentEditor le donne à la configuration de l'éditeur, créée une fois par document.
+  const imageRejected = useCallback(
+    (reason: ImageRejection) => setMessage(imageRejectedMessage(reason)),
+    [],
+  );
+
   return {
     document,
     unsaved,
@@ -314,6 +322,8 @@ export function useDocumentFile() {
     openAsIs: () => void resolvePending(false),
     /** Ferme le message affiché (U1b, critère 4). */
     dismissMessage: () => setMessage(null),
+    /** Affiche le message d'une image refusée à l'insertion (T1.9, critère 2). */
+    imageRejected,
     newDocument,
     open: () => void open(),
     save: () => void save(false),

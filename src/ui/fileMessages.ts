@@ -1,5 +1,6 @@
-// Messages affichés sous l'en-tête par `useDocumentFile` (T0c, T0d, U1b), et ceux d'un fichier
-// retrouvé au lancement (PL3). Textes seulement : l'affichage est dans MessageBar.tsx.
+// Messages affichés sous l'en-tête par `useDocumentFile` (T0c, T0d, U1b), ceux d'un fichier
+// retrouvé au lancement (PL3) et ceux d'une image refusée (T1.9). Textes seulement : l'affichage est dans MessageBar.tsx.
+import type { ImageRejection } from "../editor/imageImport";
 import type { RestoredFile, SaveResult } from "../storage/fileStore";
 
 /**
@@ -89,4 +90,18 @@ export function saveMessage(result: SaveResult): FileMessage | null {
   return result.status === "failed"
     ? { kind: "alert", icon: "save-failed", text: SAVE_ERROR, action: "save-as" }
     : null;
+}
+
+/** Textes d'une image refusée (T1.9, critère 2). */
+const IMAGE_REJECTED: Record<ImageRejection, string> = {
+  "too-large":
+    "Cette image pèse plus de 25 Mo : elle n'a pas été ajoutée. Choisissez une image plus légère.",
+  unsupported: "Ce fichier n'est pas une image JPEG, PNG, WebP ou GIF : il n'a pas été ajouté.",
+  unreadable:
+    "Cette image n'a pas pu être lue, le fichier est peut-être abîmé : elle n'a pas été ajoutée.",
+};
+
+/** Message d'une image refusée à l'insertion (T1.9, critère 2). Le document n'a pas changé. */
+export function imageRejectedMessage(reason: ImageRejection): FileMessage {
+  return { kind: "alert", icon: "unreadable", text: IMAGE_REJECTED[reason] };
 }

@@ -13,6 +13,7 @@ import {
 } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
+import { IMAGE_NODE } from "../core/images";
 import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
 import { CellSelection, isInTable } from "@tiptap/pm/tables";
 import {
@@ -148,6 +149,29 @@ function mapFragment(
   return Fragment.from(nodes);
 }
 
+/** Retire les images d'un fragment, à toute profondeur. */
+function removeImages(fragment: Fragment): Fragment {
+  const nodes: ProseMirrorNode[] = [];
+  fragment.forEach((child) => {
+    if (child.type.name === IMAGE_NODE) return;
+    nodes.push(child.isLeaf ? child : child.copy(removeImages(child.content)));
+  });
+  return Fragment.from(nodes);
+}
+
+/**
+ * Collage dans une cellule : les images sont retirées, car un tableau ne contient pas d'image
+ * (T1.9, hors périmètre). Sans cela, ProseMirror couperait le tableau pour placer l'image.
+ */
+export function withoutImages(slice: Slice): Slice {
+  let found = false;
+  slice.content.descendants((node) => {
+    if (node.type.name === IMAGE_NODE) found = true;
+    return !found;
+  });
+  return found ? new Slice(removeImages(slice.content), slice.openStart, slice.openEnd) : slice;
+}
+
 /** Marques retirées d'un collage extérieur : police, taille et couleur ; surlignage (T1.7). */
 const EXTERNAL_MARKS_REMOVED = ["textStyle", "highlight"];
 
@@ -230,7 +254,7 @@ export function createClipboardPlugin(schema: Schema): Plugin {
         pastedFromNanoBuro = false;
         const { selection } = view.state;
         const inCell = !(selection instanceof CellSelection) && isInTable(view.state);
-        return cleanPastedSlice(inCell ? flattenTablesForCell(slice) : slice, {
+        return cleanPastedSlice(inCell ? withoutImages(flattenTablesForCell(slice)) : slice, {
           internal,
           contextTextStyle: contextTextStyleOf(view),
           newBlockIds: !dragging,

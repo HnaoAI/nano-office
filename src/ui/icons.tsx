@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -185,6 +185,27 @@ export function HighlighterIcon() {
       <path d="m9 11 6.5-6.5a2.1 2.1 0 0 1 3 3L12 14" />
       <path d="m9 11 3 3" />
       <path d="M14 20h6" />
+    </Icon>
+  );
+}
+
+/** « Insérer une image » : un cadre, un soleil et une montagne (T1.9). */
+export function ImageIcon() {
+  return (
+    <Icon>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+      <circle cx="9" cy="10" r="1.75" />
+      <path d="m20.5 16-5-5L6 19.5" />
+    </Icon>
+  );
+}
+
+/** « Texte de remplacement » : une bulle de texte (T1.9). */
+export function AltTextIcon() {
+  return (
+    <Icon>
+      <path d="M4.5 5.5h15v10h-8l-4 3.5v-3.5h-3z" />
+      <path d="M8 9.5h8M8 12.5h5" />
     </Icon>
   );
 }
