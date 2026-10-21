@@ -1,4 +1,4 @@
-# M1 : Ménage (fichiers trop longs, actions GitHub) et icône de l'interligne
+# M1 : Barre d'outils figée, icône de l'interligne, et ménage
 
 **Suivi** : Issue [#70](https://github.com/HnaoAI/nano-office/issues/70), le statut se lit sur le tableau Kanban
 **Dépend de** : lot F
@@ -10,9 +10,25 @@
 
 Après les lots D, E et F, trois fichiers dépassent la limite de 300 lignes des règles de travail, et GitHub signale
 que les actions utilisées tournent sur une version de Node bientôt retirée. Le PO ne trouvait pas non plus le
-réglage d'interligne : la liste n'affiche que « Par défaut », sans icône.
+réglage d'interligne : la liste n'affiche que « Par défaut », sans icône. Enfin, la barre de mise en forme disparaît
+quand on fait défiler un long document : il faut remonter pour l'utiliser (constat du PO, 2026-10-21).
 
 ## Critères d'acceptation
+
+**Barre d'outils figée (visible par le PO)**
+
+A. Quand on fait défiler le document, l'en-tête et la barre de mise en forme **restent en haut de la fenêtre**
+   (`position: sticky`), comme dans Word et Google Docs. Seule la page défile dessous. Ils gardent leur fond et
+   leur ombre, et le texte ne se lit jamais à travers.
+B. La barre de recherche (T2.1), les grilles de couleurs, les menus et les messages s'affichent sous la barre figée,
+   jamais dessous ni par-dessus le texte cherché. Une occurrence trouvée, ou le curseur qui descend au clavier,
+   n'est jamais cachée par la barre (`scroll-margin-top` ou `scrollPadding` de l'éditeur).
+C. Si la fenêtre est très basse (moins de 500 px de haut), seule la barre de mise en forme reste figée, sans
+   l'en-tête, pour laisser de la place au texte. À 390 px de large, rien ne déborde, et la barre sur deux lignes
+   reste figée.
+D. À l'impression, rien ne change : seule la page s'imprime (T2.6).
+E. Test Playwright : dans un document de 10 pages, faire défiler jusqu'en bas, puis cliquer sur « Gras » sans
+   remonter. Le bouton est visible et fonctionne, et le texte tapé reste visible sous la barre.
 
 **Interligne (visible par le PO)**
 
@@ -36,5 +52,6 @@ réglage d'interligne : la liste n'affiche que « Par défaut », sans icône.
 
 ## Vérification manuelle
 
-Sur la version publiée : l'icône apparaît devant la liste d'interligne, et la liste propose « Interligne normal », 1,
+Sur la version publiée : dans un long document, faire défiler jusqu'en bas. La barre reste en haut et s'utilise
+sans remonter. Faire de même avec la recherche ouverte. L'icône apparaît devant la liste d'interligne, et la liste propose « Interligne normal », 1,
 1,15, 1,5 et 2. Un document existant s'affiche comme avant.
