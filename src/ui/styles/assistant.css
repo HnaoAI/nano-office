@@ -1,0 +1,242 @@
+/* Assistant facultatif (T3.1) : bouton « Réglages » de l'en-tête et sa boîte, groupe « Assistant » de
+   la barre, panneau au style des messages, marques de suggestion dans le texte, boutons d'une
+   modification. Monochrome : aucune couleur vive, seulement les variables de la charte. */
+
+/* Bouton « Réglages » au bout de l'en-tête, à la hauteur du groupe Fichier. */
+.nano-settings-button {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--nano-radius-group);
+  background: var(--nano-group-bg);
+  color: var(--nano-ink);
+  cursor: pointer;
+}
+
+.nano-settings-button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+/* Boîte « Réglages » : même boîte que « Mise en page ». */
+.nano-settings {
+  width: 540px;
+}
+
+.nano-settings-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 16px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.nano-settings-switch input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--nano-ink);
+}
+
+.nano-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--nano-text-secondary);
+}
+
+.nano-settings-field input {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  font: inherit;
+  font-size: 15px;
+  color: var(--nano-ink);
+}
+
+.nano-settings-field input:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-settings-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+}
+
+.nano-dialog .nano-settings-notice p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.nano-settings-notice a {
+  color: var(--nano-ink);
+}
+
+/* Groupe « Assistant » de la barre : boutons de texte, 40 px de haut comme les autres. */
+.nano-format-bar .nano-text-button {
+  width: auto;
+  padding: 0 12px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.nano-assistant-group {
+  display: flex;
+  gap: 4px;
+}
+
+/* Panneau de l'assistant : un message sous la barre de mise en forme. */
+.nano-assistant-row {
+  margin-top: 12px;
+}
+
+.nano-message .nano-message-secondary {
+  padding: 0 14px;
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+}
+
+.nano-message-alert .nano-message-secondary {
+  background: var(--nano-icon-chip-on-ink);
+  color: var(--nano-on-ink);
+}
+
+.nano-message .nano-message-icon-button {
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--nano-text-secondary);
+}
+
+.nano-message button:disabled {
+  color: var(--nano-text-disabled);
+  cursor: default;
+}
+
+.nano-message .nano-message-action:disabled {
+  background: var(--nano-group-bg);
+}
+
+.nano-suggestion-bar .nano-message-action {
+  margin-left: 0;
+}
+
+/* Traduction : le texte reçu, puis ses boutons sur une ligne à part. */
+.nano-translation-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.nano-translation-text p {
+  margin: 0 0 6px;
+}
+
+.nano-translation-buttons {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.nano-translation-note {
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--nano-text-quiet);
+}
+
+/* Marques de suggestion dans le texte (critère 7) : retrait barré en gris, ajout souligné sur le gris
+   clair des surfaces atténuées. Lisibles en monochrome ; la couleur du document est remplacée. */
+.nano-editor .nano-suggest-removed,
+.nano-editor .nano-suggest-removed * {
+  color: var(--nano-text-quiet);
+  text-decoration: line-through;
+  cursor: pointer;
+}
+
+.nano-editor .nano-suggest-inserted {
+  background: var(--nano-surface-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* La modification choisie est entourée d'encre, comme l'occurrence active de la recherche. */
+.nano-editor .nano-suggest-active {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 1px;
+}
+
+/* Boutons de la modification choisie, juste sous elle. */
+.nano-suggestion-actions {
+  position: fixed;
+  z-index: 40;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--nano-radius-group);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-info);
+}
+
+.nano-suggestion-actions button {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.nano-suggestion-actions button:first-child {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+}
+
+.nano-suggestion-actions button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+/* Les propositions ne s'impriment pas : le document s'imprime tel qu'il est enregistré. */
+@media print {
+  .nano-editor .nano-suggest-inserted {
+    display: none;
+  }
+
+  .nano-editor .nano-suggest-removed,
+  .nano-editor .nano-suggest-removed * {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  .nano-editor .nano-suggest-active {
+    outline: none;
+  }
+}

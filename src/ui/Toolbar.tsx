@@ -1,6 +1,7 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
 // style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Barré (T2.3), couleur du texte et surlignage
-// (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9).
+// (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9)
+// | mise en page (T2.5) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
@@ -14,6 +15,7 @@ import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
 import { PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
+import { AssistantButtons } from "./AssistantButtons";
 import { CaseButton } from "./CaseButton";
 import { ColorButtons } from "./ColorButtons";
 import { FontSelects } from "./FontSelects";
@@ -23,6 +25,14 @@ import { ListButtons } from "./ListButtons";
 import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
 import { TableButtons } from "./TableButtons";
 import { MOD } from "./shortcuts";
+import type { AssistantTask } from "../core/assistant";
+
+/** Groupe « Assistant » de la barre (T3.1) ; absent quand l'assistant est éteint (critère 4). */
+export interface ToolbarAssistant {
+  online: boolean;
+  pending: boolean;
+  onRun: (task: AssistantTask) => void;
+}
 
 /**
  * Barre de mise en forme. Gras, Italique et Barré indiquent leur état avec `aria-pressed`.
@@ -32,8 +42,17 @@ import { MOD } from "./shortcuts";
  * même si le bouton n'affiche qu'une icône ou une lettre (U1a, critère 7).
  * @param editor éditeur Tiptap à piloter
  * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
+ * @param assistant groupe « Assistant » (T3.1), null quand l'assistant est éteint
  */
-export function Toolbar({ editor, onPageSetup }: { editor: Editor; onPageSetup: () => void }) {
+export function Toolbar({
+  editor,
+  onPageSetup,
+  assistant,
+}: {
+  editor: Editor;
+  onPageSetup: () => void;
+  assistant: ToolbarAssistant | null;
+}) {
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -143,6 +162,12 @@ export function Toolbar({ editor, onPageSetup }: { editor: Editor; onPageSetup: 
       >
         <PageSetupIcon />
       </button>
+      {assistant && (
+        <>
+          <div className="nano-separator" aria-hidden="true" />
+          <AssistantButtons hasSelection={state.hasSelection} {...assistant} />
+        </>
+      )}
     </div>
   );
 }
