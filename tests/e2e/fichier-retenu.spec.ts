@@ -7,6 +7,7 @@ import type { DocumentJson } from "../../src/core/types";
 import { paragraph, ydocFromJson } from "../core/helpers";
 import { flushBackups } from "./backupHelpers";
 import { fakeFiles, installFakeFileStore, setFakeFiles } from "./fakeFileStore";
+import { changeOnOtherComputer, relaunchWithUnsavedChanges } from "./relaunchHelpers";
 
 const RECOVERED = "Ce document a été récupéré depuis la copie de secours de ce navigateur.";
 const RECOVERED_MESSAGE = `${RECOVERED} Enregistrez-le pour le garder dans un fichier.`;
@@ -38,30 +39,6 @@ function messageAction(page: Page) {
 async function writes(page: Page): Promise<string[]> {
   const { calls } = await fakeFiles(page);
   return calls.filter((call) => call === "save" || call.startsWith("saveAs:"));
-}
-
-/**
- * Premier lancement : le document est enregistré dans « lettre.nano », puis modifié sans que la
- * modification atteigne le fichier (écriture retenue), et l'application est relancée.
- */
-async function relaunchWithUnsavedChanges(
-  page: Page,
-  permission: "granted" | "prompt",
-  whileClosed?: (page: Page) => Promise<void>,
-) {
-  await installFakeFileStore(page, "file-system-access", { keepAcrossReloads: true });
-  await page.goto("/");
-  await editor(page).click();
-  await setFakeFiles(page, { nextSaveName: "lettre.nano", restorePermission: permission });
-  await page.keyboard.type("Début");
-  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(indicator(page)).toHaveText("Enregistré");
-  await setFakeFiles(page, { holdWrites: true });
-  await page.keyboard.type(" puis la suite, élève 😀");
-  await flushBackups(page);
-  await whileClosed?.(page);
-  await page.reload();
-  await expect(editor(page)).toHaveText("Début puis la suite, élève 😀");
 }
 
 test("critère 1 : après un redémarrage, le document s'enregistre dans le même fichier, sans « Enregistrer sous »", async ({
@@ -152,15 +129,6 @@ test("critère 4 : au redémarrage, le fichier n'est jamais réécrit avant que 
   await page.waitForTimeout(AFTER_AUTO_SAVE);
   expect(await writes(page)).toEqual([]);
 });
-
-/** Mardi, sur le PC : la même lettre est modifiée et enregistrée, puis synchronisée, pendant que le Mac est fermé. */
-async function changeOnOtherComputer(page: Page) {
-  const { files } = await fakeFiles(page);
-  await setFakeFiles(page, {
-    files: { ...files, "lettre.nano": "version de mardi" },
-    changedSinceLastLaunch: true,
-  });
-}
 
 test("lundi, mardi, mercredi : au redémarrage, un fichier modifié ailleurs est signalé et n'est pas écrasé", async ({
   page,

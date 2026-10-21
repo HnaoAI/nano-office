@@ -9,7 +9,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `useSaveShortcut.ts` : Ctrl/Cmd+S sur toute la page, avant l'éditeur (T0c)
 - `fileMessages.ts` : textes et actions des messages (U1b), message d'un document qui a retrouvé son fichier (PL3)
 - `useBackup.ts` : relie le document affiché à sa copie de secours, retient le dernier document modifié, alerte avant fermeture (T0d), indique si la copie est à jour (U1a)
-- `useAppUpdate.ts` : enregistre le service worker et applique une nouvelle version au démarrage si rien n'est commencé (H1)
+- `useAppUpdate.ts` : enregistre le service worker et applique une nouvelle version au démarrage si rien n'est commencé (H1), même avec un document restauré, sans alerte avant fermeture (H2)
 - `appVersion.ts` : version injectée par Vite à la construction (H1)
 - `BackupChoice.tsx` : question « Récupérer » ou « Ouvrir tel quel » quand un fichier diffère de sa copie de secours (T0d), en boîte de dialogue sur la page estompée (U1b)
 - `SaveIndicator.tsx` : pastille « Enregistré », « Enregistrement… » ou « Non enregistré » (U1b)

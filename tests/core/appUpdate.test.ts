@@ -1,5 +1,5 @@
 // Tests de la décision « recharger maintenant ou attendre » d'une nouvelle version (src/core/appUpdate.ts),
-// ticket H1, critères 5 à 8.
+// ticket H1, critères 5 à 8, et ticket H2 (un document restauré ne reporte plus la mise à jour).
 import { describe, expect, it } from "vitest";
 import {
   decideUpdate,
@@ -14,6 +14,7 @@ function launch(overrides: Partial<LaunchState> = {}): LaunchState {
     updateReady: true,
     documentLoaded: true,
     activity: NO_ACTIVITY,
+    reloadKeepsDocument: true,
     reloadedThisLaunch: false,
     ...overrides,
   };
@@ -49,8 +50,18 @@ describe("decideUpdate (H1)", () => {
     expect(decideUpdate(withActivity({ backupQuestion: true }))).toBe("next-launch");
   });
 
-  it("critère 6 : un document restauré depuis la copie de secours reporte la mise à jour au lancement suivant", () => {
-    expect(decideUpdate(withActivity({ restoredFromBackup: true }))).toBe("next-launch");
+  it("H2, critère 1 : un document restauré depuis la copie de secours, sans rien d'autre, n'empêche pas la mise à jour", () => {
+    // Changement autorisé par le product owner (H2) : la restauration n'est plus un signe de travail commencé.
+    // Le document restauré est affiché : la copie de secours a été lue, et rien n'a été fait depuis.
+    expect(decideUpdate(launch({ documentLoaded: true, activity: NO_ACTIVITY }))).toBe("reload");
+  });
+
+  it("H2, critère 4 : si un rechargement afficherait un autre document (autre fenêtre), la mise à jour attend le lancement suivant", () => {
+    expect(decideUpdate(launch({ reloadKeepsDocument: false }))).toBe("next-launch");
+  });
+
+  it("H2, critère 2 : les signes de travail commencé sont ceux de H1, sans la restauration", () => {
+    expect(Object.keys(NO_ACTIVITY).sort()).toEqual(["backupQuestion", "edited", "fileAction"]);
   });
 
   it("critère 6 : le travail commencé l'emporte même si la copie de secours est encore en lecture", () => {
@@ -65,25 +76,30 @@ describe("decideUpdate (H1)", () => {
     expect(decideUpdate(launch({ reloadedThisLaunch: true }))).toBe("next-launch");
   });
 
-  it("critère 7 : chaque combinaison possible ne recharge que si rien n'est commencé et rien n'a été rechargé", () => {
+  it("critère 7 : chaque combinaison possible ne recharge que si rien n'est commencé, rien n'a été rechargé et le document reviendrait", () => {
     const flags = [false, true];
     for (const updateReady of flags)
       for (const documentLoaded of flags)
         for (const reloadedThisLaunch of flags)
-          for (const edited of flags)
-            for (const fileAction of flags)
-              for (const backupQuestion of flags)
-                for (const restoredFromBackup of flags) {
-                  const activity = { edited, fileAction, backupQuestion, restoredFromBackup };
+          for (const reloadKeepsDocument of flags)
+            for (const edited of flags)
+              for (const fileAction of flags)
+                for (const backupQuestion of flags) {
+                  const activity = { edited, fileAction, backupQuestion };
                   const started = Object.values(activity).some(Boolean);
                   const decision = decideUpdate({
                     updateReady,
                     documentLoaded,
                     reloadedThisLaunch,
+                    reloadKeepsDocument,
                     activity,
                   });
                   expect(decision === "reload").toBe(
-                    updateReady && documentLoaded && !reloadedThisLaunch && !started,
+                    updateReady &&
+                      documentLoaded &&
+                      reloadKeepsDocument &&
+                      !reloadedThisLaunch &&
+                      !started,
                   );
                 }
   });

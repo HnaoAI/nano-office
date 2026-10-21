@@ -4,6 +4,7 @@
 import { useEffect, useEffectEvent, useState } from "react";
 import type * as Y from "yjs";
 import type { BackupStore } from "../storage/backupStore";
+import { isReloadingForUpdate } from "./useAppUpdate";
 
 /**
  * Copie de secours du document affiché.
@@ -45,8 +46,11 @@ export function useBackup(
   }, [backups, id, ydoc, unsaved]);
 
   // Alerte du navigateur à la fermeture de l'onglet (critère 5). Le texte est imposé par le navigateur.
+  // Pas d'alerte pour le rechargement d'une mise à jour sans travail commencé (H2) : le document
+  // restauré est dans sa copie de secours et revient à l'identique, s'il est encore le dernier modifié.
   const onBeforeUnload = useEffectEvent((event: BeforeUnloadEvent) => {
     if (!unsaved) return;
+    if (isReloadingForUpdate() && id !== undefined && backups.lastModifiedId() === id) return;
     event.preventDefault();
     // Safari n'affiche l'alerte que si `returnValue` est rempli.
     event.returnValue = "";
