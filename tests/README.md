@@ -34,7 +34,7 @@ Même arborescence que `src/`.
   - `interligne.spec.ts` : liste, hauteur de ligne de Word, blocs sélectionnés, Par défaut, sélection mélangée, réouverture, copier-coller, annulation (T2.2)
   - `casse.spec.ts` : menu « Aa » à la souris et au clavier, lettres changées, règles du français, mise en forme et sélection gardées, annulation, phrases (T2.4)
   - `barre.spec.ts` : bouton, raccourci Mac et Windows à la touche physique, cumul, réouverture, copier-coller, annulation (T2.3)
-  - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, sélectionner un texte, coller depuis une autre application, lire le presse-papiers, enregistrer puis rouvrir (lots A et C)
+  - `formatHelpers.ts` : démarrer l'éditeur, attendre son focus après Ouvrir, lire le Y.Doc, sélectionner un texte, coller depuis une autre application, lire le presse-papiers, enregistrer puis rouvrir (lots A et C)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
   - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture, fichier modifié ailleurs (T1.6)
   - `fichier-retenu.spec.ts` : fichier retrouvé au redémarrage, autorisation à redonner, fichier déplacé, mémoire des fichiers (PL3)

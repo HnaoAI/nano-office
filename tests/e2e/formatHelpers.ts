@@ -53,6 +53,17 @@ export async function settleSelection(page: Page) {
   );
 }
 
+/**
+ * Attend que l'éditeur d'un document qui vient d'être ouvert ou créé ait reçu le focus. L'éditeur
+ * est recréé pour chaque Y.Doc et prend le focus un peu après son affichage (`autofocus` de Tiptap,
+ * différé d'une tâche) : une touche frappée avant serait perdue. Cause du test instable des polices
+ * (T1.4, critère 8), signalé sur la PR 65.
+ */
+export async function waitEditorFocus(page: Page) {
+  await expect(editor(page)).toBeFocused();
+  await settleSelection(page);
+}
+
 /** Laisse passer le délai de regroupement des annulations de Yjs, pour isoler l'étape suivante. */
 export async function waitUndoGroup(page: Page) {
   await page.waitForTimeout(700);
