@@ -89,3 +89,31 @@
 .nano-color-bar-mixed {
   background: var(--nano-group-bg);
 }
+
+/* Menu « Majuscules et minuscules » (T2.4) : même fenêtre que les grilles, une ligne par choix. */
+.nano-format-bar .nano-case-button {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nano-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+}
+
+.nano-format-bar .nano-menu-item {
+  width: auto;
+  height: 36px;
+  justify-content: flex-start;
+  padding: 0 12px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.nano-format-bar .nano-menu-item:hover,
+.nano-format-bar .nano-menu-item:focus-visible {
+  outline: none;
+  background: var(--nano-surface-muted);
+}

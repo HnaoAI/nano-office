@@ -6,7 +6,7 @@ Couleurs, rayons et ombres ne sont écrits que dans `tokens.css` (vérifié par 
 - `tokens.css` : variables `--nano-…` (U1a)
 - `layout.css` : bases, en-tête, groupe Fichier, page du document, pied de page (U1a)
 - `toolbar.css` : barre de mise en forme flottante (U1a)
-- `pickers.css` : petites fenêtres de la barre, grilles de couleurs et trait sous le « A » (T1.7)
+- `pickers.css` : petites fenêtres de la barre, grilles de couleurs et trait sous le « A » (T1.7), menu « Majuscules et minuscules » (T2.4)
 - `tables.css` : tableaux du document, curseur entre deux blocs, groupe « Tableau » et grille d'insertion (T1.8)
 - `images.css` : images du document, sélection et poignées, cadre « Image manquante », fenêtre « Texte de remplacement » (T1.9)
 - `messages.css` : indicateur d'enregistrement et messages (U1b)

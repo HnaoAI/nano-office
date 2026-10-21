@@ -9,6 +9,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `lists.ts` : listes à puces et numérotées : type de la liste du curseur, Tab et Shift+Tab sur trois niveaux (T1.2)
 - `alignment.ts` : alignement à gauche, centré, à droite ou justifié des paragraphes et titres (`setAlignment`, `currentAlignment`, T1.3)
 - `lineHeight.ts` : interligne des blocs sélectionnés et lecture au curseur (`setLineHeight`, `currentLineHeight`, T2.2)
+- `textCase.ts` : majuscules et minuscules de la sélection, marques et sélection gardées, en une transaction (`changeCase`, T2.4)
 - `fontStyle.ts` : police et taille de la sélection ou du texte tapé ensuite, lecture au curseur (`setFontFamily`, `setFontSize`, `currentTextStyle`, T1.4)
 - `textColor.ts` : couleur du texte et surlignage de la sélection ou du texte tapé ensuite, lecture au curseur (`setTextColor`, `setHighlight`, `currentTextColor`, `currentHighlight`, T1.7)
 - `tables.ts` : insertion d'un tableau, curseur dans un tableau, ligne d'en-tête, lignes et colonnes supprimables, curseur entre deux blocs et paragraphe après un tableau final (`insertTable`, `tableDeletions`, `TableNavigation`, T1.8)

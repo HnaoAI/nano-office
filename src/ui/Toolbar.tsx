@@ -1,6 +1,6 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
 // style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Barré (T2.3), couleur du texte et surlignage
-// (T1.7) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9).
+// (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
@@ -14,6 +14,7 @@ import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
 import { RedoIcon, StrikeIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
+import { CaseButton } from "./CaseButton";
 import { ColorButtons } from "./ColorButtons";
 import { FontSelects } from "./FontSelects";
 import { ImageButtons } from "./ImageButtons";
@@ -50,6 +51,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       inTable: isInTable(current.state),
       headerRow: headerRowActive(current.state),
       tableDeletions: tableDeletions(current.state),
+      hasSelection: !current.state.selection.empty,
       imageAlt: selectedImage(current.state)?.alt ?? null,
     }),
   });
@@ -114,6 +116,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
         <StrikeIcon />
       </button>
       <ColorButtons editor={editor} textColor={state.textColor} highlight={state.highlight} />
+      <CaseButton editor={editor} hasSelection={state.hasSelection} />
       <div className="nano-separator" aria-hidden="true" />
       <AlignmentButtons editor={editor} active={state.alignment} />
       <LineHeightSelect editor={editor} value={state.lineHeight} />
