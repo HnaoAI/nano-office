@@ -30,6 +30,12 @@ export interface LaunchState {
   /** La copie de secours a été lue et le document (restauré ou neuf) est affiché. */
   documentLoaded: boolean;
   activity: LaunchActivity;
+  /**
+   * Un rechargement rouvrirait le document affiché (H2, relecture) : il n'a pas de modifications non
+   * enregistrées, ou c'est lui que la copie de secours restaurera. Faux si une autre fenêtre a modifié
+   * un autre document depuis : le rechargement afficherait celui-là à la place.
+   */
+  reloadKeepsDocument: boolean;
   /** L'application s'est déjà rechargée pour une mise à jour pendant ce lancement. */
   reloadedThisLaunch: boolean;
 }
@@ -57,5 +63,6 @@ export function hasStartedWork(activity: LaunchActivity): boolean {
 export function decideUpdate(state: LaunchState): UpdateDecision {
   if (state.reloadedThisLaunch || hasStartedWork(state.activity)) return "next-launch";
   if (!state.updateReady || !state.documentLoaded) return "wait";
+  if (!state.reloadKeepsDocument) return "next-launch";
   return "reload";
 }

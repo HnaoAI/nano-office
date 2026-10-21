@@ -14,6 +14,7 @@ function launch(overrides: Partial<LaunchState> = {}): LaunchState {
     updateReady: true,
     documentLoaded: true,
     activity: NO_ACTIVITY,
+    reloadKeepsDocument: true,
     reloadedThisLaunch: false,
     ...overrides,
   };
@@ -55,6 +56,10 @@ describe("decideUpdate (H1)", () => {
     expect(decideUpdate(launch({ documentLoaded: true, activity: NO_ACTIVITY }))).toBe("reload");
   });
 
+  it("H2, critère 4 : si un rechargement afficherait un autre document (autre fenêtre), la mise à jour attend le lancement suivant", () => {
+    expect(decideUpdate(launch({ reloadKeepsDocument: false }))).toBe("next-launch");
+  });
+
   it("H2, critère 2 : les signes de travail commencé sont ceux de H1, sans la restauration", () => {
     expect(Object.keys(NO_ACTIVITY).sort()).toEqual(["backupQuestion", "edited", "fileAction"]);
   });
@@ -71,25 +76,31 @@ describe("decideUpdate (H1)", () => {
     expect(decideUpdate(launch({ reloadedThisLaunch: true }))).toBe("next-launch");
   });
 
-  it("critère 7 : chaque combinaison possible ne recharge que si rien n'est commencé et rien n'a été rechargé", () => {
+  it("critère 7 : chaque combinaison possible ne recharge que si rien n'est commencé, rien n'a été rechargé et le document reviendrait", () => {
     const flags = [false, true];
     for (const updateReady of flags)
       for (const documentLoaded of flags)
         for (const reloadedThisLaunch of flags)
-          for (const edited of flags)
-            for (const fileAction of flags)
-              for (const backupQuestion of flags) {
-                const activity = { edited, fileAction, backupQuestion };
-                const started = Object.values(activity).some(Boolean);
-                const decision = decideUpdate({
-                  updateReady,
-                  documentLoaded,
-                  reloadedThisLaunch,
-                  activity,
-                });
-                expect(decision === "reload").toBe(
-                  updateReady && documentLoaded && !reloadedThisLaunch && !started,
-                );
-              }
+          for (const reloadKeepsDocument of flags)
+            for (const edited of flags)
+              for (const fileAction of flags)
+                for (const backupQuestion of flags) {
+                  const activity = { edited, fileAction, backupQuestion };
+                  const started = Object.values(activity).some(Boolean);
+                  const decision = decideUpdate({
+                    updateReady,
+                    documentLoaded,
+                    reloadedThisLaunch,
+                    reloadKeepsDocument,
+                    activity,
+                  });
+                  expect(decision === "reload").toBe(
+                    updateReady &&
+                      documentLoaded &&
+                      reloadKeepsDocument &&
+                      !reloadedThisLaunch &&
+                      !started,
+                  );
+                }
   });
 });

@@ -22,6 +22,7 @@ import type { OpenDocument } from "../core/types";
 import type * as Y from "yjs";
 import { createBackupStore } from "../storage/backupStore";
 import { createFileStore } from "../storage/fileStore";
+import { cancelReloadForUpdate } from "./useAppUpdate";
 import {
   DISCARD_QUESTION,
   READ_ERROR,
@@ -67,6 +68,8 @@ export function useDocumentFile() {
 
   /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
   const noteActivity = useCallback((sign: keyof LaunchActivity) => {
+    // Synchrone : un rechargement de mise à jour déjà décidé est annulé avant tout rendu (H2).
+    cancelReloadForUpdate();
     setActivity((current) => (current[sign] ? current : { ...current, [sign]: true }));
   }, []);
 
@@ -299,6 +302,12 @@ export function useDocumentFile() {
     message,
     pending,
     activity,
+    /**
+     * Vrai si un rechargement rouvrirait le document affiché (H2) : sans modifications non enregistrées,
+     * ou s'il est encore le dernier document modifié. Une autre fenêtre peut avoir changé ce dernier.
+     */
+    reloadKeepsDocument: () =>
+      document === null || !unsaved || backups.lastModifiedId() === document.id,
     /** À appeler à chaque modification faite par l'utilisateur dans l'éditeur (H1, critère 6). */
     noteEdit: () => noteActivity("edited"),
     recover: () => void resolvePending(true),

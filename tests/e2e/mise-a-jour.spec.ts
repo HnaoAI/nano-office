@@ -3,7 +3,7 @@
 // pas ici : ces tests vérifient le numéro « dev » et les signes de travail commencé (critère 6), lus sur
 // `window.__nanoLaunch` (développement seulement), qui simule aussi une nouvelle version prête (H2).
 // La publication sous /nano-office/ est vérifiée par publication.spec.ts, sur la version construite.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Dialog, type Page } from "@playwright/test";
 import type { LaunchActivity } from "../../src/core/appUpdate";
 import { serializeDocument } from "../../src/core/fileFormat";
 import type { DocumentJson } from "../../src/core/types";
@@ -61,35 +61,62 @@ async function relaunchWithDraft(page: Page, text: string) {
   await expect(editor(page)).toHaveText(text);
 }
 
+type MarkedWindow = { __beforeUpdate?: true };
+
+/** Simule une nouvelle version prête (H2), après avoir marqué la page pour voir si elle se recharge. */
+async function simulateUpdate(page: Page, holdControl = false) {
+  await page.evaluate((hold) => {
+    (window as unknown as MarkedWindow).__beforeUpdate = true;
+    window.__nanoLaunch?.simulateUpdate({ holdControl: hold });
+  }, holdControl);
+}
+
+/** Vrai si la page marquée par `simulateUpdate` s'est rechargée dans le délai donné. */
+async function wasReloaded(page: Page, timeout = 5_000): Promise<boolean> {
+  try {
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => (window as unknown as MarkedWindow).__beforeUpdate).catch(() => true),
+        { timeout },
+      )
+      .toBeUndefined();
+  } catch {
+    return false;
+  }
+  // Hors du `try` : une page rechargée mais cassée fait échouer le test, au lieu de passer pour « pas rechargée ».
+  await expect(editor(page)).toBeVisible();
+  return true;
+}
+
 /**
  * Simule une nouvelle version prête (H2) et renvoie vrai si la page s'est rechargée pour l'appliquer.
  * Les alertes du navigateur affichées entre-temps (alerte avant fermeture) sont acceptées et retenues.
  */
 async function updateReloads(page: Page, dialogs: string[] = []): Promise<boolean> {
-  const onDialog = (dialog: import("@playwright/test").Dialog) => {
+  const onDialog = (dialog: Dialog) => {
     dialogs.push(dialog.type());
     void dialog.accept();
   };
   page.on("dialog", onDialog);
-  await page.evaluate(() => {
-    (window as unknown as { __beforeUpdate?: true }).__beforeUpdate = true;
-    window.__nanoLaunch?.simulateUpdate();
-  });
   try {
-    await expect
-      .poll(() =>
-        page
-          .evaluate(() => (window as unknown as { __beforeUpdate?: true }).__beforeUpdate)
-          .catch(() => true),
-      )
-      .toBeUndefined();
-    await expect(editor(page)).toBeVisible();
-    return true;
-  } catch {
-    return false;
+    await simulateUpdate(page);
+    return await wasReloaded(page);
   } finally {
     page.off("dialog", onDialog);
   }
+}
+
+/** Vérifie que l'alerte avant fermeture protège toujours le document, puis la refuse et ferme la page. */
+async function expectCloseAlert(page: Page, text: string) {
+  const dialog = page.waitForEvent("dialog");
+  // Le rechargement reste en attente de la réponse à l'alerte, refusée ici : il n'aboutit pas.
+  const reload = page.reload().catch(() => undefined);
+  expect((await dialog).type()).toBe("beforeunload");
+  await (await dialog).dismiss();
+  await expect(editor(page)).toHaveText(text);
+  await page.close();
+  await reload;
 }
 
 /** Ce que l'utilisateur voit au lancement : texte, titre de la fenêtre, message et son bouton. */
@@ -200,14 +227,44 @@ test("H2, critère 2 : une frappe dans le document restauré reporte toujours la
   expect(await updateReloads(page)).toBe(false);
   await expect(editor(page)).toHaveText("Brouillon suite");
   // L'alerte avant fermeture protège toujours ces modifications.
-  const dialog = page.waitForEvent("dialog");
-  // Le rechargement reste en attente de la réponse à l'alerte, refusée ici : il n'aboutit pas.
-  const reload = page.reload().catch(() => undefined);
-  expect((await dialog).type()).toBe("beforeunload");
-  await (await dialog).dismiss();
+  await expectCloseAlert(page, "Brouillon suite");
+});
+
+test("H2, critère 2 : une frappe avant que la nouvelle version prenne la main annule le rechargement, et l'alerte avant fermeture reste", async ({
+  page,
+}) => {
+  await relaunchWithDraft(page, "Brouillon");
+  await simulateUpdate(page, true);
+  // La décision de recharger est prise ; la nouvelle version n'a pas encore pris la main.
+  await expect
+    .poll(() => page.evaluate(() => typeof window.__nanoLaunch?.takeControl))
+    .toBe("function");
+  await editor(page).press("End");
+  await page.keyboard.type(" suite");
+  await page.evaluate(() => window.__nanoLaunch?.takeControl?.());
+  expect(await wasReloaded(page, 2_000)).toBe(false);
   await expect(editor(page)).toHaveText("Brouillon suite");
-  await page.close();
-  await reload;
+  await expectCloseAlert(page, "Brouillon suite");
+});
+
+test("H2, critère 4 : si une autre fenêtre a modifié un autre document depuis, la mise à jour attend, pour ne pas changer de document", async ({
+  page,
+  context,
+}) => {
+  await relaunchWithDraft(page, "Brouillon X");
+  // Deuxième fenêtre : elle restaure le même brouillon, puis l'abandonne pour un nouveau document.
+  const other = await context.newPage();
+  await installFakeFileStore(other);
+  await other.goto("/");
+  await expect(editor(other)).toHaveText("Brouillon X");
+  other.on("dialog", (dialog) => void dialog.accept());
+  await button(other, "Nouveau").click();
+  await editor(other).click();
+  await other.keyboard.type("Document Y");
+  await flushBackups(other);
+  // La première fenêtre, rechargée, rouvrirait « Document Y » : elle ne se recharge pas.
+  expect(await updateReloads(page)).toBe(false);
+  await expect(editor(page)).toHaveText("Brouillon X");
 });
 
 for (const [name, permission, whileClosed, action] of [
@@ -227,6 +284,7 @@ for (const [name, permission, whileClosed, action] of [
     await expect(page.locator(".nano-message-action")).toHaveText(action);
     expect(await launchView(page)).toEqual(before);
     // Le même fichier est retenu, et rien n'y a été écrit : les modifications sont dans la copie de secours.
+    // `files` couvre tout le test ; `calls`, remis à zéro au chargement, couvre la page rechargée.
     const after = await fakeFiles(page);
     expect(after.files).toEqual(filesBefore);
     expect(after.remembered).toEqual(remembered);

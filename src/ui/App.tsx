@@ -26,13 +26,15 @@ export function App() {
     dismissMessage,
     pending,
     activity,
+    reloadKeepsDocument,
     noteEdit,
     recover,
     openAsIs,
     ...file
   } = useDocumentFile();
-  // Une nouvelle version s'applique au démarrage si rien n'est commencé (H1).
-  useAppUpdate(activity, document !== null);
+  // Une nouvelle version s'applique au démarrage si rien n'est commencé (H1), et si le rechargement
+  // rouvre le même document (H2).
+  useAppUpdate(activity, document !== null, reloadKeepsDocument);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
