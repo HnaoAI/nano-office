@@ -240,7 +240,8 @@ describe("T1.7 : couleur du texte et surlignage", () => {
     };
     const text = serializeDocument({ id: createDocumentId(), ydoc: ydocFromJson(json) });
     const saved = JSON.parse(text) as { version: number; content: DocumentJson };
-    expect(saved.version).toBe(1);
+    // Version 2 depuis T1.9 (images) : la couleur n'a pas changé le format.
+    expect(saved.version).toBe(2);
     expect(JSON.stringify(saved.content)).toContain('"color":"#C62828"');
     const marks = roundTrip(json).content?.[0]?.content?.map((part) => part.marks);
     expect(marks?.[1]).toEqual([{ type: "highlight", attrs: { color: "#FFF176" } }]);
@@ -262,7 +263,7 @@ describe("T1.8 : tableaux", () => {
     content: [paragraph(`${id}-p`, { text })],
   });
 
-  it("critère 6 et 9 : aller-retour d'un tableau, chaque cellule garde son identifiant, version 1", () => {
+  it("critère 6 et 9 : aller-retour d'un tableau, chaque cellule garde son identifiant, format version 2 (T1.9)", () => {
     const json: DocumentJson = {
       type: "doc",
       content: [
@@ -283,7 +284,7 @@ describe("T1.8 : tableaux", () => {
       ],
     };
     const text = serializeDocument({ id: createDocumentId(), ydoc: ydocFromJson(json) });
-    expect((JSON.parse(text) as { version: number }).version).toBe(1);
+    expect((JSON.parse(text) as { version: number }).version).toBe(2);
     const reread = roundTrip(json);
     const ids: unknown[] = [];
     const visit = (node: DocumentJson) => {

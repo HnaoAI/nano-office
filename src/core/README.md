@@ -2,15 +2,18 @@
 
 Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèques.
 
-- `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `ParseResult`) et constantes du format
-- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8)
+- `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `NanoFileV2`, `ParseResult`) et constantes du format
+- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9)
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `tableSchema.ts` : tableaux : document qui accepte les tableaux, tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
 - `documentColors.ts` : palettes fixes de la couleur du texte et du surlignage (`TEXT_COLORS`, `HIGHLIGHT_COLORS`, T1.7)
-- `fileFormat.ts` : format `.nano` version 1 (`createDocumentId`, `serializeDocument`, `parseDocument`)
-- `documentFile.ts` : nouveau document, ouverture avec message d'erreur en français, modifications non enregistrées, titre de la fenêtre (T0c), nom du document dans l'en-tête (U1a)
-- `backup.ts` : copie de secours relue dans un Y.Doc neuf, comparaison avec un fichier ouvert, document récupéré ou restauré (T0d)
-- `autoSave.ts` : déclenchement de la sauvegarde automatique : 3 secondes après la dernière modification, 30 secondes au plus, jamais deux écritures à la fois, pause après un échec (`AutoSaver`, T1.6)
+- `fileFormat.ts` : format `.nano` version 2 (`createDocumentId`, `serializeDocument`, `parseDocument`) : images rangées une fois dans `images`, triées par empreinte, en fin de fichier, `ydoc` enregistré sans elles (T1.9)
+- `migrations.ts` : migrations du format, de la version 1 à la version 2 (`migrateV1ToV2`, `migrateToCurrent`, T1.9)
+- `images.ts` : images (T1.9) : format reconnu aux premiers octets, empreinte SHA-256, règles de réduction, `Y.Map` « images » du Y.Doc, texte de remplacement par défaut
+- `imageSchema.ts` : nœud image du schéma, dans son propre groupe : jamais dans une liste ni un tableau (`ImageNode`, T1.9)
+- `documentFile.ts` : nouveau document, ouverture avec message d'erreur en français, modifications non enregistrées (une image seule compte, T1.9), titre de la fenêtre (T0c), nom du document dans l'en-tête (U1a)
+- `backup.ts` : copie de secours relue dans un Y.Doc neuf, comparaison avec un fichier ouvert, document récupéré ou restauré (T0d), images comprises (T1.9)
+- `autoSave.ts` : déclenchement de la sauvegarde automatique : 3 secondes après la dernière modification, 30 secondes au plus (10 et 60 secondes au-delà de 2 Mo, T1.9), jamais deux écritures à la fois, pause après un échec (`AutoSaver`, T1.6)
 - `appUpdate.ts` : décision « recharger maintenant ou attendre » quand une nouvelle version est prête (`decideUpdate`, H1)
 - `appVersion.ts` : numéro de version `v<date>·<commit court>`, ou `dev` (`formatVersion`, H1)
 - `base64.ts` : conversion octets <-> base64 pour l'état Yjs

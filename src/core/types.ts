@@ -9,7 +9,7 @@ import type * as Y from "yjs";
 export const NANO_FORMAT = "nano-office";
 
 /** Version actuelle du format `.nano`. Tout changement de format l'incrémente (voir CLAUDE.md). */
-export const NANO_FORMAT_VERSION = 1;
+export const NANO_FORMAT_VERSION = 2;
 
 /** Nom proposé pour un document jamais enregistré (T0c, critère 3). */
 export const DEFAULT_FILE_NAME = "document.nano";
@@ -23,7 +23,10 @@ export interface DocumentJson {
   text?: string;
 }
 
-/** Contenu d'un fichier `.nano` version 1, tel qu'écrit sur le disque (JSON en UTF-8). */
+/**
+ * Contenu d'un fichier `.nano` version 1 (T0a), tel qu'écrit sur le disque (JSON en UTF-8).
+ * Il se lit encore : src/core/migrations.ts le convertit en version 2 à l'ouverture (T1.9, critère 7).
+ */
 export interface NanoFileV1 {
   format: typeof NANO_FORMAT;
   version: 1;
@@ -33,6 +36,23 @@ export interface NanoFileV1 {
   content: DocumentJson;
   /** État Yjs encodé en base64 (`Y.encodeStateAsUpdate`). Source de vérité à l'ouverture. */
   ydoc: string;
+}
+
+/** Image rangée dans un fichier `.nano` version 2 : son format et son contenu en base64. */
+export interface NanoFileImage {
+  type: string;
+  data: string;
+}
+
+/**
+ * Contenu d'un fichier `.nano` version 2 (T1.9) : la version 1, plus les images.
+ * Chaque image est rangée une seule fois dans `images`, sous l'empreinte SHA-256 de son contenu ;
+ * `content` et `ydoc` n'en gardent que l'empreinte (attribut `hash` du nœud image, critère 6).
+ */
+export interface NanoFileV2 extends Omit<NanoFileV1, "version"> {
+  version: 2;
+  /** Images utilisées par le document, par empreinte. Une image retirée du document n'y est plus. */
+  images: Record<string, NanoFileImage>;
 }
 
 /**

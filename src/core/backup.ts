@@ -2,6 +2,8 @@
 // enregistrées par y-indexeddb, comparaison avec un fichier ouvert, document récupéré ou restauré.
 import * as Y from "yjs";
 import { contentSnapshot, hasUnsavedChanges } from "./documentFile";
+import { contentOf } from "./fileFormat";
+import { imageRefs, readImage } from "./images";
 import type { OpenDocument } from "./types";
 
 /**
@@ -31,10 +33,16 @@ export function backupFromUpdates(updates: Uint8Array[]): Y.Doc | null {
 /**
  * Compare un fichier ouvert à sa copie de secours, avec la même conversion que `serializeDocument` (T0a).
  * Seul le contenu compte : deux historiques Yjs différents au même contenu sont identiques.
+ * Une image que la copie de secours a et que le fichier n'a pas (image manquante dans le fichier) rend
+ * la copie différente : sinon elle serait effacée et recréée sans cette image (T1.9, critère 8).
  */
 export function compareWithBackup(file: OpenDocument, backup: Y.Doc | null): BackupComparison {
   if (!backup) return "none";
-  return contentSnapshot(backup) === contentSnapshot(file.ydoc) ? "same" : "different";
+  if (contentSnapshot(backup) !== contentSnapshot(file.ydoc)) return "different";
+  const onlyInBackup = imageRefs(contentOf(backup)).some(
+    (hash) => readImage(backup, hash) !== null && readImage(file.ydoc, hash) === null,
+  );
+  return onlyInBackup ? "different" : "same";
 }
 
 /**

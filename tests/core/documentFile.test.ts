@@ -124,7 +124,7 @@ describe("openDocumentText", () => {
 
   it("critère 12 : un fichier d'une version inconnue affiche un message clair en français", () => {
     const file = JSON.parse(sampleFileText()) as Record<string, unknown>;
-    const result = openDocumentText("x.nano", JSON.stringify({ ...file, version: 2 }));
+    const result = openDocumentText("x.nano", JSON.stringify({ ...file, version: 3 }));
     expect(result).toEqual({
       ok: false,
       message:

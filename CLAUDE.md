@@ -62,10 +62,16 @@ CSS `--nano-…`. Un écart à la charte est une question pour le product owner,
 Fichier JSON en UTF-8 :
 
 - `format` : toujours `"nano-office"`
-- `version` : entier, actuellement `1`
+- `version` : entier, actuellement `2` (depuis T1.9 ; un fichier version 1 s'ouvre et est migré, voir `src/core/migrations.ts`)
 - `id` : identifiant unique du document (UUID), créé avec le document et conservé à chaque enregistrement
 - `content` : le document au format JSON de Tiptap (lisible, sert de secours)
-- `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`)
+- `ydoc` : l'état Yjs encodé en base64 (`Y.encodeStateAsUpdate`), sans le contenu des images
+- `images` (version 2) : les images utilisées par le document, chacune une seule fois, sous l'empreinte SHA-256
+  de son contenu : `{ "<empreinte>": { "type": "image/png", "data": "<base64>" } }`. `content` et `ydoc` n'en
+  gardent que l'empreinte (attribut `hash` du nœud image). Une image retirée du document n'est plus enregistrée.
+
+Dans l'application, les images vivent dans la `Y.Map` « images » du `Y.Doc`, donc dans la copie de secours.
+Une référence sans image (fichier modifié à la main) s'affiche « Image manquante », sans bloquer l'ouverture.
 
 À l'ouverture, `ydoc` est la source de vérité, vérifiée par `content` : s'ils diffèrent, utiliser `content`.
 Si `content` est inutilisable, le fichier est refusé (`corrupted`), même si `ydoc` contient du texte :
@@ -186,4 +192,5 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-20 : Couleur du texte, surlignage, tableaux et images ajoutés à la tranche T1 (lots C et D). Palettes de couleurs courtes et fixes ; les seules couleurs à l'écran sont celles du document. Les images sont rangées dans le fichier `.nano`, une seule fois chacune, et réduites à 2 000 px à l'insertion : le format passe en version 2, avec une migration testée depuis la version 1.
 - 2026-10-21 : Un tableau collé avec le curseur dans une cellule devient du texte dans cette cellule : il n'écrase jamais les cellules voisines et ne coupe pas le tableau. Les tableaux ne s'imbriquent jamais. Depuis T1.8, un tableau collé depuis une autre application reste un tableau (le critère 4 de T1.5 est remplacé sur ce point).
 - 2026-10-21 : Une restauration depuis la copie de secours ne compte plus comme travail commencé pour la mise à jour (ticket H2) : depuis le lot B, un document est restauré à chaque lancement, et la mise à jour était toujours reportée. Un document restauré est déjà en sécurité dans la copie de secours, et un rechargement le rouvre à l'identique.
+- 2026-10-21 : Format `.nano` version 2 (T1.9) : les images sont rangées une seule fois dans le champ `images`, sous l'empreinte SHA-256 de leur contenu, et `content` comme `ydoc` n'en gardent que l'empreinte. Dans l'application, elles vivent dans la `Y.Map` « images » du Y.Doc, donc dans la copie de secours et, plus tard, dans la collaboration. Un fichier version 1 s'ouvre et s'enregistre en version 2. Les images restent hors des listes et des tableaux pour l'instant. Elles sont réduites à 1 600 px sur le grand côté, et une photo est réencodée en JPEG de qualité 0,8. Le champ `images` est trié par empreinte et placé en fin de fichier, pour qu'ajouter une image ne change pas le texte des autres et que le dossier synchronisé reste léger. Au-delà de 2 Mo enregistrés, la sauvegarde automatique est espacée (10 s après la dernière modification, 60 s au plus) ; la copie de secours reste immédiate.
 - 2026-10-21 : Tranche T2 « aller plus loin », par ordre de priorité : lot E (rechercher et remplacer, interligne, barré, majuscules et minuscules), puis lot F (page A4 et marges, impression et PDF, export Word). L'impression et l'export, absents de la demande initiale, passent avant le pinceau et le tri des tableaux (PL4, PL5, plus tard), car sans eux un document ne peut pas être rendu ni envoyé. Les réglages de page sont des attributs du document, sans changement de version.

@@ -1,4 +1,5 @@
-// Tests du format de fichier `.nano` version 1 (src/core/fileFormat.ts), critères 2 à 5 et 7 à 11 de T0a.
+// Tests du format de fichier `.nano` (src/core/fileFormat.ts), critères 2 à 5 et 7 à 11 de T0a.
+// La version 2 (images, migration) est testée dans fileFormatV2.test.ts (T1.9).
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
 import { createDocumentId, parseDocument, serializeDocument } from "../../src/core/fileFormat";
@@ -27,10 +28,10 @@ function expectError(result: ParseResult, error: string) {
 }
 
 describe("serializeDocument", () => {
-  it("critère 2 : un document sérialisé contient format, version (1), id, content et ydoc", () => {
+  it("critère 2 : un document sérialisé contient format, version (2 depuis T1.9), id, content et ydoc", () => {
     const file = validFile();
     expect(file.format).toBe("nano-office");
-    expect(file.version).toBe(1);
+    expect(file.version).toBe(2);
     expect(file.id).toBe("doc-1");
     expect(file.content).toEqual(expect.objectContaining({ type: "doc" }));
     expect(typeof file.ydoc).toBe("string");
@@ -65,7 +66,7 @@ describe("parseDocument : aller-retour", () => {
     const id = createDocumentId();
     const result = roundTrip(SAMPLE_DOCUMENT, id);
     expect(result.id).toBe(id);
-    expect(result.version).toBe(1);
+    expect(result.version).toBe(2);
     expect(jsonFromYdoc(result.ydoc)).toEqual(jsonFromYdoc(ydocFromJson(SAMPLE_DOCUMENT)));
   });
 
@@ -224,7 +225,7 @@ describe("parseDocument : fichiers refusés", () => {
 
   it("critère 9 : une version inconnue renvoie unsupported-version, sans exception", () => {
     expectError(
-      parseDocument(JSON.stringify({ ...validFile(), version: 2 })),
+      parseDocument(JSON.stringify({ ...validFile(), version: 3 })),
       "unsupported-version",
     );
     expectError(

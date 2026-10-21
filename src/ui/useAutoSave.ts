@@ -11,20 +11,26 @@ import { AutoSaver, type AutoSaveRun } from "../core/autoSave";
  * @param ydoc Y.Doc affiché, ou undefined pendant le chargement
  * @param run enregistrement automatique, appelé avec les valeurs du dernier rendu
  * @param startsPaused vrai si la sauvegarde de ce Y.Doc doit attendre un premier enregistrement réussi (PL3)
+ * @param savedBytes taille du dernier fichier écrit ou ouvert : au-delà de 2 Mo, la sauvegarde s'espace (T1.9)
  * @returns l'AutoSaver du document affiché, à prévenir du résultat de chaque enregistrement
  */
 export function useAutoSave(
   ydoc: Y.Doc | undefined,
   run: AutoSaveRun,
   startsPaused: (ydoc: Y.Doc) => boolean,
+  savedBytes: () => number,
 ) {
   const saverRef = useRef<AutoSaver | null>(null);
   const onRun = useEffectEvent(run);
   const isPausedAtStart = useEffectEvent(startsPaused);
+  const sizeOf = useEffectEvent(savedBytes);
 
   useEffect(() => {
     if (!ydoc) return;
-    const saver = new AutoSaver(() => onRun());
+    const saver = new AutoSaver(
+      () => onRun(),
+      () => sizeOf(),
+    );
     if (isPausedAtStart(ydoc)) saver.pause();
     saverRef.current = saver;
     const onUpdate = () => saver.change();

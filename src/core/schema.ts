@@ -9,6 +9,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
 import { isSafeCssValue, TextStyleAttributes } from "./textStyle";
 import { DocumentWithTables, tableExtensions } from "./tableSchema";
+import { ImageNode } from "./imageSchema";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -24,8 +25,15 @@ export const YJS_FRAGMENT_NAME = "default";
 /** Nom de l'attribut qui porte l'identifiant stable d'un bloc. */
 export const BLOCK_ID_ATTRIBUTE = "id";
 
-/** Types de nœuds qui portent un identifiant de bloc (règle produit 5), cellules comprises (T1.8). */
-export const BLOCK_TYPES_WITH_ID = ["paragraph", "heading", "listItem", "tableCell", "tableHeader"];
+/** Types de nœuds qui portent un identifiant de bloc (règle produit 5), cellules (T1.8) et images (T1.9) comprises. */
+export const BLOCK_TYPES_WITH_ID = [
+  "paragraph",
+  "heading",
+  "listItem",
+  "tableCell",
+  "tableHeader",
+  "image",
+];
 
 /** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
 export const HEADING_LEVELS = [1, 2, 3] as const;
@@ -101,12 +109,12 @@ const DocumentListItem = ListItem.extend({
 });
 
 /**
- * Alignement des paragraphes et des titres (T1.3), dans l'attribut `textAlign`, sans les raccourcis
+ * Alignement des paragraphes, des titres (T1.3) et des images (T1.9), dans l'attribut `textAlign`, sans les raccourcis
  * de Tiptap (remplacés par ceux de src/editor/keyboardShortcuts.ts, à la touche physique).
  * L'attribut est gardé quand Entrée coupe le bloc : le nouveau paragraphe reprend l'alignement.
  */
 const DocumentTextAlign = TextAlign.extend({ addKeyboardShortcuts: () => ({}) }).configure({
-  types: ["paragraph", "heading"],
+  types: ["paragraph", "heading", "image"],
   alignments: [...TEXT_ALIGNMENTS],
 });
 
@@ -140,8 +148,8 @@ const DocumentHighlight = Highlight.extend({
 /**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
  * puces et numérotées (T1.2), alignement (T1.3), gras, italique, police et taille (T1.4),
- * couleur du texte et surlignage (T1.7), tableaux (T1.8), identifiant de bloc. T0b les réutilise telles
- * quelles, sans redéfinir le schéma.
+ * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), identifiant de bloc. T0b les
+ * réutilise telles quelles, sans redéfinir le schéma (l'éditeur configure seulement `ImageNode`).
  */
 export const documentExtensions = [
   DocumentWithTables,
@@ -151,6 +159,7 @@ export const documentExtensions = [
   DocumentOrderedList,
   DocumentListItem,
   ...tableExtensions,
+  ImageNode,
   Text,
   Bold,
   Italic,
