@@ -9,8 +9,9 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `search.ts` : recherche d'un texte dans un paragraphe, majuscules ignorées ou non, textes « 3 sur 12 » et « 12 remplacements » (`findInText`, `searchStatus`, T2.1)
 - `textCase.ts` : majuscules et minuscules selon les règles du français, phrase et mot pris dans leur paragraphe (`convertCase`, `CASE_MODES`, T2.4)
 - `tableSchema.ts` : tableaux : document qui accepte les tableaux, tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
+- `pageSetup.ts` : mise en page (T2.5) : orientation et marges d'une page A4, `Y.Map` « page » du Y.Doc, attributs du nœud `doc` de `content`, marges écrites et lues à la française (`readPageSetup`, `writePageSetup`, `withPageSetupAttrs`)
 - `documentColors.ts` : palettes fixes de la couleur du texte et du surlignage (`TEXT_COLORS`, `HIGHLIGHT_COLORS`, T1.7)
-- `fileFormat.ts` : format `.nano` version 2 (`createDocumentId`, `serializeDocument`, `parseDocument`) : images rangées une fois dans `images`, triées par empreinte, en fin de fichier, `ydoc` enregistré sans elles (T1.9)
+- `fileFormat.ts` : format `.nano` version 2 (`createDocumentId`, `serializeDocument`, `parseDocument`) : images rangées une fois dans `images`, triées par empreinte, en fin de fichier, `ydoc` enregistré sans elles (T1.9) ; mise en page en attributs du nœud `doc` de `content` (T2.5)
 - `migrations.ts` : migrations du format, de la version 1 à la version 2 (`migrateV1ToV2`, `migrateToCurrent`, T1.9)
 - `images.ts` : images (T1.9) : format reconnu aux premiers octets, empreinte SHA-256, règles de réduction, `Y.Map` « images » du Y.Doc, texte de remplacement par défaut
 - `imageSchema.ts` : nœud image du schéma, dans son propre groupe : jamais dans une liste ni un tableau (`ImageNode`, T1.9)

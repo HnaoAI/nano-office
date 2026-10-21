@@ -1,17 +1,34 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1) et éditeur
-// Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a).
+// Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a), au format et aux marges du
+// document (T2.5).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
-import { useEffect, useEffectEvent, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from "react";
 import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { createEditorOptions } from "../editor/editorOptions";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
+import { pageSize, type PageSetup } from "../core/pageSetup";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
+import { usePageSetup } from "./usePageSetup";
 import { useSearchShortcuts } from "./useSearchShortcuts";
+
+/** Variables CSS de la page (layout.css) : feuille A4 et marges du document, en centimètres (T2.5). */
+function pageStyle(setup: PageSetup): CSSProperties {
+  const size = pageSize(setup.orientation);
+  const { top, right, bottom, left } = setup.margins;
+  return {
+    "--page-width": `${size.width}cm`,
+    "--page-height": `${size.height}cm`,
+    "--page-margin-top": `${top}cm`,
+    "--page-margin-right": `${right}cm`,
+    "--page-margin-bottom": `${bottom}cm`,
+    "--page-margin-left": `${left}cm`,
+  } as CSSProperties;
+}
 
 /**
  * Éditeur d'un document.
@@ -37,6 +54,7 @@ export function DocumentEditor({
     [ydoc, onImageRejected],
   );
   const editor = useEditor({ ...options, autofocus: true }, [ydoc]);
+  const pageSetup = usePageSetup(ydoc);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {
     if (isUserEdit(transaction)) onEdit();
@@ -68,7 +86,11 @@ export function DocumentEditor({
       </div>
       {search && <SearchBar editor={editor} request={search} onClose={() => setSearch(null)} />}
       <main className="nano-workspace">
-        <article className="nano-page">
+        <article
+          className="nano-page"
+          data-orientation={pageSetup.orientation}
+          style={pageStyle(pageSetup)}
+        >
           <EditorContent editor={editor} />
         </article>
       </main>

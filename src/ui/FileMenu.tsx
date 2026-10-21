@@ -1,4 +1,5 @@
-// Groupe Fichier de l'en-tête (T0c, style U1a) : Nouveau, Ouvrir…, Enregistrer sous…, Enregistrer.
+// Groupe Fichier de l'en-tête (T0c, style U1a) : Nouveau, Ouvrir…, Enregistrer sous…, Mise en page… (T2.5),
+// Enregistrer.
 import { MOD, SAVE_SHORTCUT } from "./shortcuts";
 
 /** Actions déclenchées par les boutons. */
@@ -7,6 +8,8 @@ export interface FileMenuActions {
   open: () => void;
   save: () => void;
   saveAs: () => void;
+  /** Ouvre la boîte « Mise en page » (T2.5). */
+  pageSetup: () => void;
 }
 
 /**
@@ -15,7 +18,7 @@ export interface FileMenuActions {
  * son nom accessible reste « Enregistrer » (U1a, critère 7).
  * @param actions actions fournies par `useDocumentFile`
  */
-export function FileMenu({ newDocument, open, save, saveAs }: FileMenuActions) {
+export function FileMenu({ newDocument, open, save, saveAs, pageSetup }: FileMenuActions) {
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
   return (
     <div className="nano-file-menu" role="toolbar" aria-label="Fichier">
@@ -27,6 +30,9 @@ export function FileMenu({ newDocument, open, save, saveAs }: FileMenuActions) {
       </button>
       <button type="button" onMouseDown={keepFocus} onClick={saveAs}>
         Enregistrer sous…
+      </button>
+      <button type="button" onMouseDown={keepFocus} onClick={pageSetup}>
+        Mise en page…
       </button>
       <button
         type="button"

@@ -80,7 +80,8 @@ export function markSaved(
 
 /**
  * Vrai si le document a des modifications non enregistrées.
- * Un document jamais enregistré n'en a que s'il contient du texte ou une image (T1.9, critère 8) :
+ * Un document jamais enregistré n'en a que s'il contient du texte, une image (T1.9, critère 8) ou une
+ * mise en page réglée (T2.5) :
  * le paragraphe vide créé par l'éditeur ne compte pas, pour ne pas demander de confirmation sur une
  * page blanche.
  */
@@ -110,5 +111,7 @@ export function documentTitle(fileName: string | null): string {
  * au rechargement ni protégée par l'alerte avant fermeture (T1.9, critère 8).
  */
 function hasContent(node: DocumentJson): boolean {
+  // Une mise en page réglée (attributs du nœud `doc`) compte aussi (T2.5, critère 5).
+  if (node.type === "doc" && node.attrs && Object.keys(node.attrs).length > 0) return true;
   return Boolean(node.text) || node.type === IMAGE_NODE || (node.content ?? []).some(hasContent);
 }

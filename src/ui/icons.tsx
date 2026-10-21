@@ -238,3 +238,13 @@ export function AltTextIcon() {
     </Icon>
   );
 }
+
+/** Feuille et ses marges, du bouton et de la boîte « Mise en page » (T2.5). */
+export function PageSetupIcon() {
+  return (
+    <Icon size={22}>
+      <rect x="5" y="3" width="14" height="18" rx="1.5" />
+      <path d="M8 7h8M8 11h8M8 15h5" />
+    </Icon>
+  );
+}

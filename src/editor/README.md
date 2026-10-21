@@ -21,6 +21,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `imageImport.ts` : préparation d'une image : 25 Mo au plus, format vérifié, réduction à 1 600 px par un canvas (`prepareImage`, T1.9)
 - `imageLibrary.ts` : adresses `blob:` et `data:` des images d'un document, avis quand une image arrive (`ImageLibrary`, T1.9)
 - `imageView.ts` : affichage d'une image : alignement, poignées de redimensionnement, cadre « Image manquante » (`ImageView`, T1.9)
+- `pageSetup.ts` : mise en page dans l'historique d'annulation : la `Y.Map` « page » suivie par Ctrl/Cmd+Z, un changement isolé de la frappe (`createPageSetupHistory`, T2.5)
 - `focus.ts` : redonne le focus à l'éditeur tout de suite après un clic sur la barre (`focusEditor`, lot A)
 - `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1), barré Ctrl/Cmd+Shift+X (T2.3)
 - `userEdits.ts` : reconnaît une modification faite par l'utilisateur, pour la mise à jour au démarrage (`isUserEdit`, H1)

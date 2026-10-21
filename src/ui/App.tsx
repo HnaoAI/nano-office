@@ -1,9 +1,11 @@
-// Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché
-// et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+// Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché,
+// boîte « Mise en page » (T2.5) et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
 import { MessageBar } from "./MessageBar";
+import { PageSetupDialog } from "./PageSetupDialog";
+import { usePageSetupDialog } from "./usePageSetupDialog";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
 import "./fonts";
@@ -38,11 +40,13 @@ export function App() {
   // Une nouvelle version s'applique au démarrage si rien n'est commencé (H1), et si le rechargement
   // rouvre le même document (H2).
   useAppUpdate(activity, document !== null, reloadKeepsDocument);
+  const pageDialog = usePageSetupDialog(document?.ydoc ?? null, noteEdit);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
     save: file.save,
     saveAs: file.saveAs,
+    pageSetup: pageDialog.show,
   };
   // Pendant la lecture de la copie de secours, rien n'est modifiable (T0d, critère 4).
   if (!document) {
@@ -78,6 +82,13 @@ export function App() {
           ydoc={document.ydoc}
           onEdit={noteEdit}
           onImageRejected={imageRejected}
+        />
+      )}
+      {pageDialog.current && !pending && (
+        <PageSetupDialog
+          current={pageDialog.current}
+          onApply={pageDialog.apply}
+          onCancel={pageDialog.close}
         />
       )}
       <footer className="nano-footer">
