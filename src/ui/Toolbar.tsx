@@ -8,7 +8,7 @@ import { currentAlignment } from "../editor/alignment";
 import { currentBlockStyle } from "../editor/blockStyle";
 import { currentTextStyle } from "../editor/fontStyle";
 import { currentListType } from "../editor/lists";
-import { headerRowActive, isInTable } from "../editor/tables";
+import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
 import { RedoIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
@@ -43,6 +43,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       highlight: currentHighlight(current.state),
       inTable: isInTable(current.state),
       headerRow: headerRowActive(current.state),
+      tableDeletions: tableDeletions(current.state),
     }),
   });
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -101,7 +102,12 @@ export function Toolbar({ editor }: { editor: Editor }) {
       <div className="nano-separator" aria-hidden="true" />
       <ListButtons editor={editor} active={state.listType} />
       <div className="nano-separator" aria-hidden="true" />
-      <TableButtons editor={editor} inTable={state.inTable} headerRow={state.headerRow} />
+      <TableButtons
+        editor={editor}
+        inTable={state.inTable}
+        headerRow={state.headerRow}
+        canDelete={state.tableDeletions}
+      />
     </div>
   );
 }

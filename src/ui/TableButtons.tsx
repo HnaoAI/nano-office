@@ -118,6 +118,8 @@ const TABLE_ACTIONS: {
   label: string;
   icon: React.ReactNode;
   run: (editor: Editor) => boolean;
+  /** Suppression soumise à condition : la dernière ligne ou colonne ne se supprime pas seule. */
+  needs?: "row" | "column";
 }[] = [
   {
     label: "Ajouter une ligne au-dessus",
@@ -139,11 +141,17 @@ const TABLE_ACTIONS: {
     icon: <ColumnRightIcon />,
     run: (e) => e.commands.addColumnAfter(),
   },
-  { label: "Supprimer la ligne", icon: <DeleteRowIcon />, run: (e) => e.commands.deleteRow() },
+  {
+    label: "Supprimer la ligne",
+    icon: <DeleteRowIcon />,
+    run: (e) => e.commands.deleteRow(),
+    needs: "row",
+  },
   {
     label: "Supprimer la colonne",
     icon: <DeleteColumnIcon />,
     run: (e) => e.commands.deleteColumn(),
+    needs: "column",
   },
   {
     label: "Supprimer le tableau",
@@ -159,15 +167,19 @@ const TABLE_ACTIONS: {
  * @param editor éditeur à piloter
  * @param inTable vrai si le curseur est dans un tableau
  * @param headerRow vrai si la première ligne du tableau du curseur est une ligne d'en-tête
+ * @param canDelete faux pour la seule ligne ou la seule colonne d'un tableau : le bouton est désactivé
+ *   (« Supprimer le tableau » reste possible)
  */
 export function TableButtons({
   editor,
   inTable,
   headerRow,
+  canDelete,
 }: {
   editor: Editor;
   inTable: boolean;
   headerRow: boolean;
+  canDelete: { row: boolean; column: boolean };
 }) {
   const keepFocus = (event: React.MouseEvent) => event.preventDefault();
   return (
@@ -175,10 +187,11 @@ export function TableButtons({
       <InsertTableButton editor={editor} disabled={inTable} />
       {inTable && (
         <div className="nano-table-actions" role="group" aria-label="Tableau">
-          {TABLE_ACTIONS.map(({ label, icon, run }) => (
+          {TABLE_ACTIONS.map(({ label, icon, run, needs }) => (
             <button
               key={label}
               type="button"
+              disabled={needs !== undefined && !canDelete[needs]}
               aria-label={label}
               title={label}
               onMouseDown={keepFocus}

@@ -228,6 +228,13 @@ describe("T1.7 : copier-coller", () => {
     ]);
   });
 
+  it("une couleur de surlignage qui tenterait d'ajouter une propriété CSS n'est pas écrite", () => {
+    const source = start(
+      docOf(textNode("x", { type: "highlight", attrs: { color: "red; position: fixed" } })),
+    );
+    expect(copyAll(source).html).not.toContain("position");
+  });
+
   it("critère 8 : le HTML copié porte la couleur et le surlignage en style, lisibles par un e-mail", () => {
     const source = start(COLORED);
     const { html } = copyAll(source);

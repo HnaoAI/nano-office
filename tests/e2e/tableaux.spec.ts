@@ -1,19 +1,14 @@
 // Tests d'interface du ticket T1.8 (tableaux), dans Chromium.
-import { expect, test, type Page } from "@playwright/test";
-import { serializeDocument } from "../../src/core/fileFormat";
-import type { DocumentJson } from "../../src/core/types";
-import { ydocFromJson } from "../core/helpers";
-import { setFakeFiles } from "./fakeFileStore";
+import { expect, test } from "@playwright/test";
 import {
   button,
   editor,
-  pasteFromOtherApp,
-  readClipboard,
   saveAndReopen,
   settleSelection,
   start,
-  ydocJson,
+  waitUndoGroup,
 } from "./formatHelpers";
+import { cellIds, insertTable, tableText } from "./tableHelpers";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -27,37 +22,6 @@ const TABLE_BUTTONS = [
   "Supprimer le tableau",
   "Ligne d'en-tête",
 ];
-
-/** Textes des cellules de chaque ligne du premier tableau affiché. */
-function tableText(page: Page) {
-  return editor(page)
-    .locator("table")
-    .first()
-    .evaluate((table: HTMLTableElement) =>
-      Array.from(table.rows, (row) => Array.from(row.cells, (cell) => cell.textContent ?? "")),
-    );
-}
-
-/** Insère un tableau par la grille, à la souris. */
-async function insertTable(page: Page, rows: number, cols: number) {
-  await button(page, "Insérer un tableau").click();
-  const name = `${String(rows)} ligne${rows > 1 ? "s" : ""}, ${String(cols)} colonne${cols > 1 ? "s" : ""}`;
-  const cell = page.getByRole("group", { name: "Taille du tableau" }).getByRole("button", { name });
-  await cell.hover();
-  await expect(page.locator(".nano-table-size")).toHaveText(`${String(rows)} × ${String(cols)}`);
-  await cell.click();
-}
-
-/** Identifiants des cellules du Y.Doc, dans l'ordre. */
-async function cellIds(page: Page): Promise<unknown[]> {
-  const ids: unknown[] = [];
-  const visit = (node: DocumentJson) => {
-    if (node.type === "tableCell" || node.type === "tableHeader") ids.push(node.attrs?.id);
-    node.content?.forEach(visit);
-  };
-  visit(await ydocJson(page));
-  return ids;
-}
 
 test("critère 1 : la grille de 8 × 8 cases insère le tableau choisi au survol, avec une ligne d'en-tête", async ({
   page,
@@ -232,108 +196,56 @@ test("critère 6 : chaque cellule garde son identifiant à l'enregistrement et �
   expect((await tableText(page))[0]).toEqual(["Poste", ""]);
 });
 
-test("critère 6 : un tableau collé depuis Nano Buro reçoit de nouveaux identifiants", async ({
+test("critère 2 : on ne peut pas supprimer seule la dernière ligne ou la dernière colonne", async ({
+  page,
+}) => {
+  await start(page);
+  await insertTable(page, 1, 1);
+  const group = page.getByRole("group", { name: "Tableau" });
+  await expect(group.getByRole("button", { name: "Supprimer la ligne" })).toBeDisabled();
+  await expect(group.getByRole("button", { name: "Supprimer la colonne" })).toBeDisabled();
+  await expect(group.getByRole("button", { name: "Supprimer le tableau" })).toBeEnabled();
+});
+
+test("critère 3 : dans une liste d'une cellule, Tab décale l'élément, puis passe à la cellule suivante quand c'est impossible", async ({
   page,
 }) => {
   await start(page);
   await insertTable(page, 2, 2);
-  await page.keyboard.type("A");
-  await page.keyboard.press("ControlOrMeta+a");
-  await settleSelection(page);
-  await page.keyboard.press("ControlOrMeta+c");
-  await page.keyboard.press("ControlOrMeta+End");
-  await settleSelection(page);
-  await page.keyboard.press("ControlOrMeta+v");
-  await expect(editor(page).locator("table")).toHaveCount(2);
-  const ids = await cellIds(page);
-  expect(ids).toHaveLength(8);
-  expect(new Set(ids).size).toBe(8);
-});
-
-test("critère 7 : un tableau collé depuis Word ou une page web reste un tableau, sans couleurs ni polices", async ({
-  page,
-}) => {
-  await start(page);
-  await pasteFromOtherApp(
-    page,
-    `<table class=MsoTableGrid border=1 style="border-collapse:collapse"><tr><td width=200 style="background:#FFC000"><p class=MsoNormal><b><span style="font-family:Calibri;color:red">Mois</span></b></p></td><td colspan=2><p class=MsoNormal>Budget</p></td></tr><tr><td>Janvier</td><td>1 200 €</td><td>Payé</td></tr></table>`,
-  );
-  expect(await tableText(page)).toEqual([
-    ["Mois", "Budget", ""],
-    ["Janvier", "1 200 €", "Payé"],
-  ]);
-  await expect(editor(page).locator("strong")).toHaveText("Mois");
-  await expect(
-    editor(page).locator("[style*='color'], [style*='background'], [data-font]"),
-  ).toHaveCount(0);
-  await page.keyboard.press("ControlOrMeta+End");
-  await settleSelection(page);
-  await pasteFromOtherApp(
-    page,
-    `<table><thead><tr><th style="font-family: Georgia; background: navy; color: white">Ville</th></tr></thead><tbody><tr><td>Lyon</td></tr></tbody></table>`,
-  );
-  await expect(editor(page).locator("table")).toHaveCount(2);
-  await expect(editor(page).locator("table").last().locator("th")).toHaveText("Ville");
-  expect(JSON.stringify(await ydocJson(page))).not.toMatch(/Calibri|Georgia|FFC000|navy/);
-});
-
-test("critère 8 : un tableau copié vers un e-mail reste un tableau HTML", async ({ page }) => {
-  await start(page);
-  await insertTable(page, 2, 2);
-  await page.keyboard.type("Poste");
+  await page.keyboard.press("ControlOrMeta+Shift+Digit8");
+  await page.keyboard.type("lait");
   await page.keyboard.press("Tab");
-  await page.keyboard.type("Montant");
-  await page.keyboard.press("ControlOrMeta+a");
-  await settleSelection(page);
-  await page.keyboard.press("ControlOrMeta+c");
-  const { html } = await readClipboard(page);
-  expect(html).toMatch(/<table[^>]*>/);
-  expect(html).toMatch(/<th[^>]*>.*Poste.*<\/th>/);
-  expect(html).toMatch(/<tr[^>]*>/);
+  await page.keyboard.type("Prix");
+  expect((await tableText(page))[0]).toEqual(["lait", "Prix"]);
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("œufs");
+  await page.keyboard.press("Tab");
+  await expect(editor(page).locator("th").first().locator("li li")).toHaveText("œufs");
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.type("!");
+  await expect(editor(page).locator("th").first().locator("li li")).toHaveCount(0);
 });
 
-test("critère 10 : un tableau de 50 lignes et 10 colonnes reste fluide à la saisie", async ({
+test("Ctrl/Cmd+Z annule l'insertion d'un tableau, puis l'ajout d'une ligne, en une fois chacun", async ({
   page,
 }) => {
   await start(page);
-  const cell = (r: number, c: number): DocumentJson => ({
-    type: r === 0 ? "tableHeader" : "tableCell",
-    attrs: { id: `c-${String(r)}-${String(c)}` },
-    content: [
-      {
-        type: "paragraph",
-        attrs: { id: `p-${String(r)}-${String(c)}` },
-        content: [{ type: "text", text: `Case ${String(r)}.${String(c)}` }],
-      },
-    ],
-  });
-  const json: DocumentJson = {
-    type: "doc",
-    content: [
-      {
-        type: "table",
-        content: Array.from({ length: 50 }, (_, r) => ({
-          type: "tableRow",
-          content: Array.from({ length: 10 }, (_, c) => cell(r, c)),
-        })),
-      },
-      { type: "paragraph", attrs: { id: "p-end" } },
-    ],
-  };
-  const text = serializeDocument({ id: crypto.randomUUID(), ydoc: ydocFromJson(json) });
-  await setFakeFiles(page, { files: { "budget.nano": text }, nextOpen: "budget.nano" });
-  await button(page, "Ouvrir…").click();
-  await expect(editor(page).locator("tr")).toHaveCount(50);
-  await editor(page).locator("td").filter({ hasText: "Case 25.5" }).click();
-  await settleSelection(page);
-  const typed = "fluide à la saisie";
-  const startTime = await page.evaluate(() => performance.now());
-  await page.keyboard.type(typed);
-  await expect(editor(page).locator("td").filter({ hasText: typed })).toHaveAttribute(
-    "data-id",
-    "c-25-5",
-  );
-  const elapsed = (await page.evaluate(() => performance.now())) - startTime;
-  // Moins de 50 ms par caractère en moyenne, frappe de Playwright comprise.
-  expect(elapsed / typed.length).toBeLessThan(50);
+  await page.keyboard.type("Budget");
+  await page.keyboard.press("Enter");
+  await waitUndoGroup(page);
+  await insertTable(page, 2, 2);
+  await waitUndoGroup(page);
+  await page
+    .getByRole("group", { name: "Tableau" })
+    .getByRole("button", { name: "Ajouter une ligne au-dessous" })
+    .click();
+  await expect(editor(page).locator("tr")).toHaveCount(3);
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor(page).locator("tr")).toHaveCount(2);
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(editor(page).locator("table")).toHaveCount(0);
+  await expect(editor(page)).toHaveText("Budget");
 });

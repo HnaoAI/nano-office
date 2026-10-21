@@ -7,7 +7,7 @@ import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
-import { TextStyleAttributes } from "./textStyle";
+import { isSafeCssValue, TextStyleAttributes } from "./textStyle";
 import { DocumentWithTables, tableExtensions } from "./tableSchema";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
@@ -116,8 +116,25 @@ const DocumentTextAlign = TextAlign.extend({ addKeyboardShortcuts: () => ({}) })
  * La couleur du texte est l'attribut `color` de la marque `textStyle`, à côté de la police et de la
  * taille (src/core/textStyle.ts) : un seul `<span>` porte les trois.
  */
-const DocumentHighlight = Highlight.extend({ addKeyboardShortcuts: () => ({}) }).configure({
-  multicolor: true,
+const DocumentHighlight = Highlight.extend({
+  addKeyboardShortcuts: () => ({}),
+  addAttributes() {
+    return {
+      color: {
+        default: null,
+        parseHTML: (element) =>
+          element.getAttribute("data-color") ?? (element.style.backgroundColor || null),
+        // Même contrôle que la couleur du texte : une valeur venue d'un fichier ne doit pas pouvoir
+        // ajouter une autre propriété CSS.
+        renderHTML: (attributes) => {
+          const color: unknown = attributes.color;
+          return isSafeCssValue(color)
+            ? { "data-color": color, style: `background-color: ${color}; color: inherit` }
+            : {};
+        },
+      },
+    };
+  },
 });
 
 /**

@@ -67,7 +67,7 @@ function firstFamily(cssValue: string): string | null {
  * Vrai si `value` peut être écrit sans risque dans un style CSS : une couleur ne doit pas pouvoir
  * ajouter une autre propriété (`;`) ou un bloc (`{`).
  */
-function isSafeCssValue(value: unknown): value is string {
+export function isSafeCssValue(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "" && !/[;{}]/.test(value);
 }
 

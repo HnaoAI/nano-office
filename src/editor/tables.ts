@@ -6,7 +6,7 @@ import { Extension, type Editor } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { gapCursor } from "@tiptap/pm/gapcursor";
 import { Plugin, PluginKey, type EditorState } from "@tiptap/pm/state";
-import { isInTable as cursorInTable } from "@tiptap/pm/tables";
+import { isInTable as cursorInTable, selectedRect } from "@tiptap/pm/tables";
 
 /** Vrai si le curseur (ou la sélection de cellules) est dans un tableau. */
 export function isInTable(state: EditorState): boolean {
@@ -32,6 +32,20 @@ export function headerRowActive(state: EditorState): boolean {
     if (cell.type.name !== "tableHeader") allHeaders = false;
   });
   return allHeaders;
+}
+
+/**
+ * Lignes et colonnes que « Supprimer la ligne » et « Supprimer la colonne » peuvent retirer : pas
+ * toutes celles du tableau (prosemirror-tables refuse alors sans rien dire, et `can()` de Tiptap ne
+ * le voit pas, car la vérification n'a lieu qu'à l'exécution).
+ */
+export function tableDeletions(state: EditorState): { row: boolean; column: boolean } {
+  if (!isInTable(state)) return { row: false, column: false };
+  const rect = selectedRect(state);
+  return {
+    row: !(rect.top === 0 && rect.bottom === rect.map.height),
+    column: !(rect.left === 0 && rect.right === rect.map.width),
+  };
 }
 
 /**

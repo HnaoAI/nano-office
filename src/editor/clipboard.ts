@@ -14,7 +14,13 @@ import {
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
-import { splitMergedCells } from "./tablePaste";
+import { CellSelection, isInTable } from "@tiptap/pm/tables";
+import {
+  addTableBordersForEmail,
+  flattenNestedTables,
+  flattenTablesForCell,
+  splitMergedCells,
+} from "./tablePaste";
 
 /**
  * Attribut posé sur le HTML copié depuis Nano Buro, pour reconnaître un collage interne (critère 5),
@@ -47,6 +53,7 @@ class NanoClipboardSerializer extends DOMSerializer {
       for (const child of Array.from(result.children)) {
         child.setAttribute(NANO_CLIPBOARD_ATTRIBUTE, "");
       }
+      addTableBordersForEmail(result);
     }
     return result;
   }
@@ -111,17 +118,20 @@ function convertWordLists(body: HTMLElement): void {
 
 /**
  * Prépare le HTML d'un collage venu d'une autre application, avant sa lecture par le schéma :
- * listes de Word en vraies listes, cellules fusionnées séparées (T1.8, critère 7). Le reste (styles,
+ * listes de Word en vraies listes, tableaux imbriqués aplatis et cellules fusionnées séparées (T1.8). Le reste (styles,
  * images, scripts) est trié ensuite : ce que le schéma ne connaît pas est ignoré ou gardé comme
  * simple texte (critère 4). Les tableaux restent des tableaux (T1.8).
  */
 export function prepareExternalHtml(html: string): string {
   const wordLists = /mso-list/i.test(html);
-  const mergedCells = /<t[dh][^>]*\s(colspan|rowspan)\s*=/i.test(html);
-  if (!wordLists && !mergedCells) return html;
+  const tables = /<table/i.test(html);
+  if (!wordLists && !tables) return html;
   const doc = new DOMParser().parseFromString(html, "text/html");
   if (wordLists) convertWordLists(doc.body);
-  if (mergedCells) splitMergedCells(doc.body);
+  if (tables) {
+    flattenNestedTables(doc.body);
+    splitMergedCells(doc.body);
+  }
   return doc.body.innerHTML;
 }
 
@@ -218,7 +228,9 @@ export function createClipboardPlugin(schema: Schema): Plugin {
         const dragging = view.dragging !== null;
         const internal = pastedFromNanoBuro || dragging;
         pastedFromNanoBuro = false;
-        return cleanPastedSlice(slice, {
+        const { selection } = view.state;
+        const inCell = !(selection instanceof CellSelection) && isInTable(view.state);
+        return cleanPastedSlice(inCell ? flattenTablesForCell(slice) : slice, {
           internal,
           contextTextStyle: contextTextStyleOf(view),
           newBlockIds: !dragging,
