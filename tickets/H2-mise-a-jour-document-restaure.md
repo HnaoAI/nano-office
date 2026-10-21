@@ -4,6 +4,7 @@
 **Dépend de** : H1, lot B
 **Taille estimée** : S
 **Branche** : `ticket/H2-mise-a-jour-document-restaure`
+**Lot** : à traiter avec B1, dans la même PR (deux petites corrections)
 
 ## User story
 
