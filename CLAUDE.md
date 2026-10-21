@@ -119,6 +119,8 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **B. Ne jamais perdre** | T1.6 sauvegarde automatique, puis PL3 se souvenir du fichier | #7, #38 |
 | **C. Mise en forme (suite)** | T1.7 couleur et surlignage, T1.8 tableaux | #44, #45 |
 | **D. Images** | T1.9 images, avec le format `.nano` version 2 | #46 |
+| **E. Écrire plus vite** | T2.1 rechercher et remplacer, T2.2 interligne, T2.3 barré, T2.4 majuscules et minuscules | #55, #56, #57, #58 |
+| **F. La page** | T2.5 page A4 et marges, T2.6 imprimer et PDF, T2.7 exporter en Word | #59, #60, #61 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -184,3 +186,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-20 : Couleur du texte, surlignage, tableaux et images ajoutés à la tranche T1 (lots C et D). Palettes de couleurs courtes et fixes ; les seules couleurs à l'écran sont celles du document. Les images sont rangées dans le fichier `.nano`, une seule fois chacune, et réduites à 2 000 px à l'insertion : le format passe en version 2, avec une migration testée depuis la version 1.
 - 2026-10-21 : Un tableau collé avec le curseur dans une cellule devient du texte dans cette cellule : il n'écrase jamais les cellules voisines et ne coupe pas le tableau. Les tableaux ne s'imbriquent jamais. Depuis T1.8, un tableau collé depuis une autre application reste un tableau (le critère 4 de T1.5 est remplacé sur ce point).
 - 2026-10-21 : Une restauration depuis la copie de secours ne compte plus comme travail commencé pour la mise à jour (ticket H2) : depuis le lot B, un document est restauré à chaque lancement, et la mise à jour était toujours reportée. Un document restauré est déjà en sécurité dans la copie de secours, et un rechargement le rouvre à l'identique.
+- 2026-10-21 : Tranche T2 « aller plus loin », par ordre de priorité : lot E (rechercher et remplacer, interligne, barré, majuscules et minuscules), puis lot F (page A4 et marges, impression et PDF, export Word). L'impression et l'export, absents de la demande initiale, passent avant le pinceau et le tri des tableaux (PL4, PL5, plus tard), car sans eux un document ne peut pas être rendu ni envoyé. Les réglages de page sont des attributs du document, sans changement de version.
