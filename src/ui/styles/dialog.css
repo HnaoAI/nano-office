@@ -123,3 +123,150 @@
     padding: 24px 20px;
   }
 }
+
+/* Boîte « Mise en page » (T2.5) : même boîte que la question de la copie de secours. Chaque choix est
+   un bouton radio présenté comme un bouton de la boîte ; le choix actif est sur le fond des groupes,
+   comme un alignement activé. */
+.nano-page-setup {
+  width: 540px;
+}
+
+.nano-page-setup-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nano-page-setup-group legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-page-setup-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nano-page-setup-options label {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+/* Le bouton radio, invisible, couvre tout le choix : un clic ou une touche l'atteint directement. */
+.nano-page-setup-options input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.nano-page-setup-options span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 6px 16px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nano-page-setup-options small {
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-page-setup-options input:checked + span {
+  background: var(--nano-group-bg);
+  color: var(--nano-ink);
+  font-weight: 500;
+}
+
+.nano-page-setup-options input:focus-visible + span {
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-page-setup-sides {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nano-page-setup-sides label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-size: 13px;
+  color: var(--nano-text-secondary);
+}
+
+.nano-page-setup-sides label > span:first-child {
+  flex-basis: 100%;
+}
+
+.nano-page-setup-sides input {
+  width: 0;
+  flex: 1;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  font: inherit;
+  font-size: 15px;
+  color: var(--nano-ink);
+}
+
+.nano-page-setup-sides input:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-page-setup-sides input[aria-invalid="true"] {
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-dialog .nano-page-setup-range {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--nano-text-quiet);
+}
+
+/* Une marge hors bornes : l'indication passe à l'encre, comme une alerte. */
+.nano-dialog .nano-page-setup-range-invalid {
+  color: var(--nano-ink);
+  font-weight: 500;
+}
+
+.nano-page-setup .nano-dialog-buttons button:disabled {
+  color: var(--nano-text-disabled);
+  cursor: default;
+}
+
+.nano-page-setup .nano-dialog-buttons .nano-dialog-primary:disabled {
+  background: var(--nano-group-bg);
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  .nano-page-setup-sides {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

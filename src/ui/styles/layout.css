@@ -151,13 +151,16 @@ button:focus-visible {
   padding: 36px 20px 40px;
 }
 
+/* Mise en page (T2.5) : largeur d'une feuille A4 et marges du document, à l'échelle (1 cm du CSS).
+   Les variables sont posées sur la page par DocumentEditor.tsx ; sans elles, portrait et marges Normales. */
 .nano-page {
   width: 100%;
-  max-width: 794px;
-  min-height: 1000px;
+  max-width: var(--page-width, 21cm);
+  min-height: var(--page-height, 29.7cm);
   display: flex;
   flex-direction: column;
-  padding: 88px 11%;
+  padding: var(--page-margin-top, 2.5cm) var(--page-margin-right, 2.5cm)
+    var(--page-margin-bottom, 2.5cm) var(--page-margin-left, 2.5cm);
   border-radius: var(--nano-radius-page);
   background: var(--nano-surface);
   box-shadow: var(--nano-shadow-page);
@@ -241,7 +244,7 @@ button:focus-visible {
   color: var(--nano-text-quiet);
 }
 
-/* Écran étroit (moins de 600 px) : marges réduites. */
+/* Écran étroit (moins de 600 px) : marges réduites, quelle que soit la mise en page (T2.5, critère 2). */
 @media (max-width: 600px) {
   .nano-header {
     padding: 14px 16px;

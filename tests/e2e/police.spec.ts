@@ -12,6 +12,7 @@ import {
   settleSelection,
   start,
   waitUndoGroup,
+  waitEditorFocus,
   ydocJson,
 } from "./formatHelpers";
 
@@ -209,9 +210,12 @@ test("critère 8 : une police inconnue dans un fichier s'affiche avec une police
   await expect(fontSelect(page)).toHaveValue("");
 
   // Une modification ailleurs, puis Enregistrer : le nom d'origine est réécrit tel quel.
+  await waitEditorFocus(page);
   await page.keyboard.press("ControlOrMeta+End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await page.keyboard.type("Ajout");
+  await expect(editor(page)).toContainText("Ajout");
   await setFakeFiles(page, { nextSaveName: "futur.nano" });
   await button(page, "Enregistrer").click();
   await expect.poll(async () => (await fakeFiles(page)).files["futur.nano"]).toContain("Ajout");

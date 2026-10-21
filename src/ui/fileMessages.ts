@@ -1,6 +1,7 @@
 // Messages affichés sous l'en-tête par `useDocumentFile` (T0c, T0d, U1b), ceux d'un fichier
 // retrouvé au lancement (PL3) et ceux d'une image refusée (T1.9). Textes seulement : l'affichage est dans MessageBar.tsx.
 import type { ImageRejection } from "../editor/imageImport";
+import type { ExportResult } from "../storage/exportStore";
 import type { RestoredFile, SaveResult } from "../storage/fileStore";
 
 /**
@@ -108,4 +109,46 @@ const IMAGE_REJECTED: Record<ImageRejection, string> = {
 export function imageRejectedMessage(reasons: ImageRejection[]): FileMessage {
   const text = Array.from(new Set(reasons), (reason) => IMAGE_REJECTED[reason]).join(" ");
   return { kind: "alert", icon: "unreadable", text };
+}
+
+/**
+ * Message après un export en Word (T2.7), ou null si l'utilisateur a fermé le sélecteur. Il rappelle
+ * que le document reste le fichier `.nano` : Ctrl/Cmd+S n'écrit jamais dans le `.docx` (critère 1).
+ * @param fileName fichier `.nano` du document, ou null s'il n'a jamais été enregistré
+ */
+export function wordExportMessage(
+  result: ExportResult,
+  fileName: string | null,
+): FileMessage | null {
+  const stays = fileName
+    ? `Votre document reste « ${fileName} ».`
+    : "Votre document n'est pas modifié.";
+  switch (result.status) {
+    case "saved":
+      return {
+        kind: "status",
+        icon: "downloaded",
+        text: `Le fichier Word « ${result.name} » a été créé. ${stays}`,
+      };
+    case "downloaded":
+      return {
+        kind: "status",
+        icon: "downloaded",
+        text: `Le fichier Word « ${result.name} » a été téléchargé dans votre dossier de téléchargements. ${stays}`,
+      };
+    case "wrongType":
+      return {
+        kind: "alert",
+        icon: "save-failed",
+        text: `« ${result.name} » n'est pas un fichier Word : rien n'a été écrit. Choisissez un nom qui finit par .docx. ${stays}`,
+      };
+    case "failed":
+      return {
+        kind: "alert",
+        icon: "save-failed",
+        text: `Le fichier Word n'a pas pu être créé. ${stays}`,
+      };
+    case "cancelled":
+      return null;
+  }
 }

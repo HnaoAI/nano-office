@@ -12,7 +12,7 @@ import { currentListType } from "../editor/lists";
 import { selectedImage } from "../editor/images";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
-import { RedoIcon, StrikeIcon, UndoIcon } from "./icons";
+import { PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
 import { CaseButton } from "./CaseButton";
 import { ColorButtons } from "./ColorButtons";
@@ -31,8 +31,9 @@ import { MOD } from "./shortcuts";
  * INVARIANT : les noms accessibles (« Annuler », « Rétablir », « Gras », « Italique ») ne changent pas,
  * même si le bouton n'affiche qu'une icône ou une lettre (U1a, critère 7).
  * @param editor éditeur Tiptap à piloter
+ * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
  */
-export function Toolbar({ editor }: { editor: Editor }) {
+export function Toolbar({ editor, onPageSetup }: { editor: Editor; onPageSetup: () => void }) {
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -130,6 +131,18 @@ export function Toolbar({ editor }: { editor: Editor }) {
         canDelete={state.tableDeletions}
       />
       <ImageButtons editor={editor} selectedAlt={state.imageAlt} />
+      <div className="nano-separator" aria-hidden="true" />
+      {/* Dans la barre plutôt que dans le groupe Fichier, pour que l'en-tête tienne sur une ligne
+          à 1 280 px de large (T2.5, choix à confirmer). */}
+      <button
+        type="button"
+        aria-label="Mise en page…"
+        title="Mise en page : orientation et marges"
+        onMouseDown={keepFocus}
+        onClick={onPageSetup}
+      >
+        <PageSetupIcon />
+      </button>
     </div>
   );
 }

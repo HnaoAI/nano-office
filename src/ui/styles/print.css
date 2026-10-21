@@ -1,0 +1,79 @@
+/* Impression et PDF (T2.6) : seule la page du document s'imprime, sans en-tête, barre, message, boîte
+   de dialogue ni pied de page (critère 2). La règle @page (A4, orientation, marges) est écrite par
+   DocumentEditor.tsx d'après la mise en page du document (T2.5) ; la page n'a donc plus de marge ici. */
+@media print {
+  body {
+    background: none;
+  }
+
+  .nano-app {
+    display: block;
+    min-height: 0;
+  }
+
+  .nano-app > :not(.nano-workspace) {
+    display: none !important;
+  }
+
+  .nano-workspace {
+    display: block;
+    padding: 0;
+  }
+
+  .nano-page {
+    width: auto;
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Couleurs du texte et surlignage imprimés tels quels (critère 4). */
+  .nano-editor,
+  .nano-editor * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Un titre n'est jamais seul en bas de page (critère 5). */
+  .nano-editor h1,
+  .nano-editor h2,
+  .nano-editor h3 {
+    break-after: avoid;
+    break-inside: avoid;
+  }
+
+  /* Une ligne de tableau qui tient sur une page n'est pas coupée (critère 4). */
+  .nano-editor tr {
+    break-inside: avoid;
+  }
+
+  .nano-editor .nano-image-frame {
+    break-inside: avoid;
+  }
+
+  /* Recherche, sélection, poignées et curseurs ne s'impriment pas (critère 6). */
+  .nano-editor .nano-search-match {
+    background: none;
+  }
+
+  .nano-editor .nano-search-match-active {
+    outline: none;
+  }
+
+  .nano-editor .selectedCell::after,
+  .nano-editor .ProseMirror-gapcursor,
+  .nano-image-handle {
+    display: none !important;
+  }
+
+  .nano-editor .nano-image.ProseMirror-selectednode .nano-image-frame {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .nano-editor ::selection {
+    background: none;
+  }
+}

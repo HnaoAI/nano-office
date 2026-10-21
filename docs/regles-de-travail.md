@@ -58,7 +58,7 @@ Un ticket est terminé quand :
 ## Dépendances
 
 - Justifier chaque nouvelle dépendance dans la réponse.
-- Licences acceptées : MIT, Apache-2.0, BSD, ISC.
+- Licences acceptées : MIT, Apache-2.0, BSD, ISC, Zlib.
 - Toute autre licence (GPL, commerciale, « Pro », payante) est refusée sans mon accord.
 - Préférer une bibliothèque maintenue et répandue à du code écrit à la main pour un problème déjà résolu.
 

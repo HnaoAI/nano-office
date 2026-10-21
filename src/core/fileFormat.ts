@@ -16,6 +16,7 @@ import {
   removeAllImages,
 } from "./images";
 import { migrateToCurrent } from "./migrations";
+import { pageSetupFromAttrs, withPageSetupAttrs, writePageSetup } from "./pageSetup";
 import { documentSchema, YJS_FRAGMENT_NAME } from "./schema";
 import {
   NANO_FORMAT,
@@ -31,9 +32,15 @@ export function createDocumentId(): string {
   return crypto.randomUUID();
 }
 
-/** Contenu du fragment du document d'un Y.Doc, au format JSON de Tiptap (celui écrit dans `content`). */
+/**
+ * Contenu d'un Y.Doc au format JSON de Tiptap (celui écrit dans `content`) : le fragment du document,
+ * avec la mise en page en attributs du nœud `doc` quand elle est réglée (T2.5, critère 6).
+ */
 export function contentOf(ydoc: Y.Doc): DocumentJson {
-  return yXmlFragmentToProsemirrorJSON(ydoc.getXmlFragment(YJS_FRAGMENT_NAME)) as DocumentJson;
+  const fragment = yXmlFragmentToProsemirrorJSON(
+    ydoc.getXmlFragment(YJS_FRAGMENT_NAME),
+  ) as DocumentJson;
+  return withPageSetupAttrs(fragment, ydoc);
 }
 
 /**
@@ -142,10 +149,15 @@ export function parseDocument(text: string): ParseResult {
   if (!content) {
     return { ok: false, error: "corrupted" };
   }
-  const ydoc =
-    fromYdoc && isSameJson(contentOf(fromYdoc), content)
-      ? fromYdoc
-      : prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME);
+  let ydoc: Y.Doc;
+  if (fromYdoc && isSameJson(contentOf(fromYdoc), content)) {
+    ydoc = fromYdoc;
+  } else {
+    // Reconstruit à partir de `content` : la mise en page, attributs du nœud `doc`, n'est pas dans le
+    // fragment ; elle est remise dans sa `Y.Map` (T2.5).
+    ydoc = prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME);
+    writePageSetup(ydoc, pageSetupFromAttrs(content.attrs));
+  }
   addFileImages(ydoc, content, file.images);
   return { ok: true, id, ydoc, version };
 }
