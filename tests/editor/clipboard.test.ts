@@ -120,7 +120,7 @@ describe("collage depuis une page web (T1.5)", () => {
     expect(json).not.toContain('textAlign":"center');
   });
 
-  it("critère 4 : images, vidéos, scripts et styles sont ignorés, un tableau devient du texte, sans erreur", () => {
+  it("critère 4 : images, vidéos, scripts et styles sont ignorés, le texte d'un tableau est gardé, sans erreur", () => {
     const target = createEditor();
     expect(() => pasteHtml(target, WEB_PAGE)).not.toThrow();
     const all = target.state.doc.textContent;

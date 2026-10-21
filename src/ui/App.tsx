@@ -12,6 +12,7 @@ import "./styles/tokens.css";
 import "./styles/layout.css";
 import "./styles/toolbar.css";
 import "./styles/pickers.css";
+import "./styles/tables.css";
 import "./styles/messages.css";
 import "./styles/dialog.css";
 

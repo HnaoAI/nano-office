@@ -59,6 +59,13 @@ Grille de pastilles : surface `#FFFFFF`, rayon 14 px et ombre d'information, com
 d'information ; pastilles rondes de 28 px, bordure du séparateur fort, anneau noir autour de la pastille
 choisie. Le trait sous le « A » est gris clair quand la sélection mélange plusieurs couleurs.
 
+## Tableaux
+
+Le tableau occupe la largeur de la page, colonnes de même largeur, bordures de 1 px du séparateur fort
+`#D4D4D1`, en-tête en gras (600), sans fond de couleur (T1.8). La grille d'insertion (8 × 8 cases)
+et le groupe « Tableau » de la barre reprennent le style des grilles de couleurs et des boutons de la
+barre : icônes au trait, bouton « Ligne d'en-tête » activé sur fond `#E2E2DF`.
+
 ## Typographie
 
 - **Interface et texte par défaut** : IBM Plex Sans (400, 500, 600, italique 400).

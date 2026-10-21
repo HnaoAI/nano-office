@@ -7,6 +7,7 @@ import { documentExtensions, YJS_FRAGMENT_NAME } from "../core/schema";
 import { BlockIdGenerator } from "./blockIds";
 import { CleanClipboard } from "./clipboard";
 import { FormatShortcuts } from "./keyboardShortcuts";
+import { TableNavigation } from "./tables";
 
 /**
  * Options de l'éditeur pour un document donné.
@@ -19,6 +20,7 @@ import { FormatShortcuts } from "./keyboardShortcuts";
  *   (règle produit 6, critère 8) : `# ` ne crée pas de titre (T1.1, critère 9).
  * - Les raccourcis de mise en forme sont reconnus à la touche physique (`FormatShortcuts`).
  * - Le copier-coller garde la structure et retire la mise en forme d'origine (`CleanClipboard`, T1.5).
+ * - On peut toujours écrire avant ou après un tableau (`TableNavigation`, T1.8).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
@@ -31,6 +33,7 @@ export function createEditorOptions(ydoc: Y.Doc): Partial<EditorOptions> {
       BlockIdGenerator,
       FormatShortcuts,
       CleanClipboard,
+      TableNavigation,
       Collaboration.configure({ document: ydoc, field: YJS_FRAGMENT_NAME }),
     ],
     enableInputRules: false,

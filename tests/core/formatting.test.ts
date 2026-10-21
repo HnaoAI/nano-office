@@ -254,3 +254,60 @@ describe("T1.7 : couleur du texte et surlignage", () => {
     expect(byType.highlight).toEqual({ color: "#C5E1A5" });
   });
 });
+
+describe("T1.8 : tableaux", () => {
+  const cell = (type: string, id: string, text: string): DocumentJson => ({
+    type,
+    attrs: { id },
+    content: [paragraph(`${id}-p`, { text })],
+  });
+
+  it("critère 6 et 9 : aller-retour d'un tableau, chaque cellule garde son identifiant, version 1", () => {
+    const json: DocumentJson = {
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [cell("tableHeader", "h-1", "Poste"), cell("tableHeader", "h-2", "Montant")],
+            },
+            {
+              type: "tableRow",
+              content: [cell("tableCell", "c-1", "Courses 🛒"), cell("tableCell", "c-2", "350 €")],
+            },
+          ],
+        },
+        paragraph("p-1", { text: "Après le tableau" }),
+      ],
+    };
+    const text = serializeDocument({ id: createDocumentId(), ydoc: ydocFromJson(json) });
+    expect((JSON.parse(text) as { version: number }).version).toBe(1);
+    const reread = roundTrip(json);
+    const ids: unknown[] = [];
+    const visit = (node: DocumentJson) => {
+      if (node.type === "tableCell" || node.type === "tableHeader") ids.push(node.attrs?.id);
+      node.content?.forEach(visit);
+    };
+    visit(reread);
+    expect(ids).toEqual(["h-1", "h-2", "c-1", "c-2"]);
+    expect(reread.content?.map((block) => block.type)).toEqual(["table", "paragraph"]);
+  });
+
+  it("critère 10 : un tableau de 50 lignes et 10 colonnes s'enregistre et se relit", () => {
+    const rows = Array.from({ length: 50 }, (_, r) => ({
+      type: "tableRow",
+      content: Array.from({ length: 10 }, (_, c) =>
+        cell(
+          r === 0 ? "tableHeader" : "tableCell",
+          `c-${String(r)}-${String(c)}`,
+          `${String(r)}×${String(c)}`,
+        ),
+      ),
+    }));
+    const json: DocumentJson = { type: "doc", content: [{ type: "table", content: rows }] };
+    const reread = roundTrip(json);
+    expect(reread.content?.[0]?.content).toHaveLength(50);
+  });
+});

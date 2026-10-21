@@ -79,7 +79,8 @@ test("critère 3 : Ctrl/Cmd+Shift+V colle du texte brut, sans mise en forme, en 
   await expect(target.locator("h1, strong, ol, li")).toHaveCount(0);
 });
 
-test("critère 4 : images, vidéos, tableaux et scripts sont ignorés ou convertis en texte, sans erreur", async ({
+// Depuis T1.8 (critère 7), un tableau collé reste un tableau : il n'est plus converti en texte.
+test("critère 4 : images, vidéos et scripts sont ignorés, un tableau reste un tableau (T1.8), sans erreur", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -92,7 +93,8 @@ test("critère 4 : images, vidéos, tableaux et scripts sont ignorés ou convert
   await expect(target).toContainText("Avant");
   await expect(target).toContainText("Case 1");
   await expect(target).toContainText("Après");
-  await expect(target.locator("img, video, table, script")).toHaveCount(0);
+  await expect(target.locator("img, video, script")).toHaveCount(0);
+  await expect(target.locator("table td")).toHaveText(["Case 1", "Case 2"]);
   expect(await page.evaluate(() => (window as { __pirate?: boolean }).__pirate)).toBeUndefined();
   expect(errors).toEqual([]);
 });

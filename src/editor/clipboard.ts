@@ -14,6 +14,7 @@ import {
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
+import { splitMergedCells } from "./tablePaste";
 
 /**
  * Attribut posé sur le HTML copié depuis Nano Buro, pour reconnaître un collage interne (critère 5),
@@ -110,13 +111,17 @@ function convertWordLists(body: HTMLElement): void {
 
 /**
  * Prépare le HTML d'un collage venu d'une autre application, avant sa lecture par le schéma :
- * listes de Word en vraies listes. Le reste (styles, images, tableaux, scripts) est trié ensuite :
- * ce que le schéma ne connaît pas est ignoré ou gardé comme simple texte (critère 4).
+ * listes de Word en vraies listes, cellules fusionnées séparées (T1.8, critère 7). Le reste (styles,
+ * images, scripts) est trié ensuite : ce que le schéma ne connaît pas est ignoré ou gardé comme
+ * simple texte (critère 4). Les tableaux restent des tableaux (T1.8).
  */
 export function prepareExternalHtml(html: string): string {
-  if (!/mso-list/i.test(html)) return html;
+  const wordLists = /mso-list/i.test(html);
+  const mergedCells = /<t[dh][^>]*\s(colspan|rowspan)\s*=/i.test(html);
+  if (!wordLists && !mergedCells) return html;
   const doc = new DOMParser().parseFromString(html, "text/html");
-  convertWordLists(doc.body);
+  if (wordLists) convertWordLists(doc.body);
+  if (mergedCells) splitMergedCells(doc.body);
   return doc.body.innerHTML;
 }
 
@@ -136,6 +141,9 @@ function mapFragment(
 /** Marques retirées d'un collage extérieur : police, taille et couleur ; surlignage (T1.7). */
 const EXTERNAL_MARKS_REMOVED = ["textStyle", "highlight"];
 
+/** Attributs d'une cellule collée de l'extérieur : sans fusion, largeur ni alignement propres. */
+const EXTERNAL_CELL_ATTRS = { colspan: 1, rowspan: 1, colwidth: null, align: null };
+
 /** Options du nettoyage d'un collage. */
 export interface PasteCleaning {
   /** Vrai pour un collage copié depuis Nano Buro : toute la mise en forme est gardée (critère 5). */
@@ -152,7 +160,8 @@ export interface PasteCleaning {
  *   nouveaux, sans doublon (critère 8).
  * - Collage extérieur : retire polices, tailles, couleurs (marque `textStyle`) et surlignages
  *   (marque `highlight`, T1.7 critère 7), leur substitue la police et la taille du curseur, et retire
- *   l'alignement (critère 2). Les fonds n'existent pas dans le schéma : ils sont déjà ignorés.
+ *   l'alignement (critère 2), et la fusion, la largeur et l'alignement des cellules (T1.8). Les fonds
+ *   n'existent pas dans le schéma : ils sont déjà ignorés.
  */
 export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
   const { internal, contextTextStyle, newBlockIds } = options;
@@ -167,6 +176,8 @@ export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
       attrs[BLOCK_ID_ATTRIBUTE] = null;
     }
     if (!internal && "textAlign" in attrs) attrs.textAlign = null;
+    // Cellule venue d'ailleurs : ni largeur de colonne ni alignement de cellule (T1.8, critère 5 et 7).
+    if (!internal && "colwidth" in attrs) Object.assign(attrs, EXTERNAL_CELL_ATTRS);
     return node.type.create(attrs, node.content, node.marks);
   });
   return new Slice(content, slice.openStart, slice.openEnd);

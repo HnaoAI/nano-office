@@ -24,6 +24,8 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `FontSelects.tsx` : listes déroulantes « Police » et « Taille » (T1.4)
 - `ColorButtons.tsx` : boutons « Couleur du texte » et « Surlignage » et leurs grilles de pastilles (T1.7)
 - `usePopover.ts` : petite fenêtre d'un bouton de la barre, fermée par Échap ou un clic à côté, déplacement aux flèches dans une grille (T1.7)
+- `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
+- `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
 - `DocumentEditor.tsx` : barre de mise en forme et éditeur d'un document, relié à un Y.Doc, sur une page centrée
-- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, couleur, surlignage, alignement, listes)
+- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, couleur, surlignage, alignement, listes, tableau)
 - `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

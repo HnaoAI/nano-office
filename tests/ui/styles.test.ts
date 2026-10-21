@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const STYLE_FILES = ["tokens", "layout", "toolbar", "pickers", "messages", "dialog"];
+const STYLE_FILES = ["tokens", "layout", "toolbar", "pickers", "tables", "messages", "dialog"];
 const css = STYLE_FILES.map((name) =>
   readFileSync(new URL(`../../src/ui/styles/${name}.css`, import.meta.url), "utf8"),
 )
