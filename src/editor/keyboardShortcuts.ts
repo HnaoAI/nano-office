@@ -20,7 +20,7 @@ interface Modifiers {
  * Un raccourci : la touche physique, ses modificateurs exacts, et l'action lancée. L'action renvoie
  * faux si la touche ne la concerne pas (Tab hors d'une liste) : le navigateur la traite alors.
  */
-interface Shortcut extends Modifiers {
+export interface Shortcut extends Modifiers {
   code: string;
   run: (editor: Editor) => boolean;
 }
@@ -88,9 +88,20 @@ const ALIGNMENT_SHORTCUTS: Shortcut[] = (
   },
 }));
 
+/** Barré (T2.3, critère 2) : Ctrl/Cmd+Shift+X, comme Google Docs (Ctrl/Cmd+Shift+S enregistre ailleurs). */
+const STRIKE_SHORTCUT: Shortcut = {
+  code: "KeyX",
+  mod: true,
+  shift: true,
+  run: (editor) => {
+    editor.commands.toggleStrike();
+    return true;
+  },
+};
+
 /** Liste de tous les raccourcis, pour la plateforme donnée. */
 export function formatShortcuts(mac: boolean): Shortcut[] {
-  return [...headingShortcuts(mac), ...LIST_SHORTCUTS, ...ALIGNMENT_SHORTCUTS];
+  return [...headingShortcuts(mac), ...LIST_SHORTCUTS, ...ALIGNMENT_SHORTCUTS, STRIKE_SHORTCUT];
 }
 
 /**

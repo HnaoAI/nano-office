@@ -3,7 +3,7 @@
 Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèques.
 
 - `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `NanoFileV2`, `ParseResult`) et constantes du format
-- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9)
+- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), barré (T2.3)
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `tableSchema.ts` : tableaux : document qui accepte les tableaux, tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
 - `documentColors.ts` : palettes fixes de la couleur du texte et du surlignage (`TEXT_COLORS`, `HIGHLIGHT_COLORS`, T1.7)

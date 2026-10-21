@@ -13,6 +13,7 @@ import { ImageNode } from "./imageSchema";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
+import Strike from "@tiptap/extension-strike";
 
 /**
  * Nom du fragment Yjs qui contient le document.
@@ -146,8 +147,20 @@ const DocumentHighlight = Highlight.extend({
 });
 
 /**
+ * Barré (T2.3) : marque `strike`, rendue en `<s>` (lisible par un e-mail) et relue depuis `<s>`, `<del>`,
+ * `<strike>` ou un style `line-through`, donc gardée dans un collage extérieur, comme le gras.
+ * Sans le raccourci Mod-Shift-S de Tiptap, reconnu au caractère produit (remplacé par Ctrl/Cmd+Shift+X
+ * dans src/editor/keyboardShortcuts.ts), ni `~~texte~~` (règle produit 6).
+ */
+const DocumentStrike = Strike.extend({
+  addKeyboardShortcuts: () => ({}),
+  addInputRules: () => [],
+  addPasteRules: () => [],
+});
+
+/**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
- * puces et numérotées (T1.2), alignement (T1.3), gras, italique, police et taille (T1.4),
+ * puces et numérotées (T1.2), alignement (T1.3), gras, italique, barré (T2.3), police et taille (T1.4),
  * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), identifiant de bloc. T0b les
  * réutilise telles quelles, sans redéfinir le schéma (l'éditeur configure seulement `ImageNode`).
  */
@@ -163,6 +176,7 @@ export const documentExtensions = [
   Text,
   Bold,
   Italic,
+  DocumentStrike,
   TextStyle,
   TextStyleAttributes,
   DocumentHighlight,

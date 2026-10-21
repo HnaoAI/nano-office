@@ -177,6 +177,17 @@ export function AlignJustifyIcon() {
   );
 }
 
+/** « Barré » : un S traversé d'un trait (T2.3). */
+export function StrikeIcon() {
+  return (
+    <Icon>
+      <path d="M16.5 7.5c-.6-1.8-2.3-3-4.5-3-2.5 0-4.5 1.5-4.5 3.6 0 1.4.8 2.4 2.4 3" />
+      <path d="M8 16.5c.6 1.8 2.3 3 4.5 3 2.6 0 4.5-1.5 4.5-3.6 0-.6-.1-1-.4-1.4" />
+      <path d="M4 12h16" />
+    </Icon>
+  );
+}
+
 /** Marqueur au trait, pour le bouton « Surlignage » (T1.7). */
 export function HighlighterIcon() {
   return (

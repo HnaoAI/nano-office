@@ -11,7 +11,7 @@ Même arborescence que `src/`.
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
 - `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`) ; fichier retenu entre deux lancements (`fileMemory.test.ts`, PL3) ; fichier modifié ailleurs, non écrasé par la sauvegarde automatique (`changedOnDisk.test.ts`, T1.6)
 - `ui/` : tests Vitest de la feuille de style : variables de la charte, aucune nouvelle variable après U1a (`styles.test.ts`)
-- `editor/` : tests Vitest de la configuration de l'éditeur, sans navigateur (`blockIds.test.ts`, `blockStyle.test.ts`) ; copier-coller dans jsdom (`clipboard.test.ts`, T1.5) ; couleur et surlignage (`textColor.test.ts`, T1.7) ; tableaux : schéma, insertion, identifiants (`tables.test.ts`), collage et copie (`tablePaste.test.ts`), outils (`tableHelpers.ts`, T1.8) ; images : schéma, point d'insertion, alignement, texte de remplacement, image manquante, collage (`images.test.ts`, T1.9) ; `editorHelpers.ts` : éditeur sans affichage, collage, copie
+- `editor/` : tests Vitest de la configuration de l'éditeur, sans navigateur (`blockIds.test.ts`, `blockStyle.test.ts`) ; copier-coller dans jsdom (`clipboard.test.ts`, T1.5) ; couleur et surlignage (`textColor.test.ts`, T1.7) ; tableaux : schéma, insertion, identifiants (`tables.test.ts`), collage et copie (`tablePaste.test.ts`), outils (`tableHelpers.ts`, T1.8) ; barré : schéma, raccourci, cumul, copier-coller (`strike.test.ts`, T2.3) ; images : schéma, point d'insertion, alignement, texte de remplacement, image manquante, collage (`images.test.ts`, T1.9) ; `editorHelpers.ts` : éditeur sans affichage, collage, copie
 - `e2e/` : tests Playwright dans Chromium (`npm run test:e2e`)
   - `editeur.spec.ts` : saisie, gras, italique, annuler et rétablir, Y.Doc, identifiants (T0b)
   - `fichiers.spec.ts` : nouveau, ouvrir, enregistrer, Ctrl/Cmd+S, titre, fichiers invalides (T0c)
@@ -30,6 +30,7 @@ Même arborescence que `src/`.
   - `tableaux.spec.ts` : grille d'insertion, groupe « Tableau », Tab (listes comprises), en-tête, largeur, identifiants, annulation (T1.8)
   - `tableaux-collage.spec.ts` : collage interne, Word et web, copie vers un e-mail, 50 × 10 (T1.8) ; `tableHelpers.ts` : outils communs
   - `images.spec.ts` : bouton, glisser-déposer, collage, refus, réduction, poignées, alignement, annulation, texte de remplacement, enregistrement, version 1, copie de secours, image manquante, réseau, 20 photos (T1.9) ; `imageHelpers.ts` : fabriquer, insérer, déposer, coller une image
+  - `barre.spec.ts` : bouton, raccourci Mac et Windows à la touche physique, cumul, réouverture, copier-coller, annulation (T2.3)
   - `formatHelpers.ts` : démarrer l'éditeur, lire le Y.Doc, sélectionner un texte, coller depuis une autre application, lire le presse-papiers, enregistrer puis rouvrir (lots A et C)
   - `etats-messages.spec.ts` : indicateur d'enregistrement, messages et boîte de dialogue de récupération (U1b)
   - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture, fichier modifié ailleurs (T1.6)
