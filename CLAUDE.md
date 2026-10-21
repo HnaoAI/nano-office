@@ -43,8 +43,8 @@ CSS `--nano-…`. Un écart à la charte est une question pour le product owner,
 
 ## Règles produit (non négociables)
 
-1. Aucune publicité, bannière, bouton IA ou invitation à payer.
-2. Fonctionnement hors ligne. Aucune donnée de document n'est envoyée sur le réseau. Seuls les fichiers de l'application elle-même (mises à jour de la PWA) peuvent être téléchargés.
+1. Aucune publicité, bannière ou invitation à payer. Aucun assistant IA imposé : l'assistant (T3.1) est facultatif, désactivé par défaut, et invisible tant qu'il est éteint.
+2. Fonctionnement hors ligne. Aucune donnée de document n'est envoyée sur le réseau, sauf le texte sélectionné, envoyé à l'assistant IA choisi par l'utilisateur, avec sa propre clé, et seulement après un clic explicite (T3.1). Seuls les fichiers de l'application elle-même (mises à jour de la PWA) peuvent être téléchargés.
 3. **Ne jamais perdre un document** : écriture atomique, copie de secours, alerte avant fermeture si des modifications ne sont pas enregistrées.
 4. Le contenu du document vit dans un `Y.Doc` (Yjs).
 5. Chaque bloc (paragraphe, titre, élément de liste, cellule) porte un identifiant stable, conservé après enregistrement et réouverture.
@@ -127,6 +127,7 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **D. Images** | T1.9 images, avec le format `.nano` version 2 | #46 |
 | **E. Écrire plus vite** | T2.1 rechercher et remplacer, T2.2 interligne, T2.3 barré, T2.4 majuscules et minuscules | #55, #56, #57, #58 |
 | **F. La page** | T2.5 page A4 et marges, T2.6 imprimer et PDF, T2.7 exporter en Word | #59, #60, #61 |
+| **G. Assistant** | T3.1 assistant IA facultatif (corriger, traduire), avec choix des modifications | #66 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -196,3 +197,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-21 : Tranche T2 « aller plus loin », par ordre de priorité : lot E (rechercher et remplacer, interligne, barré, majuscules et minuscules), puis lot F (page A4 et marges, impression et PDF, export Word). L'impression et l'export, absents de la demande initiale, passent avant le pinceau et le tri des tableaux (PL4, PL5, plus tard), car sans eux un document ne peut pas être rendu ni envoyé. Les réglages de page sont des attributs du document, sans changement de version.
 - 2026-10-21 : Lot E. La recherche surligne par des décorations, jamais dans le document. « Remplacer » ne repart pas au début après la dernière occurrence, pour qu'un remplacement qui contient le texte cherché ne boucle pas.
 - 2026-10-21 : L'interligne est enregistré à la valeur de Word (`"1.15"`) dans l'attribut de bloc `lineHeight`, et affiché à 1,2 fois cette valeur, sans changement de version du format.
+- 2026-10-21 : Assistant IA facultatif (T3.1, lot G, après le lot F). Les règles produit 1 et 2 sont modifiées : il est désactivé par défaut, invisible tant qu'il est éteint, et n'envoie que le texte sélectionné, après un clic, au fournisseur choisi (Claude ou Gemini), avec la clé d'API de l'utilisateur, gardée sur l'ordinateur et jamais dans un fichier. Chaque modification proposée s'accepte ou se refuse une par une, comme dans Cursor. Un abonnement claude.ai ou Gemini ne peut pas être relié à une autre application : il faut une clé d'API.
