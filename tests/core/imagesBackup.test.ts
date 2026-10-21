@@ -9,6 +9,7 @@ import {
   restoredDocument,
 } from "../../src/core/backup";
 import { hasUnsavedChanges, openDocumentText } from "../../src/core/documentFile";
+import { storeImage } from "../../src/core/images";
 import { serializeDocument } from "../../src/core/fileFormat";
 import { readImage } from "../../src/core/images";
 import type { NanoFileV2, OpenDocument } from "../../src/core/types";
@@ -87,5 +88,14 @@ describe("images et copie de secours", () => {
     const fragment = ydoc.getXmlFragment("default");
     fragment.delete(1, 1);
     expect(readImage(backupOf(ydoc), hashes[0] ?? "")).not.toBeNull();
+  });
+
+  it("critère 9 : remettre une image manquante compte comme une modification à enregistrer", () => {
+    const { ydoc } = ydocWithImages((h) => illustratedDocument(h[0] ?? ""), [fakePng(1)]);
+    const text = serializeDocument({ id: "doc-1", ydoc });
+    const file = open(JSON.stringify({ ...(JSON.parse(text) as NanoFileV2), images: {} }));
+    expect(hasUnsavedChanges(file)).toBe(false);
+    storeImage(file.ydoc, fakePng(1));
+    expect(hasUnsavedChanges(file)).toBe(true);
   });
 });

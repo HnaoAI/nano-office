@@ -405,3 +405,88 @@ test("critère 11 : un document de 20 photos reste fluide et s'enregistre", asyn
   expect(Date.now() - started).toBeLessThan(5000);
   expect(Object.keys((await savedFile(page)).images)).toHaveLength(20);
 });
+
+test("relecture : un document qui commence par une image se rouvre sans que la première touche la remplace", async ({
+  page,
+}) => {
+  await start(page);
+  await insertWithButton(page, [
+    await makeImage(page, "logo.png", { width: 120, height: 80, type: "image/png" }),
+  ]);
+  await expectImagesLoaded(page, 1);
+  await page.keyboard.type("Lettre");
+  await saveAndReopen(page);
+  await expectImagesLoaded(page, 1);
+  await page.keyboard.type("X");
+  expect(await blockTypes(page)).toEqual(["image", "paragraph"]);
+  expect((await topBlocks(page))[1]?.content?.[0]?.text).toBe("XLettre");
+});
+
+test("relecture : Ctrl/Cmd+Shift+V colle du texte brut, sans image, même avec une image data: (T1.5)", async ({
+  page,
+}) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await start(page);
+  const logo = await makeImage(page, "logo.png", { width: 64, height: 64, type: "image/png" });
+  const html = `<p>Logo du club</p><img src="data:image/png;base64,${logo.buffer.toString("base64")}" alt="Logo">`;
+  await page.evaluate(async (markup) => {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": new Blob([markup], { type: "text/html" }),
+        "text/plain": new Blob(["Logo du club"], { type: "text/plain" }),
+      }),
+    ]);
+  }, html);
+  await page.keyboard.press("ControlOrMeta+Shift+V");
+  await expect(editor(page)).toContainText("Logo du club");
+  await page.waitForTimeout(300);
+  expect(await blockTypes(page)).not.toContain("image");
+});
+
+test("relecture : plusieurs images refusées d'un coup donnent un message avec chaque raison", async ({
+  page,
+}) => {
+  await start(page);
+  const huge = Buffer.alloc(25 * 1024 * 1024 + 1, 0);
+  Buffer.from([0xff, 0xd8, 0xff]).copy(huge);
+  await insertWithButton(page, [
+    { name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("texte") },
+    { name: "enorme.jpg", mimeType: "image/jpeg", buffer: huge },
+    await makeImage(page, "bonne.png", { width: 50, height: 50, type: "image/png" }),
+  ]);
+  await expectImagesLoaded(page, 1);
+  await expect(page.getByRole("alert")).toContainText("plus de 25 Mo");
+  await expect(page.getByRole("alert")).toContainText("n'est pas une image");
+});
+
+test("relecture : une image glissée depuis une autre fenêtre de Nano Buro garde son contenu", async ({
+  page,
+}) => {
+  await start(page);
+  await page.keyboard.type("Cible");
+  const logo = await makeImage(page, "logo.png", { width: 64, height: 64, type: "image/png" });
+  const html = `<img data-nano-buro="" data-pm-slice="0 0 []" data-hash="${"f".repeat(64)}" alt="Logo" src="data:image/png;base64,${logo.buffer.toString("base64")}">`;
+  const box = await editor(page).getByText("Cible").boundingBox();
+  if (!box) throw new Error("texte invisible");
+  await page.evaluate(
+    ({ markup, x, y }) => {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("text/html", markup);
+      const target = document.elementFromPoint(x, y) ?? document.body;
+      for (const type of ["dragenter", "dragover", "drop"]) {
+        target.dispatchEvent(
+          new DragEvent(type, {
+            dataTransfer,
+            clientX: x,
+            clientY: y,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+    },
+    { markup: html, x: box.x + box.width - 2, y: box.y + box.height / 2 },
+  );
+  await expectImagesLoaded(page, 1);
+  await expect(page.locator(".nano-image-missing")).toHaveCount(0);
+});

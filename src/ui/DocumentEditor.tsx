@@ -26,7 +26,7 @@ export function DocumentEditor({
 }: {
   ydoc: Y.Doc;
   onEdit: () => void;
-  onImageRejected: (reason: ImageRejection) => void;
+  onImageRejected: (reasons: ImageRejection[]) => void;
 }) {
   // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
   // `onImageRejected` est stable (useDocumentFile), il ne recrée pas la configuration.

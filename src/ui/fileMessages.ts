@@ -101,7 +101,11 @@ const IMAGE_REJECTED: Record<ImageRejection, string> = {
     "Cette image n'a pas pu être lue, le fichier est peut-être abîmé : elle n'a pas été ajoutée.",
 };
 
-/** Message d'une image refusée à l'insertion (T1.9, critère 2). Le document n'a pas changé. */
-export function imageRejectedMessage(reason: ImageRejection): FileMessage {
-  return { kind: "alert", icon: "unreadable", text: IMAGE_REJECTED[reason] };
+/**
+ * Message des images refusées à l'insertion (T1.9, critère 2), une phrase par raison. Les autres
+ * images de la même insertion ont été ajoutées.
+ */
+export function imageRejectedMessage(reasons: ImageRejection[]): FileMessage {
+  const text = Array.from(new Set(reasons), (reason) => IMAGE_REJECTED[reason]).join(" ");
+  return { kind: "alert", icon: "unreadable", text };
 }

@@ -5,7 +5,9 @@ import * as Y from "yjs";
 import { prosemirrorJSONToYDoc, yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import { base64ToBytes, bytesToBase64 } from "./base64";
 import {
+  detectImageType,
   hasStoredImages,
+  imageHash,
   imageRefs,
   isImageHash,
   isImageType,
@@ -146,7 +148,8 @@ export function parseDocument(text: string): ParseResult {
 
 /**
  * Range dans le Y.Doc neuf les images de `images` utilisées par `content`. Une entrée absente, d'un
- * format inconnu ou au base64 illisible est ignorée : l'image s'affiche « Image manquante » (critère 9).
+ * format inconnu, au base64 illisible ou dont le contenu ne correspond pas à son empreinte est ignorée :
+ * l'image s'affiche « Image manquante » (critère 9).
  */
 function addFileImages(ydoc: Y.Doc, content: DocumentJson, images: unknown): void {
   if (!isRecord(images)) return;
@@ -155,11 +158,16 @@ function addFileImages(ydoc: Y.Doc, content: DocumentJson, images: unknown): voi
       const entry = images[hash];
       if (!isImageHash(hash) || !isRecord(entry) || !isImageType(entry.type)) continue;
       if (typeof entry.data !== "string") continue;
+      let data: Uint8Array;
       try {
-        putImage(ydoc, hash, { type: entry.type, data: base64ToBytes(entry.data) });
+        data = base64ToBytes(entry.data);
       } catch {
-        // Base64 abîmé : l'image reste manquante.
+        continue; // Base64 abîmé : l'image reste manquante.
       }
+      // Contenu qui ne correspond pas à son empreinte ou à son format (fichier modifié à la main) :
+      // manquant plutôt que faux, pour qu'une réinsertion de la vraie image le remplace (critère 9).
+      if (detectImageType(data) !== entry.type || imageHash(data) !== hash) continue;
+      putImage(ydoc, hash, { type: entry.type, data });
     }
   });
 }

@@ -45,6 +45,13 @@ function imageEditor(content: DocumentJson, ydoc = new Y.Doc()): Editor {
   });
 }
 
+/** Éditeur prêt, comme après un premier clic de l'utilisateur (voir « sélection de départ »). */
+function usedEditor(content: DocumentJson, ydoc = new Y.Doc()): Editor {
+  const editor = imageEditor(content, ydoc);
+  editor.view.dom.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+  return editor;
+}
+
 const p = (id: string, text?: string): DocumentJson => ({
   type: "paragraph",
   attrs: { id },
@@ -173,12 +180,20 @@ describe("point d'insertion", () => {
 });
 
 describe("image sélectionnée", () => {
+  it("un document qui commence par une image s'ouvre avec le curseur dans le premier texte : la première touche ne la remplace pas", () => {
+    const editor = imageEditor({ type: "doc", content: [img(), p("p-1", "Lettre")] });
+    editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, 0)));
+    expect(editor.state.selection).toBeInstanceOf(TextSelection);
+    editor.commands.insertContent("X");
+    expect(types(editor)).toEqual(["image", "paragraph"]);
+  });
+
   const selectImage = (editor: Editor) => {
     editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, 2)));
   };
 
   it("critère 3 : l'image reçoit son propre identifiant de bloc, différent de celui d'une copie", () => {
-    const editor = imageEditor({ type: "doc", content: [p("p-1", "A"), img(), img()] });
+    const editor = usedEditor({ type: "doc", content: [p("p-1", "A"), img(), img()] });
     editor.view.dispatch(editor.state.tr.insertText("B", 2));
     const ids = (editor.getJSON().content ?? [])
       .filter((node) => node.type === "image")
@@ -189,7 +204,7 @@ describe("image sélectionnée", () => {
   });
 
   it("critère 4 : les boutons d'alignement alignent l'image sélectionnée", () => {
-    const editor = imageEditor({ type: "doc", content: [p("p-1"), img(), p("p-2")] });
+    const editor = usedEditor({ type: "doc", content: [p("p-1"), img(), p("p-2")] });
     selectImage(editor);
     expect(currentAlignment(editor.state)).toBe("left");
     setAlignment(editor, "center");
@@ -202,7 +217,7 @@ describe("image sélectionnée", () => {
   });
 
   it("critère 5 : le texte de remplacement se modifie, accents et emojis compris", () => {
-    const editor = imageEditor({ type: "doc", content: [p("p-1"), img(HASH, "photo"), p("p-2")] });
+    const editor = usedEditor({ type: "doc", content: [p("p-1"), img(HASH, "photo"), p("p-2")] });
     selectImage(editor);
     expect(selectedImage(editor.state)).toEqual({ alt: "photo" });
     expect(setImageAlt(editor, "  Mémé à la plage 👵🏽🌊  ")).toBe(true);
@@ -211,13 +226,13 @@ describe("image sélectionnée", () => {
   });
 
   it("critère 5 : sans image sélectionnée, rien n'est modifié", () => {
-    const editor = imageEditor({ type: "doc", content: [p("p-1", "Texte"), img()] });
+    const editor = usedEditor({ type: "doc", content: [p("p-1", "Texte"), img()] });
     expect(selectedImage(editor.state)).toBeNull();
     expect(setImageAlt(editor, "x")).toBe(false);
   });
 
   it("critère 4 : Suppr retire l'image sélectionnée", () => {
-    const editor = imageEditor({ type: "doc", content: [p("p-1"), img(), p("p-2")] });
+    const editor = usedEditor({ type: "doc", content: [p("p-1"), img(), p("p-2")] });
     selectImage(editor);
     editor.commands.deleteSelection();
     expect(types(editor)).toEqual(["paragraph", "paragraph"]);

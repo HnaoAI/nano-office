@@ -19,8 +19,11 @@ import { prepareImage, type ImageRejection } from "./imageImport";
 import { ImageLibrary } from "./imageLibrary";
 import { ImageView } from "./imageView";
 
-/** Appelé quand une image est refusée, pour afficher un message clair (critère 2). */
-export type ImageRejectedHandler = (reason: ImageRejection) => void;
+/**
+ * Appelé quand des images sont refusées, pour afficher un message clair (critère 2) : une seule fois
+ * par insertion, avec toutes les raisons, pour qu'aucune ne soit cachée par la suivante.
+ */
+export type ImageRejectedHandler = (reasons: ImageRejection[]) => void;
 
 /** Bibliothèque et message d'erreur d'un éditeur, retrouvés par sa vue. */
 interface ImageContext {
@@ -114,9 +117,7 @@ export async function insertImageFiles(
     }
   }
   if (view.isDestroyed) return;
-  rejections.forEach((reason) => {
-    context.onRejected(reason);
-  });
+  if (rejections.size > 0) context.onRejected(Array.from(rejections));
   if (ready.length > 0) insertImageNodes(view, ready);
 }
 
@@ -190,10 +191,28 @@ async function pasteHtmlWithImages(view: EditorView, html: string): Promise<void
     }
   }
   if (view.isDestroyed) return;
-  rejections.forEach((reason) => {
-    context.onRejected(reason);
-  });
+  if (rejections.size > 0) context.onRejected(Array.from(rejections));
   view.pasteHTML(doc.body.innerHTML);
+}
+
+/**
+ * Vrai si le HTML contient une image `data:` que le document ne range pas encore (copie depuis une
+ * autre fenêtre ou une autre application). Une image déjà rangée (copie dans le même document) est
+ * lue directement par son empreinte.
+ */
+function hasNewDataImages(html: string, library: ImageLibrary): boolean {
+  if (!/<img[^>]+src\s*=\s*["']?data:/i.test(html)) return false;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return Array.from(doc.querySelectorAll("img")).some((img) => {
+    const hash = img.getAttribute("data-hash");
+    return (img.getAttribute("src") ?? "").startsWith("data:") && !(hash && library.has(hash));
+  });
+}
+
+/** Sélection de départ : le premier endroit où écrire du texte, jamais une image sélectionnée. */
+function firstTextSelection(state: EditorState): TextSelection | null {
+  const found = TextSelection.findFrom(state.doc.resolve(0), 1, true);
+  return found instanceof TextSelection ? found : null;
 }
 
 /**
@@ -201,12 +220,23 @@ async function pasteHtmlWithImages(view: EditorView, html: string): Promise<void
  * - fichiers déposés : préparés et insérés à l'endroit du dépôt (critère 1) ; un déplacement d'image
  *   dans le document reste géré par ProseMirror ;
  * - fichiers collés sans texte (image copiée) : insérés au curseur ;
- * - HTML avec des images `data:` : voir `pasteHtmlWithImages`. Le reste suit le collage habituel
- *   (src/editor/clipboard.ts), où les images `http…` sont ignorées.
+ * - HTML avec des images `data:` collé ou déposé : voir `pasteHtmlWithImages`. Le reste suit le
+ *   collage habituel (src/editor/clipboard.ts), où les images `http…` sont ignorées ;
+ * - Ctrl/Cmd+Shift+V colle toujours du texte brut, sans image (T1.5, critère 3).
+ * Il veille aussi à ce qu'un document qui commence par une image s'ouvre avec le curseur dans le
+ * premier texte, et non avec l'image sélectionnée : la première touche la remplacerait (relecture du lot D).
  */
 function createImagePlugin(context: ImageContext): Plugin {
+  // Vrai après la première touche ou le premier clic : la sélection est alors celle de l'utilisateur.
+  let interacted = false;
+  let plainPaste = false;
   return new Plugin({
     key: new PluginKey("nanoImages"),
+    appendTransaction(_transactions, _oldState, state) {
+      if (interacted || !(state.selection instanceof NodeSelection)) return null;
+      const selection = firstTextSelection(state);
+      return selection ? state.tr.setSelection(selection).setMeta("addToHistory", false) : null;
+    },
     view(view) {
       contexts.set(view, context);
       context.library.attach();
@@ -218,16 +248,29 @@ function createImagePlugin(context: ImageContext): Plugin {
       };
     },
     props: {
+      handleDOMEvents: {
+        mousedown() {
+          interacted = true;
+          return false;
+        },
+        keydown(_view, event) {
+          interacted = true;
+          plainPaste = event.shiftKey && (event.ctrlKey || event.metaKey) && event.code === "KeyV";
+          return false;
+        },
+      },
       handlePaste(view, event) {
+        const plain = plainPaste;
+        plainPaste = false;
         const data = event.clipboardData;
-        if (!data) return false;
+        if (!data || plain) return false;
         const html = data.getData("text/html");
         const files = filesOf(data.files);
         if (files.length > 0 && (!html || htmlHasNoText(html))) {
           void insertImageFiles(view, files, false);
           return true;
         }
-        if (html && /<img[^>]+src\s*=\s*["']?data:/i.test(html)) {
+        if (html && hasNewDataImages(html, context.library)) {
           void pasteHtmlWithImages(view, html);
           return true;
         }
@@ -236,13 +279,16 @@ function createImagePlugin(context: ImageContext): Plugin {
       handleDrop(view, event, _slice, moved) {
         if (moved) return false;
         const files = filesOf(event.dataTransfer?.files);
-        if (files.length === 0) return false;
+        const html = event.dataTransfer?.getData("text/html") ?? "";
+        const withImages =
+          files.length === 0 && html !== "" && hasNewDataImages(html, context.library);
+        if (files.length === 0 && !withImages) return false;
         const target = view.posAtCoords({ left: event.clientX, top: event.clientY });
         if (target) {
           const $pos = view.state.doc.resolve(target.pos);
           view.dispatch(view.state.tr.setSelection(TextSelection.near($pos)));
         }
-        void insertImageFiles(view, files, true);
+        void (withImages ? pasteHtmlWithImages(view, html) : insertImageFiles(view, files, true));
         return true;
       },
     },

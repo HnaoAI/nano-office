@@ -298,7 +298,7 @@ export function useDocumentFile() {
 
   // Stable : DocumentEditor le donne à la configuration de l'éditeur, créée une fois par document.
   const imageRejected = useCallback(
-    (reason: ImageRejection) => setMessage(imageRejectedMessage(reason)),
+    (reasons: ImageRejection[]) => setMessage(imageRejectedMessage(reasons)),
     [],
   );
 

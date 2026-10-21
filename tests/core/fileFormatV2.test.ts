@@ -175,6 +175,21 @@ describe("format .nano version 2 : image manquante", () => {
     }
   });
 
+  it("critère 9 : un contenu qui ne correspond pas à son empreinte ou à son format est manquant, et non faux", () => {
+    const { ydoc, hashes } = ydocWithImages((h) => illustratedDocument(h[0] ?? ""), [fakePng(1)]);
+    const file = saved(ydoc);
+    const hash = hashes[0] ?? "";
+    const other = saved(ydocWithImages((h) => illustratedDocument(h[0] ?? ""), [fakePng(2)]).ydoc);
+    const otherData = Object.values(other.images)[0]?.data ?? "";
+    for (const entry of [
+      { type: "image/png", data: otherData },
+      { type: "image/jpeg", data: file.images[hash]?.data },
+    ]) {
+      const result = parsed(JSON.stringify({ ...file, images: { [hash]: entry } }));
+      expect(readImage(result.ydoc, hash)).toBeNull();
+    }
+  });
+
   it("critère 9 : un champ images absent ou qui n'est pas un objet ne bloque pas l'ouverture", () => {
     const { ydoc } = ydocWithImages((h) => illustratedDocument(h[0] ?? ""), [fakePng(1)]);
     const file = saved(ydoc) as unknown as Record<string, unknown>;

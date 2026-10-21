@@ -3,7 +3,7 @@
 // titre de la fenêtre et nom du document affiché (U1a).
 import * as Y from "yjs";
 import { contentOf, createDocumentId, parseDocument } from "./fileFormat";
-import { IMAGE_NODE } from "./images";
+import { IMAGE_NODE, imageRefs, readImage } from "./images";
 import { DEFAULT_FILE_NAME, type DocumentJson, type OpenDocument, type ParseError } from "./types";
 
 export { DEFAULT_FILE_NAME };
@@ -58,7 +58,11 @@ export function openDocumentText(
  * dans le Y.Doc à l'ouverture (paragraphe vide, identifiants de bloc), ce qui n'est pas une modification.
  */
 export function contentSnapshot(ydoc: Y.Doc): string {
-  return JSON.stringify(contentOf(ydoc));
+  const content = contentOf(ydoc);
+  // Une image manquante qu'on remet (même empreinte) ne change pas `content` : on note donc les
+  // images manquantes, pour que leur retour compte comme une modification à enregistrer (T1.9).
+  const missing = imageRefs(content).filter((hash) => readImage(ydoc, hash) === null);
+  return JSON.stringify(missing.length > 0 ? { content, missing } : content);
 }
 
 /**
