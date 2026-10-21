@@ -22,11 +22,12 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `ListButtons.tsx` : boutons « Liste à puces » et « Liste numérotée » (T1.2)
 - `AlignmentButtons.tsx` : boutons d'alignement : gauche, centré, droite, justifié (T1.3)
 - `FontSelects.tsx` : listes déroulantes « Police » et « Taille » (T1.4)
+- `LineHeightSelect.tsx` : liste déroulante « Interligne » : Par défaut, 1, 1,15, 1,5, 2 (T2.2)
 - `ColorButtons.tsx` : boutons « Couleur du texte » et « Surlignage » et leurs grilles de pastilles (T1.7)
 - `usePopover.ts` : petite fenêtre d'un bouton de la barre, fermée par Échap ou un clic à côté, déplacement aux flèches dans une grille (T1.7)
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
 - `DocumentEditor.tsx` : barre de mise en forme et éditeur d'un document, relié à un Y.Doc, sur une page centrée
-- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, alignement, listes, tableau, image)
+- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, alignement, interligne, listes, tableau, image)
 - `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

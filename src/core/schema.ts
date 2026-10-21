@@ -10,6 +10,7 @@ import Highlight from "@tiptap/extension-highlight";
 import { isSafeCssValue, TextStyleAttributes } from "./textStyle";
 import { DocumentWithTables, tableExtensions } from "./tableSchema";
 import { ImageNode } from "./imageSchema";
+import { LineHeightAttribute } from "./lineHeight";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
@@ -161,7 +162,7 @@ const DocumentStrike = Strike.extend({
 /**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
  * puces et numérotées (T1.2), alignement (T1.3), gras, italique, barré (T2.3), police et taille (T1.4),
- * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), identifiant de bloc. T0b les
+ * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), identifiant de bloc. T0b les
  * réutilise telles quelles, sans redéfinir le schéma (l'éditeur configure seulement `ImageNode`).
  */
 export const documentExtensions = [
@@ -181,6 +182,7 @@ export const documentExtensions = [
   TextStyleAttributes,
   DocumentHighlight,
   DocumentTextAlign,
+  LineHeightAttribute,
   BlockId,
 ];
 

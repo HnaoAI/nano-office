@@ -72,6 +72,10 @@
   padding: 0 10px;
 }
 
+.nano-line-height-select {
+  width: 112px;
+}
+
 .nano-select:focus-visible {
   outline: none;
   box-shadow: var(--nano-focus-ring);
