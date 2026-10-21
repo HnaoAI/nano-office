@@ -5,6 +5,10 @@ import {
   AUTO_SAVE_IDLE_MS,
   AUTO_SAVE_MAX_MS,
   AutoSaver,
+  autoSaveDelays,
+  LARGE_AUTO_SAVE_IDLE_MS,
+  LARGE_AUTO_SAVE_MAX_MS,
+  LARGE_DOCUMENT_BYTES,
   type AutoSaveRun,
 } from "../../src/core/autoSave";
 
@@ -255,5 +259,63 @@ describe("AutoSaver : reprise et attente (T1.6, relecture)", () => {
     saver.release();
     await vi.advanceTimersByTimeAsync(60_000);
     expect(fake.state.calls).toBe(0);
+  });
+});
+
+describe("AutoSaver : gros document (T1.9, décision du PO à la relecture du lot D)", () => {
+  let size = 0;
+  let large: AutoSaver;
+
+  beforeEach(() => {
+    size = LARGE_DOCUMENT_BYTES + 1;
+    large = new AutoSaver(fake.run, () => size);
+  });
+
+  afterEach(() => {
+    large.dispose();
+  });
+
+  it("au-delà de 2 Mo enregistrés : 10 secondes après la dernière modification, 60 secondes au plus", () => {
+    expect(LARGE_DOCUMENT_BYTES).toBe(2 * 1024 * 1024);
+    expect(autoSaveDelays(LARGE_DOCUMENT_BYTES + 1)).toEqual({ idle: 10_000, max: 60_000 });
+    expect(LARGE_AUTO_SAVE_IDLE_MS).toBe(10_000);
+    expect(LARGE_AUTO_SAVE_MAX_MS).toBe(60_000);
+  });
+
+  it("jusqu'à 2 Mo, les délais restent de 3 et 30 secondes", () => {
+    expect(autoSaveDelays(0)).toEqual({ idle: AUTO_SAVE_IDLE_MS, max: AUTO_SAVE_MAX_MS });
+    expect(autoSaveDelays(LARGE_DOCUMENT_BYTES)).toEqual({ idle: 3_000, max: 30_000 });
+  });
+
+  it("un gros document est enregistré 10 secondes après la dernière modification, pas 3", async () => {
+    large.change();
+    await vi.advanceTimersByTimeAsync(9_999);
+    expect(fake.state.calls).toBe(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(fake.state.calls).toBe(1);
+  });
+
+  it("pendant une saisie continue, un gros document est enregistré au plus toutes les 60 secondes", async () => {
+    for (let elapsed = 0; elapsed < 59_000; elapsed += 1_000) {
+      large.change();
+      await vi.advanceTimersByTimeAsync(1_000);
+    }
+    expect(fake.state.calls).toBe(0);
+    large.change();
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(fake.state.calls).toBe(1);
+  });
+
+  it("la taille est relue à chaque modification : un document qui passe les 2 Mo s'espace dès l'enregistrement suivant", async () => {
+    size = 1_000;
+    large.change();
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(fake.state.calls).toBe(1);
+    size = LARGE_DOCUMENT_BYTES + 1;
+    large.change();
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(fake.state.calls).toBe(1);
+    await vi.advanceTimersByTimeAsync(7_000);
+    expect(fake.state.calls).toBe(2);
   });
 });

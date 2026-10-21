@@ -3,7 +3,8 @@
 // Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6),
 // et donne l'état de l'indicateur d'enregistrement et les actions des messages (U1b).
 // Fichier retrouvé au lancement pour un document restauré (PL3).
-// Sauvegarde automatique dans le fichier, par le même verrou que « Enregistrer » (T1.6).
+// Sauvegarde automatique dans le fichier, par le même verrou que « Enregistrer » (T1.6), espacée
+// pour un gros fichier (T1.9).
 // La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NO_ACTIVITY, type LaunchActivity } from "../core/appUpdate";
@@ -67,6 +68,9 @@ export function useDocumentFile() {
   const opening = useRef(false);
   /** Y.Doc restauré au lancement avec son fichier : sa sauvegarde automatique commence en pause (PL3). */
   const pausedAtStart = useRef<Y.Doc | null>(null);
+  // Taille du dernier fichier écrit ou ouvert, pour espacer la sauvegarde automatique au-delà de 2 Mo
+  // (T1.9). En caractères : le JSON est presque tout en ASCII (base64), un caractère vaut un octet.
+  const savedBytes = useRef<{ ydoc: Y.Doc | null; size: number }>({ ydoc: null, size: 0 });
 
   /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
   const noteActivity = useCallback((sign: keyof LaunchActivity) => {
@@ -107,6 +111,7 @@ export function useDocumentFile() {
       return save(false, true);
     },
     (ydoc) => pausedAtStart.current === ydoc,
+    () => (savedBytes.current.ydoc === document?.ydoc ? savedBytes.current.size : 0),
   );
 
   // Au chargement, le dernier document modifié est restauré depuis sa copie de secours (T0d, critère 4).
@@ -214,8 +219,10 @@ export function useDocumentFile() {
         // Le fichier n'est retenu comme fichier courant que s'il est lisible (critère 15).
         const file = await store.open(({ name, text }) => {
           const result = openDocumentText(name, text);
-          if (result.ok) opened = result.document;
-          else error = result.message;
+          if (result.ok) {
+            opened = result.document;
+            savedBytes.current = { ydoc: result.document.ydoc, size: text.length };
+          } else error = result.message;
           return result.ok;
         });
         if (!file) return;
@@ -262,6 +269,7 @@ export function useDocumentFile() {
         : await store.save(text, { onlyIfUnchanged: auto });
       if (result.status === "saved" || result.status === "downloaded") {
         const name = result.name;
+        savedBytes.current = { ydoc: saved.ydoc, size: text.length };
         setDocument((current) =>
           current === saved ? markSaved(current, name, snapshot) : current,
         );

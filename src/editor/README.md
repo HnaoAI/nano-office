@@ -14,7 +14,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `tablePaste.ts` : cellules fusionnées séparées et tableaux imbriqués aplatis dans le HTML collé, tableau collé dans une cellule mis à plat, bordures du tableau copié vers un e-mail (T1.8)
 - `clipboard.ts` : copier-coller propre : structure gardée, mise en forme d'origine retirée (couleurs et surlignages compris, T1.7), listes de Word converties, tableaux gardés (T1.8), images retirées d'un collage dans une cellule (T1.9), nouveaux identifiants (`CleanClipboard`, T1.5)
 - `images.ts` : images (T1.9) : nœud image relié au document, point d'insertion entre deux blocs, bouton, glisser-déposer et collage, texte de remplacement (`createImageExtensions`, `insertImageFiles`, `setImageAlt`, `selectedImage`)
-- `imageImport.ts` : préparation d'une image : 25 Mo au plus, format vérifié, réduction à 2 000 px par un canvas (`prepareImage`, T1.9)
+- `imageImport.ts` : préparation d'une image : 25 Mo au plus, format vérifié, réduction à 1 600 px par un canvas (`prepareImage`, T1.9)
 - `imageLibrary.ts` : adresses `blob:` et `data:` des images d'un document, avis quand une image arrive (`ImageLibrary`, T1.9)
 - `imageView.ts` : affichage d'une image : alignement, poignées de redimensionnement, cadre « Image manquante » (`ImageView`, T1.9)
 - `focus.ts` : redonne le focus à l'éditeur tout de suite après un clic sur la barre (`focusEditor`, lot A)

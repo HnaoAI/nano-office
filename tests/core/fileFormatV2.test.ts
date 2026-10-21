@@ -149,6 +149,57 @@ describe("format .nano version 2 : images", () => {
   });
 });
 
+describe("format .nano version 2 : images en fin de fichier, triées par empreinte (relecture du lot D)", () => {
+  /** Document : un paragraphe, puis les images données, dans cet ordre. */
+  const withImages = (hashes: string[]): DocumentJson => ({
+    type: "doc",
+    content: [
+      paragraph("p-1", { text: "Album" }),
+      ...hashes.map((hash, index) => imageNode(`i-${String(index)}`, hash)),
+    ],
+  });
+
+  it("les images sont triées par empreinte, et non dans l'ordre du document", () => {
+    const { ydoc, hashes } = ydocWithImages(withImages, [fakePng(1), fakePng(2), fakePng(3)]);
+    const keys = Object.keys(saved(ydoc).images);
+    expect(keys).toEqual([...hashes].sort());
+    const reversed = ydocWithImages(
+      (h) => withImages([...h].reverse()),
+      [fakePng(1), fakePng(2), fakePng(3)],
+    );
+    expect(Object.keys(saved(reversed.ydoc).images)).toEqual(keys);
+  });
+
+  it("le champ images est le dernier du fichier", () => {
+    const { ydoc } = ydocWithImages(withImages, [fakePng(1)]);
+    const text = serializeDocument({ id: "doc-1", ydoc });
+    expect(Object.keys(JSON.parse(text) as object).at(-1)).toBe("images");
+    expect(text.endsWith("}}}")).toBe(true);
+  });
+
+  it("ajouter une image au début du document ne change pas le texte des images déjà là", () => {
+    const old = [fakePng(1, 2048), fakePng(2, 2048)];
+    const before = ydocWithImages(withImages, old);
+    const added = fakePng(7, 2048);
+    const after = ydocWithImages(
+      (h) => withImages([h[2] ?? "", h[0] ?? "", h[1] ?? ""]),
+      [...old, added],
+    );
+    const textBefore = serializeDocument({ id: "doc-1", ydoc: before.ydoc });
+    const textAfter = serializeDocument({ id: "doc-1", ydoc: after.ydoc });
+    for (const hash of before.hashes) {
+      const entry = JSON.stringify({ [hash]: saved(before.ydoc).images[hash] }).slice(1, -1);
+      expect(textBefore).toContain(entry);
+      expect(textAfter).toContain(entry);
+    }
+    // Les images déjà là restent à la fin du fichier, dans le même ordre, autour de la nouvelle.
+    const tail = (text: string) => text.slice(text.indexOf('"images":'));
+    const sortedOld = [...before.hashes].sort();
+    const positions = sortedOld.map((hash) => tail(textAfter).indexOf(hash));
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+});
+
 describe("format .nano version 2 : image manquante", () => {
   it("critère 9 : une référence sans contenu s'ouvre, l'image est manquante, le reste du document est intact", () => {
     const { ydoc, hashes } = ydocWithImages((h) => illustratedDocument(h[0] ?? ""), [fakePng(1)]);

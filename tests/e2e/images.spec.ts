@@ -109,7 +109,7 @@ test("critère 1 et 2 : un fichier d'un autre format, abîmé ou de plus de 25 M
   expect(await blockTypes(page)).not.toContain("image");
 });
 
-test("critère 2 : une grande photo est réduite à 2 000 px et réencodée en JPEG ; une image transparente reste en PNG", async ({
+test("critère 2 : une grande photo est réduite à 1 600 px et réencodée en JPEG ; une image transparente reste en PNG", async ({
   page,
 }) => {
   await start(page);
@@ -133,8 +133,8 @@ test("critère 2 : une grande photo est réduite à 2 000 px et réencodée en J
   const jpeg = images.find((image) => image.type === "image/jpeg");
   const png = images.find((image) => image.type === "image/png");
   if (!jpeg || !png) throw new Error("images absentes");
-  expect(await decodedSize(page, jpeg)).toEqual({ width: 2000, height: 1000 });
-  expect(await decodedSize(page, png)).toEqual({ width: 2000, height: 2000 });
+  expect(await decodedSize(page, jpeg)).toEqual({ width: 1600, height: 800 });
+  expect(await decodedSize(page, png)).toEqual({ width: 1600, height: 1600 });
 });
 
 test("critère 2 : une image déjà petite n'est pas réencodée", async ({ page }) => {

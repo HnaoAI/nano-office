@@ -1,5 +1,5 @@
 // Préparation d'une image à l'insertion (T1.9, critères 1 et 2) : format vérifié aux premiers octets,
-// taille limitée à 25 Mo, réduction à 2 000 px avec createImageBitmap et un canvas, dans le navigateur.
+// taille limitée à 25 Mo, réduction à 1 600 px avec createImageBitmap et un canvas, dans le navigateur.
 // Les règles (taille, format final) sont dans src/core/images.ts, testées sans navigateur.
 import {
   detectImageType,
@@ -69,8 +69,8 @@ function hasTransparency(
 
 /**
  * Prépare une image choisie, déposée ou collée. Ne lève jamais d'exception.
- * Une image déjà petite garde ses octets d'origine ; une grande est réduite à 2 000 px sur son grand
- * côté, en JPEG (qualité 0,85) ou en PNG si elle a de la transparence ; un GIF garde sa première image,
+ * Une image déjà petite garde ses octets d'origine ; une grande est réduite à 1 600 px sur son grand
+ * côté, en JPEG (qualité 0,8) ou en PNG si elle a de la transparence ; un GIF garde sa première image,
  * en PNG (critères 1 et 2).
  */
 export async function prepareImage(blob: Blob): Promise<PreparedImage> {
@@ -85,7 +85,11 @@ export async function prepareImage(blob: Blob): Promise<PreparedImage> {
   if (!type) return { ok: false, reason: "unsupported" };
   let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(new Blob([data as BlobPart], { type }));
+    // Orientation EXIF appliquée explicitement : une photo de téléphone reste droite, quelle que soit
+    // la valeur par défaut du navigateur (relecture du lot D).
+    bitmap = await createImageBitmap(new Blob([data as BlobPart], { type }), {
+      imageOrientation: "from-image",
+    });
   } catch {
     return { ok: false, reason: "unreadable" };
   }

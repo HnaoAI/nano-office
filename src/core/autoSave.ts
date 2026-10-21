@@ -1,11 +1,33 @@
 // Déclenchement de la sauvegarde automatique (T1.6) : 3 secondes après la dernière modification,
 // au plus 30 secondes pendant une saisie continue, jamais deux écritures en même temps, pause après un échec.
+// Au-delà de 2 Mo enregistrés (document avec des photos, T1.9) : 10 secondes, et 60 secondes au plus.
 // Logique pure : l'écriture elle-même est fournie par src/ui/useDocumentFile.ts.
 
 /** Délai après la dernière modification (T1.6, critère 1). */
 export const AUTO_SAVE_IDLE_MS = 3_000;
 /** Délai maximal depuis la première modification non enregistrée, pendant une saisie continue (critère 2). */
 export const AUTO_SAVE_MAX_MS = 30_000;
+
+/**
+ * Taille enregistrée au-delà de laquelle la sauvegarde automatique s'espace (décision du PO à la
+ * relecture du lot D) : un gros fichier réécrit toutes les 3 secondes chargerait le dossier synchronisé.
+ * La copie de secours, elle, reste immédiate.
+ */
+export const LARGE_DOCUMENT_BYTES = 2 * 1024 * 1024;
+/** Délai après la dernière modification d'un gros document. */
+export const LARGE_AUTO_SAVE_IDLE_MS = 10_000;
+/** Délai maximal d'un gros document pendant une saisie continue. */
+export const LARGE_AUTO_SAVE_MAX_MS = 60_000;
+
+/**
+ * Délais de la sauvegarde automatique pour un document dont le dernier fichier écrit ou ouvert
+ * pesait `savedBytes` octets.
+ */
+export function autoSaveDelays(savedBytes: number): { idle: number; max: number } {
+  return savedBytes > LARGE_DOCUMENT_BYTES
+    ? { idle: LARGE_AUTO_SAVE_IDLE_MS, max: LARGE_AUTO_SAVE_MAX_MS }
+    : { idle: AUTO_SAVE_IDLE_MS, max: AUTO_SAVE_MAX_MS };
+}
 
 /**
  * Enregistrement lancé par la sauvegarde automatique :
@@ -32,8 +54,14 @@ export class AutoSaver {
   /** Une modification a eu lieu pendant une pause ou une attente : à enregistrer à la reprise. */
   private missed = false;
 
-  /** @param run enregistre le document s'il a des modifications ; ne doit jamais ouvrir de sélecteur */
-  constructor(private readonly run: AutoSaveRun) {}
+  /**
+   * @param run enregistre le document s'il a des modifications ; ne doit jamais ouvrir de sélecteur
+   * @param savedBytes taille du dernier fichier écrit ou ouvert, lue à chaque modification (T1.9)
+   */
+  constructor(
+    private readonly run: AutoSaveRun,
+    private readonly savedBytes: () => number = () => 0,
+  ) {}
 
   /** Vrai après un échec ou `pause()`, jusqu'au prochain enregistrement réussi. */
   get paused(): boolean {
@@ -51,8 +79,9 @@ export class AutoSaver {
       return;
     }
     const now = Date.now();
+    const { idle, max } = autoSaveDelays(this.savedBytes());
     this.firstChange ??= now;
-    this.schedule(Math.min(now + AUTO_SAVE_IDLE_MS, this.firstChange + AUTO_SAVE_MAX_MS) - now);
+    this.schedule(Math.min(now + idle, this.firstChange + max) - now);
   }
 
   /**
@@ -118,7 +147,7 @@ export class AutoSaver {
     if (this.stopped || this.isPaused || this.held) return;
     // Une écriture automatique est encore en cours : on réessaie après elle (critère 6).
     if (this.running) {
-      this.schedule(AUTO_SAVE_IDLE_MS);
+      this.schedule(autoSaveDelays(this.savedBytes()).idle);
       return;
     }
     this.firstChange = null;
@@ -134,7 +163,7 @@ export class AutoSaver {
     // Un enregistrement manuel était en cours : on réessaie plus tard, sans écrire en même temps.
     if (outcome === "busy" && !this.stopped && !this.isPaused && !this.held) {
       this.firstChange ??= Date.now();
-      this.schedule(AUTO_SAVE_IDLE_MS);
+      this.schedule(autoSaveDelays(this.savedBytes()).idle);
     }
   }
 }

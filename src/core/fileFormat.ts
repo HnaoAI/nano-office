@@ -79,7 +79,9 @@ function encodeWithoutImages(ydoc: Y.Doc): Uint8Array {
 export function serializeDocument(doc: { id: string; ydoc: Y.Doc }): string {
   const content = contentOf(doc.ydoc);
   const images: Record<string, NanoFileImage> = {};
-  for (const hash of imageRefs(content)) {
+  // Triées par empreinte, et non dans l'ordre du document : ajouter ou déplacer une image ne change pas
+  // le texte des autres, et le dossier synchronisé n'envoie que la partie modifiée (relecture du lot D).
+  for (const hash of imageRefs(content).sort()) {
     const image = readImage(doc.ydoc, hash);
     if (image) images[hash] = { type: image.type, data: imageBase64(image.data) };
   }
@@ -89,6 +91,8 @@ export function serializeDocument(doc: { id: string; ydoc: Y.Doc }): string {
     id: doc.id,
     content,
     ydoc: bytesToBase64(encodeWithoutImages(doc.ydoc)),
+    // INVARIANT : `images` reste le dernier champ du JSON, pour que les images, lourdes et stables,
+    // soient à la fin du fichier.
     images,
   };
   return JSON.stringify(file);

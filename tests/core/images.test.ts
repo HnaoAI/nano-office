@@ -7,6 +7,7 @@ import {
   detectImageType,
   imageHash,
   imageRefs,
+  JPEG_QUALITY,
   MAX_IMAGE_BYTES,
   MAX_IMAGE_SIDE,
   planImageEncoding,
@@ -55,13 +56,13 @@ describe("imageHash", () => {
 });
 
 describe("planImageEncoding", () => {
-  it("critère 2 : une image de plus de 2 000 px sur son grand côté est réduite à 2 000 px, proportions gardées", () => {
+  it("critère 2 : une image de plus de 1 600 px sur son grand côté est réduite à 1 600 px, proportions gardées (décision du PO, relecture du lot D)", () => {
     expect(
       planImageEncoding({ type: "image/jpeg", width: 4032, height: 3024, transparent: false }),
-    ).toEqual({ width: 2000, height: 1500, reencode: true, type: "image/jpeg" });
+    ).toEqual({ width: 1600, height: 1200, reencode: true, type: "image/jpeg" });
     expect(
       planImageEncoding({ type: "image/jpeg", width: 3024, height: 4032, transparent: false }),
-    ).toEqual({ width: 1500, height: 2000, reencode: true, type: "image/jpeg" });
+    ).toEqual({ width: 1200, height: 1600, reencode: true, type: "image/jpeg" });
   });
 
   it("critère 2 : une grande photo est réencodée en JPEG, même si elle était en PNG ou WebP", () => {
@@ -75,13 +76,13 @@ describe("planImageEncoding", () => {
   it("critère 2 : une grande image avec transparence reste en PNG", () => {
     expect(
       planImageEncoding({ type: "image/png", width: 2400, height: 800, transparent: true }),
-    ).toEqual({ width: 2000, height: 667, reencode: true, type: "image/png" });
+    ).toEqual({ width: 1600, height: 533, reencode: true, type: "image/png" });
   });
 
-  it("critère 2 : une image déjà petite n'est pas réencodée, même à 2 000 px tout juste", () => {
+  it("critère 2 : une image déjà petite n'est pas réencodée, même à 1 600 px tout juste", () => {
     for (const type of ["image/jpeg", "image/png", "image/webp"] as const) {
-      expect(planImageEncoding({ type, width: 2000, height: 1200, transparent: true })).toEqual({
-        width: 2000,
+      expect(planImageEncoding({ type, width: 1600, height: 1200, transparent: true })).toEqual({
+        width: 1600,
         height: 1200,
         reencode: false,
         type,
@@ -108,6 +109,11 @@ describe("planImageEncoding", () => {
 
   it("critère 2 : la limite de taille d'un fichier est de 25 Mo", () => {
     expect(MAX_IMAGE_BYTES).toBe(25 * 1024 * 1024);
+  });
+
+  it("critère 2 : réduction à 1 600 px et JPEG de qualité 0,8 (décision du PO, relecture du lot D)", () => {
+    expect(MAX_IMAGE_SIDE).toBe(1600);
+    expect(JPEG_QUALITY).toBe(0.8);
   });
 });
 

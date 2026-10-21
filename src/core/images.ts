@@ -24,11 +24,14 @@ export type ImageType = (typeof IMAGE_TYPES)[number];
 /** Taille au-delà de laquelle un fichier est refusé (critère 2). */
 export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
-/** Grand côté maximal d'une image insérée, en pixels (critère 2). */
-export const MAX_IMAGE_SIDE = 2000;
+/**
+ * Grand côté maximal d'une image insérée, en pixels (critère 2). 1 600 et non 2 000 : décision du PO
+ * à la relecture du lot D, pour des fichiers plus légers dans le dossier synchronisé.
+ */
+export const MAX_IMAGE_SIDE = 1600;
 
-/** Qualité du réencodage JPEG d'une photo (critère 2). */
-export const JPEG_QUALITY = 0.85;
+/** Qualité du réencodage JPEG d'une photo (critère 2 ; 0,8 depuis la relecture du lot D). */
+export const JPEG_QUALITY = 0.8;
 
 /** Contenu d'une image, tel que rangé dans la `Y.Map` « images ». */
 export interface StoredImage {
@@ -80,8 +83,8 @@ export interface ImageEncoding {
 
 /**
  * Règles de réduction du critère 2 :
- * - au-delà de 2 000 px sur le grand côté, l'image est réduite à 2 000 px, proportions gardées ;
- * - une image réduite avec transparence devient un PNG, une autre (photo) un JPEG de qualité 0,85 ;
+ * - au-delà de 1 600 px sur le grand côté, l'image est réduite à 1 600 px, proportions gardées ;
+ * - une image réduite avec transparence devient un PNG, une autre (photo) un JPEG de qualité 0,8 ;
  * - une image déjà petite garde ses octets d'origine, sauf un GIF, dont seule la première image est
  *   gardée : il devient un PNG (critère 1), ce qui garde aussi sa transparence.
  * @param transparent vrai si l'image a au moins un pixel transparent (lu par l'appelant)
