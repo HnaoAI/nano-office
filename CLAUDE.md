@@ -135,7 +135,7 @@ Il s'arrête et demande seulement si la question :
 
 1. peut faire perdre ou abîmer un document, ou réécrire un fichier sans que l'utilisateur l'ait voulu ;
 2. change le format `.nano` ;
-3. demande une dépendance hors des licences acceptées ;
+3. demande une dépendance hors des licences acceptées (MIT, Apache-2.0, BSD, ISC, Zlib, et OFL pour les polices) ;
 4. s'écarte visiblement de la charte ou de la maquette (un nouvel écran, un nouvel élément sans modèle).
 
 ### Vérification et publication
@@ -196,3 +196,5 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-21 : Tranche T2 « aller plus loin », par ordre de priorité : lot E (rechercher et remplacer, interligne, barré, majuscules et minuscules), puis lot F (page A4 et marges, impression et PDF, export Word). L'impression et l'export, absents de la demande initiale, passent avant le pinceau et le tri des tableaux (PL4, PL5, plus tard), car sans eux un document ne peut pas être rendu ni envoyé. Les réglages de page sont des attributs du document, sans changement de version.
 - 2026-10-21 : Lot E. La recherche surligne par des décorations, jamais dans le document. « Remplacer » ne repart pas au début après la dernière occurrence, pour qu'un remplacement qui contient le texte cherché ne boucle pas.
 - 2026-10-21 : L'interligne est enregistré à la valeur de Word (`"1.15"`) dans l'attribut de bloc `lineHeight`, et affiché à 1,2 fois cette valeur, sans changement de version du format.
+- 2026-10-21 : Mise en page (T2.5) rangée dans la `Y.Map` « page » du Y.Doc, car y-tiptap ignore les attributs du nœud `doc`. Dans le fichier, elle est écrite en attributs du nœud `doc` de `content`, sans changement de version. Le bouton « Mise en page… » est en fin de barre de mise en forme, pour que l'en-tête tienne sur une ligne.
+- 2026-10-21 : La licence Zlib est ajoutée aux licences acceptées, pour tous les projets : elle est aussi permissive que MIT. Elle permet `pako`, utilisé par la bibliothèque `docx` de l'export Word (T2.7).
