@@ -7,6 +7,7 @@ import {
   readClipboard,
   saveAndReopen,
   selectText,
+  settleSelection,
   start,
   waitUndoGroup,
   WINDOWS_USER_AGENT,
@@ -115,11 +116,15 @@ test("critère 4 : gardé dans un copier-coller interne et dans la copie vers un
   await selectText(page, "du pain");
   await button(page, "Barré").click();
   await page.keyboard.press("ControlOrMeta+a");
+  await settleSelection(page);
   await page.keyboard.press("ControlOrMeta+c");
   const { html } = await readClipboard(page);
   expect(html).toMatch(/<s>du pain<\/s>/);
+  // Attendre que la sélection soit repliée en fin de ligne : sinon Entrée remplacerait tout le texte.
   await page.keyboard.press("End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
+  await expect(editor(page).locator("p")).toHaveCount(2);
   await page.keyboard.press("ControlOrMeta+v");
   await expect(editor(page).locator("s")).toHaveText(["du pain", "du pain"]);
 });
