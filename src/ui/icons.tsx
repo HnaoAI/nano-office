@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -118,6 +118,24 @@ export function CloseIcon() {
   );
 }
 
+/** Chevron vers le haut : occurrence précédente de la recherche (T2.1). */
+export function ChevronUpIcon() {
+  return (
+    <Icon>
+      <path d="m6 15 6-6 6 6" />
+    </Icon>
+  );
+}
+
+/** Chevron vers le bas : occurrence suivante de la recherche (T2.1). */
+export function ChevronDownIcon() {
+  return (
+    <Icon>
+      <path d="m6 9 6 6 6-6" />
+    </Icon>
+  );
+}
+
 /** Liste à puces, reprise de la maquette Main.dc.html (T1.2). */
 export function BulletListIcon() {
   return (
@@ -173,6 +191,17 @@ export function AlignJustifyIcon() {
   return (
     <Icon>
       <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </Icon>
+  );
+}
+
+/** « Barré » : un S traversé d'un trait (T2.3). */
+export function StrikeIcon() {
+  return (
+    <Icon>
+      <path d="M16.5 7.5c-.6-1.8-2.3-3-4.5-3-2.5 0-4.5 1.5-4.5 3.6 0 1.4.8 2.4 2.4 3" />
+      <path d="M8 16.5c.6 1.8 2.3 3 4.5 3 2.6 0 4.5-1.5 4.5-3.6 0-.6-.1-1-.4-1.4" />
+      <path d="M4 12h16" />
     </Icon>
   );
 }

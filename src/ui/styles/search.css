@@ -1,0 +1,133 @@
+/* Barre « Rechercher et remplacer » (T2.1) : sous la barre de mise en forme, à droite, au style des
+   messages d'information (surface blanche, rayon 14 px, ombre d'information). Elle décale la page vers
+   le bas, pour ne jamais cacher le début du texte, et reste visible quand la page défile jusqu'à une
+   occurrence. */
+.nano-search-row {
+  position: sticky;
+  top: 12px;
+  z-index: 30;
+  display: flex;
+  justify-content: flex-end;
+  width: calc(100% - 40px);
+  max-width: 794px;
+  margin: 12px auto 0;
+}
+
+.nano-search-bar {
+  height: fit-content;
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--nano-radius-message);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-info);
+  color: var(--nano-document-text);
+  font-size: 14px;
+}
+
+.nano-search-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nano-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--nano-separator-strong);
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface);
+  color: var(--nano-document-text);
+  font: inherit;
+}
+
+.nano-search-input:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-search-status {
+  min-width: 64px;
+  color: var(--nano-text-quiet);
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nano-search-bar button {
+  flex: none;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  cursor: pointer;
+}
+
+.nano-search-bar button:disabled {
+  color: var(--nano-text-disabled);
+  cursor: default;
+}
+
+.nano-search-icon {
+  width: 36px;
+  background: transparent;
+  color: var(--nano-text-secondary);
+}
+
+.nano-search-text {
+  padding: 0 12px;
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+}
+
+.nano-search-bar .nano-search-primary {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-weight: 500;
+}
+
+.nano-search-bar .nano-search-primary:disabled {
+  background: var(--nano-surface-muted);
+}
+
+.nano-search-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nano-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.nano-search-option input {
+  accent-color: var(--nano-ink);
+}
+
+/* Occurrences dans le document : gris clair, l'active entourée d'encre. Jamais une couleur de
+   surlignage du document, qu'elles recouvrent. */
+.nano-editor .nano-search-match {
+  background: var(--nano-group-bg);
+}
+
+.nano-editor .nano-search-match-active {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 0;
+}
+
+/* Écran étroit (moins de 600 px) : la barre prend toute la largeur. */
+@media (max-width: 600px) {
+  .nano-search-row {
+    width: calc(100% - 24px);
+  }
+
+  .nano-search-bar {
+    width: 100%;
+  }
+}

@@ -14,6 +14,7 @@ import "./styles/toolbar.css";
 import "./styles/pickers.css";
 import "./styles/tables.css";
 import "./styles/images.css";
+import "./styles/search.css";
 import "./styles/messages.css";
 import "./styles/dialog.css";
 

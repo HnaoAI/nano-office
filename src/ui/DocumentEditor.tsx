@@ -1,15 +1,17 @@
-// Zone d'édition d'un document (T0b) : barre de mise en forme et éditeur Tiptap relié à un Y.Doc,
-// affiché comme une page blanche centrée (U1a).
+// Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1) et éditeur
+// Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
-import { useEffect, useEffectEvent, useMemo } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { createEditorOptions } from "../editor/editorOptions";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
+import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
+import { useSearchShortcuts } from "./useSearchShortcuts";
 
 /**
  * Éditeur d'un document.
@@ -50,11 +52,21 @@ export function DocumentEditor({
     exposeDocumentForTests(ydoc);
   }, [ydoc]);
 
+  // Barre de recherche (T2.1) : chaque raccourci crée une demande, avec le texte sélectionné s'il
+  // tient dans un seul paragraphe.
+  const [search, setSearch] = useState<SearchRequest | null>(null);
+  useSearchShortcuts((mode) => {
+    const { from, to, empty, $from, $to } = editor.state.selection;
+    const seed = !empty && $from.sameParent($to) ? editor.state.doc.textBetween(from, to) : null;
+    setSearch((previous) => ({ id: (previous?.id ?? 0) + 1, mode, seed }));
+  });
+
   return (
     <>
       <div className="nano-format-row">
         <Toolbar editor={editor} />
       </div>
+      {search && <SearchBar editor={editor} request={search} onClose={() => setSearch(null)} />}
       <main className="nano-workspace">
         <article className="nano-page">
           <EditorContent editor={editor} />

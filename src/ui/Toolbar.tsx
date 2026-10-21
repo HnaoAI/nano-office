@@ -1,28 +1,31 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
-// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, couleur du texte et surlignage
-// (T1.7) | alignement (T1.3) | listes (T1.2) | tableau (T1.8), image (T1.9).
+// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Barré (T2.3), couleur du texte et surlignage
+// (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 import { currentAlignment } from "../editor/alignment";
 import { currentBlockStyle } from "../editor/blockStyle";
 import { currentTextStyle } from "../editor/fontStyle";
+import { currentLineHeight } from "../editor/lineHeight";
 import { currentListType } from "../editor/lists";
 import { selectedImage } from "../editor/images";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
-import { RedoIcon, UndoIcon } from "./icons";
+import { RedoIcon, StrikeIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
+import { CaseButton } from "./CaseButton";
 import { ColorButtons } from "./ColorButtons";
 import { FontSelects } from "./FontSelects";
 import { ImageButtons } from "./ImageButtons";
+import { LineHeightSelect } from "./LineHeightSelect";
 import { ListButtons } from "./ListButtons";
 import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
 import { TableButtons } from "./TableButtons";
 import { MOD } from "./shortcuts";
 
 /**
- * Barre de mise en forme. Gras et Italique indiquent leur état avec `aria-pressed`.
+ * Barre de mise en forme. Gras, Italique et Barré indiquent leur état avec `aria-pressed`.
  * Les séparateurs ajoutés par T1 sont décoratifs (`aria-hidden`), comme dans la maquette ; seul le
  * premier garde le rôle `separator` (U1a).
  * INVARIANT : les noms accessibles (« Annuler », « Rétablir », « Gras », « Italique ») ne changent pas,
@@ -35,17 +38,20 @@ export function Toolbar({ editor }: { editor: Editor }) {
     selector: ({ editor: current }) => ({
       bold: current.isActive("bold"),
       italic: current.isActive("italic"),
+      strike: current.isActive("strike"),
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
       blockStyle: currentBlockStyle(current.state),
       listType: currentListType(current.state),
       alignment: currentAlignment(current.state),
+      lineHeight: currentLineHeight(current.state),
       textStyle: currentTextStyle(current.state),
       textColor: currentTextColor(current.state),
       highlight: currentHighlight(current.state),
       inTable: isInTable(current.state),
       headerRow: headerRowActive(current.state),
       tableDeletions: tableDeletions(current.state),
+      hasSelection: !current.state.selection.empty,
       imageAlt: selectedImage(current.state)?.alt ?? null,
     }),
   });
@@ -99,9 +105,21 @@ export function Toolbar({ editor }: { editor: Editor }) {
       >
         I
       </button>
+      <button
+        type="button"
+        aria-label="Barré"
+        aria-pressed={state.strike}
+        title={`Barré (${MOD}+Shift+X)`}
+        onMouseDown={keepFocus}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+      >
+        <StrikeIcon />
+      </button>
       <ColorButtons editor={editor} textColor={state.textColor} highlight={state.highlight} />
+      <CaseButton editor={editor} hasSelection={state.hasSelection} />
       <div className="nano-separator" aria-hidden="true" />
       <AlignmentButtons editor={editor} active={state.alignment} />
+      <LineHeightSelect editor={editor} value={state.lineHeight} />
       <div className="nano-separator" aria-hidden="true" />
       <ListButtons editor={editor} active={state.listType} />
       <div className="nano-separator" aria-hidden="true" />

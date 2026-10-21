@@ -11,6 +11,7 @@ const STYLE_FILES = [
   "pickers",
   "tables",
   "images",
+  "search",
   "messages",
   "dialog",
 ];
