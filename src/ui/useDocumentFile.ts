@@ -120,14 +120,15 @@ export function useDocumentFile() {
       // INVARIANT (PL3, critère 4) : le fichier retrouvé n'est réécrit qu'après un enregistrement choisi
       // par l'utilisateur, qui a vu son nom ; jusque-là, la sauvegarde automatique attend.
       if (file) pausedAtStart.current = restored.ydoc;
+      // H2 : la restauration n'est pas un signe de travail commencé ; une nouvelle version peut recharger
+      // la page, qui restaure alors le même document, avec le même fichier retrouvé et le même message.
       setDocument(file ? { ...restored, fileName: file.name } : restored);
-      noteActivity("restoredFromBackup");
       setMessage(recoveredMessage(file));
     })();
     return () => {
       cancelled = true;
     };
-  }, [backups, store, noteActivity]);
+  }, [backups, store]);
 
   /** Demande confirmation avant d'abandonner des modifications non enregistrées (critère 1). */
   function canDiscard(): boolean {

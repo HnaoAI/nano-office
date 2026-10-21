@@ -17,7 +17,7 @@ Même arborescence que `src/`.
   - `secours.spec.ts` : copie de secours, récupération après rechargement, question à l'ouverture, alerte avant fermeture (T0d)
   - `reseau.spec.ts` : aucune donnée de document sur le réseau pendant l'édition, l'ouverture et l'enregistrement (T0e)
   - `hors-ligne.spec.ts` : version construite installable et hors ligne, polices du document hors ligne (T0e, T1.4, projet Playwright « pwa », après `npm run build`)
-  - `mise-a-jour.spec.ts` : numéro de version « dev », signes de travail commencé avant une mise à jour (H1)
+  - `mise-a-jour.spec.ts` : numéro de version « dev », signes de travail commencé avant une mise à jour (H1), mise à jour simulée malgré un document restauré, qui revient à l'identique (H2)
   - `publication.spec.ts` : version construite sous /nano-office/, installable, hors ligne, numéro de version (H1, projet Playwright « pages »)
   - `interface.spec.ts` : structure de l'interface et polices intégrées (U1a)
   - `titres.spec.ts` : titres, raccourcis Mac et Windows, AltGr, Entrée, `# `, annulation (T1.1)
@@ -33,5 +33,6 @@ Même arborescence que `src/`.
   - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture, fichier modifié ailleurs (T1.6)
   - `fichier-retenu.spec.ts` : fichier retrouvé au redémarrage, autorisation à redonner, fichier déplacé, mémoire des fichiers (PL3)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours
+  - `relaunchHelpers.ts` : relancer avec un document restauré et son fichier retrouvé, fichier modifié sur l'autre ordinateur (PL3, H2)
   - `networkWatch.ts` : journal des requêtes et messages envoyés par la page
   - `fakeFileStore.ts` : fausse implémentation de `FileStore`, installée avant le chargement de la page ; peut retenir les écritures ou faire échouer un enregistrement (U1b), garder ses fichiers au rechargement et simuler l'autorisation à redonner (PL3)

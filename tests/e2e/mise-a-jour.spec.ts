@@ -1,6 +1,7 @@
-// Tests d'interface du ticket H1 (mise à jour au démarrage et numéro de version), dans Chromium, sur le
-// serveur de développement. Le service worker n'existe pas ici : ces tests vérifient le numéro « dev »
-// et les signes de travail commencé (critère 6), lus sur `window.__nanoLaunch` (développement seulement).
+// Tests d'interface des tickets H1 (mise à jour au démarrage et numéro de version) et H2 (mise à jour
+// malgré un document restauré), dans Chromium, sur le serveur de développement. Le service worker n'existe
+// pas ici : ces tests vérifient le numéro « dev » et les signes de travail commencé (critère 6), lus sur
+// `window.__nanoLaunch` (développement seulement), qui simule aussi une nouvelle version prête (H2).
 // La publication sous /nano-office/ est vérifiée par publication.spec.ts, sur la version construite.
 import { expect, test, type Page } from "@playwright/test";
 import type { LaunchActivity } from "../../src/core/appUpdate";
@@ -8,7 +9,8 @@ import { serializeDocument } from "../../src/core/fileFormat";
 import type { DocumentJson } from "../../src/core/types";
 import { paragraph, ydocFromJson } from "../core/helpers";
 import { flushBackups } from "./backupHelpers";
-import { installFakeFileStore, setFakeFiles } from "./fakeFileStore";
+import { fakeFiles, installFakeFileStore, setFakeFiles } from "./fakeFileStore";
+import { changeOnOtherComputer, relaunchWithUnsavedChanges } from "./relaunchHelpers";
 
 const QUIET_TEXT = "rgb(95, 95, 92)";
 
@@ -44,8 +46,62 @@ const NOTHING = {
   edited: false,
   fileAction: false,
   backupQuestion: false,
-  restoredFromBackup: false,
 };
+
+const RECOVERED_MESSAGE =
+  "Ce document a été récupéré depuis la copie de secours de ce navigateur. Enregistrez-le pour le garder dans un fichier.";
+
+/** Écrit un document jamais enregistré, puis relance l'application, qui le restaure (lot B). */
+async function relaunchWithDraft(page: Page, text: string) {
+  await start(page);
+  await editor(page).click();
+  await page.keyboard.type(text);
+  await flushBackups(page);
+  await page.reload();
+  await expect(editor(page)).toHaveText(text);
+}
+
+/**
+ * Simule une nouvelle version prête (H2) et renvoie vrai si la page s'est rechargée pour l'appliquer.
+ * Les alertes du navigateur affichées entre-temps (alerte avant fermeture) sont acceptées et retenues.
+ */
+async function updateReloads(page: Page, dialogs: string[] = []): Promise<boolean> {
+  const onDialog = (dialog: import("@playwright/test").Dialog) => {
+    dialogs.push(dialog.type());
+    void dialog.accept();
+  };
+  page.on("dialog", onDialog);
+  await page.evaluate(() => {
+    (window as unknown as { __beforeUpdate?: true }).__beforeUpdate = true;
+    window.__nanoLaunch?.simulateUpdate();
+  });
+  try {
+    await expect
+      .poll(() =>
+        page
+          .evaluate(() => (window as unknown as { __beforeUpdate?: true }).__beforeUpdate)
+          .catch(() => true),
+      )
+      .toBeUndefined();
+    await expect(editor(page)).toBeVisible();
+    return true;
+  } catch {
+    return false;
+  } finally {
+    page.off("dialog", onDialog);
+  }
+}
+
+/** Ce que l'utilisateur voit au lancement : texte, titre de la fenêtre, message et son bouton. */
+async function launchView(page: Page) {
+  const message = page.locator(".nano-message");
+  return {
+    text: await editor(page).textContent(),
+    title: await page.title(),
+    message: await message.textContent(),
+    action: await page.locator(".nano-message-action").textContent(),
+  };
+}
 
 test("critère 9 : la version s'affiche sous « Nano Buro », en IBM Plex Mono 12 px, couleur texte discret", async ({
   page,
@@ -108,20 +164,75 @@ test("critère 6 : un fichier en cours d'ouverture compte comme travail commenc�
   await expect.poll(() => activity(page)).toEqual({ ...NOTHING, fileAction: true });
 });
 
-test("critère 6 : un document restauré depuis la copie de secours compte comme travail commencé", async ({
+test("H2, critère 1 : un document restauré n'empêche pas la mise à jour, et il est restauré à l'identique après le rechargement", async ({
   page,
 }) => {
-  await start(page);
+  // Remplace le test de H1 « un document restauré compte comme travail commencé » (changement autorisé, H2).
+  await relaunchWithDraft(page, "Brouillon élève 😀");
+  await expect(page.getByRole("status")).toHaveText(RECOVERED_MESSAGE);
+  expect(await activity(page)).toEqual(NOTHING);
+  const before = await launchView(page);
+  // Un clic donne à la page une activation utilisateur : le navigateur afficherait alors l'alerte avant fermeture.
   await editor(page).click();
-  await page.keyboard.type("Brouillon");
-  // La copie de secours doit être écrite avant le rechargement (correction autorisée pendant U1b).
-  await flushBackups(page);
-  await page.reload();
-  await expect(editor(page)).toContainText("Brouillon");
-  await expect
-    .poll(() => activity(page))
-    .toEqual(expect.objectContaining({ restoredFromBackup: true }));
+  const dialogs: string[] = [];
+  expect(await updateReloads(page, dialogs)).toBe(true);
+  // Critère 4 : même document, même contenu, même message ; pas d'alerte « Quitter le site ? ».
+  await expect(page.getByRole("status")).toHaveText(RECOVERED_MESSAGE);
+  expect(await launchView(page)).toEqual(before);
+  expect(dialogs).toEqual([]);
+  expect(await activity(page)).toEqual(NOTHING);
 });
+
+test("H2, critère 5 : toujours un seul rechargement au plus par lancement", async ({ page }) => {
+  await relaunchWithDraft(page, "Brouillon");
+  expect(await updateReloads(page)).toBe(true);
+  expect(await updateReloads(page)).toBe(false);
+  await expect(editor(page)).toHaveText("Brouillon");
+});
+
+test("H2, critère 2 : une frappe dans le document restauré reporte toujours la mise à jour, et l'alerte avant fermeture reste", async ({
+  page,
+}) => {
+  await relaunchWithDraft(page, "Brouillon");
+  await editor(page).press("End");
+  await page.keyboard.type(" suite");
+  await expect.poll(() => activity(page)).toEqual({ ...NOTHING, edited: true });
+  expect(await updateReloads(page)).toBe(false);
+  await expect(editor(page)).toHaveText("Brouillon suite");
+  // L'alerte avant fermeture protège toujours ces modifications.
+  const dialog = page.waitForEvent("dialog");
+  // Le rechargement reste en attente de la réponse à l'alerte, refusée ici : il n'aboutit pas.
+  const reload = page.reload().catch(() => undefined);
+  expect((await dialog).type()).toBe("beforeunload");
+  await (await dialog).dismiss();
+  await expect(editor(page)).toHaveText("Brouillon suite");
+  await page.close();
+  await reload;
+});
+
+for (const [name, permission, whileClosed, action] of [
+  ["le message « Enregistrer » du fichier retenu", "granted", undefined, "Enregistrer"],
+  ["le message « Autoriser » du fichier retenu", "prompt", undefined, "Autoriser"],
+  ["l'alerte « modifié ailleurs »", "granted", changeOnOtherComputer, "Enregistrer sous…"],
+] as const) {
+  test(`H2, critères 3 et 4 : ${name} n'empêche pas la mise à jour, et revient à l'identique, sans rien écrire`, async ({
+    page,
+  }) => {
+    await relaunchWithUnsavedChanges(page, permission, whileClosed);
+    await expect(page.locator(".nano-message-action")).toHaveText(action);
+    expect(await activity(page)).toEqual(NOTHING);
+    const before = await launchView(page);
+    const { files: filesBefore, remembered } = await fakeFiles(page);
+    expect(await updateReloads(page)).toBe(true);
+    await expect(page.locator(".nano-message-action")).toHaveText(action);
+    expect(await launchView(page)).toEqual(before);
+    // Le même fichier est retenu, et rien n'y a été écrit : les modifications sont dans la copie de secours.
+    const after = await fakeFiles(page);
+    expect(after.files).toEqual(filesBefore);
+    expect(after.remembered).toEqual(remembered);
+    expect(after.calls.filter((call) => call === "save" || call.startsWith("saveAs:"))).toEqual([]);
+  });
+}
 
 test("critère 6 : la question de la copie de secours affichée compte comme travail commencé", async ({
   page,

@@ -1,16 +1,36 @@
 // Hook React de la mise à jour au démarrage (ticket H1, critères 5 à 7) : enregistre le service worker
 // (vite-plugin-pwa, `registerType: "prompt"`) et applique une nouvelle version seulement si
 // `decideUpdate` (src/core/appUpdate.ts) le permet. Sinon, elle attend le lancement suivant.
+// Indique aussi à l'alerte avant fermeture (useBackup.ts) que la page se recharge pour une mise à jour (H2).
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { registerSW } from "virtual:pwa-register";
-import { decideUpdate, type LaunchActivity } from "../core/appUpdate";
+import { decideUpdate, hasStartedWork, type LaunchActivity } from "../core/appUpdate";
 import { hasReloadedForUpdate, markReloadedForUpdate } from "../storage/launchMarker";
 
 declare global {
   interface Window {
-    /** Signes de travail commencé, exposés aux tests Playwright en développement seulement. */
-    __nanoLaunch?: { activity: () => LaunchActivity };
+    /** Exposé aux tests Playwright en développement seulement. */
+    __nanoLaunch?: {
+      /** Signes de travail commencé depuis le lancement. */
+      activity: () => LaunchActivity;
+      /** Fait comme si une nouvelle version était prête : rechargement si `decideUpdate` le permet (H2). */
+      simulateUpdate: () => void;
+    };
   }
+}
+
+/** Vrai entre la décision de recharger pour une mise à jour et le rechargement lui-même (H2). */
+let reloadingForUpdate = false;
+
+/**
+ * Vrai si la page se recharge pour appliquer une nouvelle version, sans travail commencé (H2).
+ * L'alerte avant fermeture n'est alors pas affichée : un document restauré a des modifications non
+ * enregistrées dans le fichier, mais elles sont dans la copie de secours, et le rechargement le restaure.
+ * INVARIANT : redevient faux dès qu'un signe de travail commencé apparaît, même si le rechargement
+ * n'a pas encore eu lieu (le service worker peut tarder à prendre la main).
+ */
+export function isReloadingForUpdate(): boolean {
+  return reloadingForUpdate;
 }
 
 /**
@@ -39,6 +59,7 @@ export function useAppUpdate(activity: LaunchActivity, documentLoaded: boolean) 
       window.location.reload();
     } else if (decide(true) === "reload" && markReloadedForUpdate()) {
       // Une autre fenêtre a installé la nouvelle version et celle-ci n'a rien de commencé.
+      reloadingForUpdate = true;
       window.location.reload();
     }
   });
@@ -58,10 +79,24 @@ export function useAppUpdate(activity: LaunchActivity, documentLoaded: boolean) 
     // Le souvenir est écrit avant le rechargement ; s'il ne peut pas l'être, on attend le lancement suivant.
     if (!markReloadedForUpdate()) return;
     applying.current = true;
+    reloadingForUpdate = true;
     void applyUpdate.current?.();
   }, [updateReady, documentLoaded, activity]);
 
+  // Travail commencé avant le rechargement : l'alerte avant fermeture protège de nouveau (H2).
   useEffect(() => {
-    if (import.meta.env.DEV) window.__nanoLaunch = { activity: () => activity };
+    if (hasStartedWork(activity)) reloadingForUpdate = false;
+  }, [activity]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    window.__nanoLaunch = {
+      activity: () => activity,
+      // Même chemin qu'en production : `onNeedRefresh`, puis `updateSW(true)`, qui recharge la page.
+      simulateUpdate: () => {
+        applyUpdate.current = () => Promise.resolve(window.location.reload());
+        setUpdateReady(true);
+      },
+    };
   }, [activity]);
 }
