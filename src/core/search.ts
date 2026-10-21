@@ -46,13 +46,14 @@ export function findInText(text: string, query: string, caseSensitive: boolean):
 
 /**
  * Texte de la barre de recherche : « 3 sur 12 », « Aucun résultat », ou rien sans texte cherché
- * (critère 2).
+ * (critère 2). « Fin du document » quand « Remplacer » a traité la dernière occurrence.
  * @param active indice de l'occurrence active, ou -1
  */
 export function searchStatus(query: string, active: number, total: number): string {
   if (query === "") return "";
   if (total === 0) return "Aucun résultat";
-  return `${String(Math.max(active, 0) + 1)} sur ${String(total)}`;
+  if (active < 0) return "Fin du document";
+  return `${String(active + 1)} sur ${String(total)}`;
 }
 
 /** Texte affiché après « Tout remplacer » : « 12 remplacements », « 1 remplacement » (critère 6). */

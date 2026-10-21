@@ -198,6 +198,10 @@ describe("T2.1 : remplacer", () => {
     replaceCurrent(target, "chaton");
     replaceCurrent(target, "chaton");
     expect(target.state.doc.textContent).toBe("chaton chaton");
+    // Cliqué encore : plus aucune occurrence après, rien ne change (relecture de la PR).
+    expect(replaceCurrent(target, "chaton")).toBe(false);
+    expect(replaceCurrent(target, "chaton")).toBe(false);
+    expect(target.state.doc.textContent).toBe("chaton chaton");
     target.destroy();
     const again = start(docOf(textNode("chat chat")));
     setSearch(again, "chat", false);
@@ -210,5 +214,17 @@ describe("T2.1 : remplacer", () => {
     setSearch(target, "😀", false);
     expect(replaceAll(target, "🎉")).toBe(2);
     expect(target.state.doc.textContent).toBe("Café 🎉 et café 🎉");
+  });
+});
+
+describe("T2.1 : remplacer, cas relevés en relecture", () => {
+  it("« a a », chercher « a » et remplacer par « ab » plusieurs fois ne boucle pas", () => {
+    const target = start(docOf(textNode("a a")));
+    setSearch(target, "a", false);
+    for (let i = 0; i < 5; i += 1) replaceCurrent(target, "ab");
+    expect(target.state.doc.textContent).toBe("ab ab");
+    expect(searchState(target).active).toBe(-1);
+    goToMatch(target, 1);
+    expect(searchState(target).active).toBe(0);
   });
 });

@@ -5,6 +5,7 @@ import { useEditorState } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { replacementStatus, searchStatus } from "../core/search";
 import { focusEditor } from "../editor/focus";
+import { isMacPlatform } from "../editor/platform";
 import {
   clearSearch,
   goToMatch,
@@ -22,6 +23,20 @@ export interface SearchRequest {
   mode: SearchMode;
   /** Texte sélectionné dans le document au moment du raccourci, repris dans le champ (critère 1). */
   seed: string | null;
+}
+
+/**
+ * Annuler (`undo`) ou rétablir (`redo`) demandé au clavier, à la touche physique : Ctrl/Cmd+Z,
+ * Ctrl/Cmd+Shift+Z, et Ctrl+Y hors Mac. null pour une autre touche.
+ */
+function undoShortcut(event: React.KeyboardEvent): "undo" | "redo" | null {
+  const mac = isMacPlatform();
+  const mod = mac ? event.metaKey : event.ctrlKey;
+  const other = mac ? event.ctrlKey : event.metaKey;
+  if (!mod || other || event.altKey) return null;
+  if (event.code === "KeyZ") return event.shiftKey ? "redo" : "undo";
+  if (event.code === "KeyY" && !mac && !event.shiftKey) return "redo";
+  return null;
 }
 
 /**
@@ -48,6 +63,9 @@ export function SearchBar({
   const [replaced, setReplaced] = useState<number | null>(null);
   const queryRef = useRef<HTMLInputElement | null>(null);
   const replaceRef = useRef<HTMLInputElement | null>(null);
+  // Vrai après un remplacement, jusqu'à la prochaine frappe dans un champ : Ctrl/Cmd+Z annule alors
+  // le remplacement dans le document, et non la frappe du champ (critère 6, relecture de la PR).
+  const undoInDocument = useRef(false);
   const { active, total } = useEditorState({
     editor,
     selector: ({ editor: current }) => {
@@ -99,9 +117,16 @@ export function SearchBar({
         role="search"
         aria-label="Rechercher dans le document"
         onKeyDown={(event) => {
-          if (event.key !== "Escape") return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            close();
+            return;
+          }
+          const history = undoInDocument.current ? undoShortcut(event) : null;
+          if (!history) return;
           event.preventDefault();
-          close();
+          if (history === "undo") editor.commands.undo();
+          else editor.commands.redo();
         }}
       >
         <div className="nano-search-line">
@@ -113,6 +138,7 @@ export function SearchBar({
             placeholder="Rechercher"
             value={query}
             onChange={(event) => {
+              undoInDocument.current = false;
               setReplaced(null);
               setQuery(event.target.value);
             }}
@@ -190,12 +216,15 @@ export function SearchBar({
               aria-label="Remplacer par"
               placeholder="Remplacer par"
               value={replacement}
-              onChange={(event) => setReplacement(event.target.value)}
+              onChange={(event) => {
+                undoInDocument.current = false;
+                setReplacement(event.target.value);
+              }}
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
                 event.preventDefault();
                 setReplaced(null);
-                replaceCurrent(editor, replacement);
+                undoInDocument.current = replaceCurrent(editor, replacement);
               }}
             />
             <button
@@ -205,7 +234,7 @@ export function SearchBar({
               onMouseDown={keepFocus}
               onClick={() => {
                 setReplaced(null);
-                replaceCurrent(editor, replacement);
+                undoInDocument.current = replaceCurrent(editor, replacement);
               }}
             >
               Remplacer
@@ -215,7 +244,11 @@ export function SearchBar({
               className="nano-search-text nano-search-primary"
               disabled={total === 0}
               onMouseDown={keepFocus}
-              onClick={() => setReplaced(replaceAll(editor, replacement))}
+              onClick={() => {
+                const count = replaceAll(editor, replacement);
+                undoInDocument.current = count > 0;
+                setReplaced(count);
+              }}
             >
               Tout remplacer
             </button>

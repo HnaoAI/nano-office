@@ -242,9 +242,11 @@ test("critère 6 : Tout remplacer est une seule étape d'annulation, et affiche 
   await bar(page).getByRole("button", { name: "Tout remplacer" }).click();
   await expect(status(page)).toHaveText("12 remplacements");
   await expect(editor(page)).toHaveText("Dupont ".repeat(12).trim());
-  await editor(page).click();
+  // Le focus est resté dans la barre : Ctrl/Cmd+Z y annule le remplacement du document.
   await page.keyboard.press("ControlOrMeta+z");
   await expect(editor(page)).toHaveText("Dupond ".repeat(12).trim());
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(editor(page)).toHaveText("Dupont ".repeat(12).trim());
 });
 
 test("critère 7 : la recherche couvre les titres, les listes et les cellules de tableau", async ({

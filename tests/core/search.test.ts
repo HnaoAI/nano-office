@@ -23,6 +23,7 @@ describe("T2.1 : recherche dans un texte", () => {
     expect(searchStatus("mot", 2, 12)).toBe("3 sur 12");
     expect(searchStatus("mot", -1, 0)).toBe("Aucun résultat");
     expect(searchStatus("", -1, 0)).toBe("");
+    expect(searchStatus("mot", -1, 3)).toBe("Fin du document");
   });
 
   it("critère 6 : « 12 remplacements »", () => {

@@ -28,6 +28,8 @@ interface SearchMeta {
   caseSensitive?: boolean;
   /** Occurrence active : la première qui commence à cette position ou après (sinon la première). */
   activeFrom?: number;
+  /** Avec `activeFrom` : sans occurrence après cette position, aucune n'est active (pas de retour au début). */
+  noWrap?: boolean;
   /** Occurrence active, par son indice. */
   active?: number;
   scroll?: boolean;
@@ -61,10 +63,10 @@ export function findInDocument(
   return matches;
 }
 
-function firstFrom(matches: TextMatch[], position: number): number {
+function firstFrom(matches: TextMatch[], position: number, wrap = true): number {
   if (matches.length === 0) return -1;
   const index = matches.findIndex((match) => match.from >= position);
-  return index >= 0 ? index : 0;
+  return index >= 0 ? index : wrap ? 0 : -1;
 }
 
 function decorate(doc: ProseMirrorNode, matches: TextMatch[], active: number): DecorationSet {
@@ -99,11 +101,13 @@ function nextState(tr: Transaction, previous: SearchState): SearchState {
   if (meta?.active !== undefined) {
     active = matches.length === 0 ? -1 : (meta.active + matches.length) % matches.length;
   } else if (meta?.activeFrom !== undefined) {
-    active = firstFrom(matches, meta.activeFrom);
+    active = firstFrom(matches, meta.activeFrom, !meta.noWrap);
   } else {
     // Document modifié : l'occurrence active reste la même, ou la suivante si elle a disparu.
+    // Position prise à gauche (-1) : une annulation de Yjs remplace tout le paragraphe, et une
+    // position prise à droite partirait à sa fin, sur l'occurrence d'un autre paragraphe.
     const current = previous.matches[previous.active];
-    active = firstFrom(matches, current ? tr.mapping.map(current.from) : 0);
+    active = firstFrom(matches, current ? tr.mapping.map(current.from, -1) : 0);
   }
   return {
     query,
@@ -173,7 +177,9 @@ function replaceMatch(tr: Transaction, match: TextMatch, replacement: string): v
 
 /**
  * Remplace l'occurrence active, puis passe à la suivante (critère 4). La suivante est cherchée après
- * le texte inséré : un remplacement qui contient le texte cherché ne boucle pas (critère 8).
+ * le texte inséré, sans revenir au début du document : un remplacement qui contient le texte cherché
+ * ne boucle pas, même cliqué plusieurs fois (critère 8). Après la dernière, aucune n'est active ;
+ * Entrée repart du début.
  * @returns faux sans occurrence active
  */
 export function replaceCurrent(editor: Editor, replacement: string): boolean {
@@ -182,7 +188,10 @@ export function replaceCurrent(editor: Editor, replacement: string): boolean {
   if (!match) return false;
   const tr = editor.state.tr;
   replaceMatch(tr, match, replacement);
-  tr.setMeta(searchPluginKey, { activeFrom: match.from + replacement.length } satisfies SearchMeta);
+  tr.setMeta(searchPluginKey, {
+    activeFrom: match.from + replacement.length,
+    noWrap: true,
+  } satisfies SearchMeta);
   editor.view.dispatch(tr);
   selectActive(editor);
   return true;
