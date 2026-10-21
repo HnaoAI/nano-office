@@ -1,14 +1,26 @@
-// Format de fichier `.nano` version 1 : sérialisation et lecture, sans accès au navigateur.
+// Format de fichier `.nano` version 2 (T1.9) : sérialisation et lecture, sans accès au navigateur.
+// Lit aussi la version 1, migrée par src/core/migrations.ts (critère 7).
 // Dépend de Yjs, de @tiptap/y-tiptap (conversions fragment Yjs <-> JSON) et du schéma partagé.
 import * as Y from "yjs";
 import { prosemirrorJSONToYDoc, yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import { base64ToBytes, bytesToBase64 } from "./base64";
+import {
+  hasStoredImages,
+  imageRefs,
+  isImageHash,
+  isImageType,
+  putImage,
+  readImage,
+  removeAllImages,
+} from "./images";
+import { migrateToCurrent } from "./migrations";
 import { documentSchema, YJS_FRAGMENT_NAME } from "./schema";
 import {
   NANO_FORMAT,
   NANO_FORMAT_VERSION,
   type DocumentJson,
-  type NanoFileV1,
+  type NanoFileImage,
+  type NanoFileV2,
   type ParseResult,
 } from "./types";
 
@@ -23,19 +35,59 @@ export function contentOf(ydoc: Y.Doc): DocumentJson {
 }
 
 /**
- * Sérialise un document au format `.nano` version 1 (texte JSON à écrire en UTF-8).
+ * Version base64 de chaque contenu d'image déjà enregistré, pour ne pas la recalculer à chaque
+ * sauvegarde automatique d'un document de 20 photos (T1.9, critère 11). Clé : l'objet `data` rangé
+ * dans le Y.Doc, toujours le même pour une même image (voir `readImage`).
+ */
+const base64Cache = new WeakMap<Uint8Array, string>();
+
+/** Contenu d'une image en base64, mis en cache. */
+function imageBase64(data: Uint8Array): string {
+  let encoded = base64Cache.get(data);
+  if (encoded === undefined) {
+    encoded = bytesToBase64(data);
+    base64Cache.set(data, encoded);
+  }
+  return encoded;
+}
+
+/**
+ * État Yjs du document, sans le contenu des images (T1.9, critère 6) : elles sont retirées d'une
+ * copie du Y.Doc, dont Yjs efface alors le contenu supprimé ; seule la trace de leur retrait reste.
+ * Le Y.Doc du document n'est pas modifié : ses images restent dans la copie de secours.
+ */
+function encodeWithoutImages(ydoc: Y.Doc): Uint8Array {
+  const update = Y.encodeStateAsUpdate(ydoc);
+  if (!hasStoredImages(ydoc)) return update;
+  const copy = new Y.Doc();
+  Y.applyUpdate(copy, update);
+  removeAllImages(copy);
+  return Y.encodeStateAsUpdate(copy);
+}
+
+/**
+ * Sérialise un document au format `.nano` version 2 (texte JSON à écrire en UTF-8).
+ * Les images utilisées par `content` sont rangées une seule fois dans `images` ; une image retirée
+ * du document, encore gardée dans le Y.Doc pour Ctrl/Cmd+Z, n'est pas enregistrée (T1.9, critère 6).
  * INVARIANT : `content` est calculé ici à partir du `ydoc`, jamais fourni par l'appelant,
  * pour que les deux ne puissent pas diverger (T0a, critère 5). `parseDocument` s'appuie dessus.
  * @param doc.id identifiant du document, conservé tel quel
  * @param doc.ydoc état du document, lu sans être modifié
  */
 export function serializeDocument(doc: { id: string; ydoc: Y.Doc }): string {
-  const file: NanoFileV1 = {
+  const content = contentOf(doc.ydoc);
+  const images: Record<string, NanoFileImage> = {};
+  for (const hash of imageRefs(content)) {
+    const image = readImage(doc.ydoc, hash);
+    if (image) images[hash] = { type: image.type, data: imageBase64(image.data) };
+  }
+  const file: NanoFileV2 = {
     format: NANO_FORMAT,
     version: NANO_FORMAT_VERSION,
     id: doc.id,
-    content: contentOf(doc.ydoc),
-    ydoc: bytesToBase64(Y.encodeStateAsUpdate(doc.ydoc)),
+    content,
+    ydoc: bytesToBase64(encodeWithoutImages(doc.ydoc)),
+    images,
   };
   return JSON.stringify(file);
 }
@@ -47,6 +99,9 @@ export function serializeDocument(doc: { id: string; ydoc: Y.Doc }): string {
  * un document vide ou partiel, son contenu relu est comparé au `content` enregistré :
  * s'ils diffèrent, le document est reconstruit à partir de `content` (T0a, critères 7 et 8).
  * Si `content` est absent ou abîmé, le fichier est refusé avec `corrupted`.
+ * Un fichier version 1 est d'abord migré en version 2 (T1.9, critère 7). Les images utilisées par le
+ * document sont ensuite rangées dans le Y.Doc ; une image absente ou abîmée est simplement
+ * manquante, le reste du document s'ouvre (critère 9).
  *
  * INVARIANT : crée toujours un nouveau Y.Doc. Appliquer un état sur un Y.Doc déjà rempli
  * additionnerait les deux contenus au lieu de les remplacer (voir CLAUDE.md).
@@ -62,18 +117,18 @@ export function parseDocument(text: string): ParseResult {
   if (!isRecord(data) || data.format !== NANO_FORMAT || !Number.isInteger(data.version)) {
     return { ok: false, error: "not-nano" };
   }
-  // Une future version 2 ajoutera ici la migration testée des fichiers version 1 (voir CLAUDE.md).
-  if (data.version !== NANO_FORMAT_VERSION) {
+  const file = migrateToCurrent(data, NANO_FORMAT_VERSION);
+  if (!file) {
     return { ok: false, error: "unsupported-version" };
   }
-  if (typeof data.id !== "string" || data.id.trim() === "") {
+  if (typeof file.id !== "string" || file.id.trim() === "") {
     return { ok: false, error: "not-nano" };
   }
 
-  const id = data.id;
+  const id = file.id;
   const version = NANO_FORMAT_VERSION;
-  const fromYdoc = readYdoc(data.ydoc);
-  const content = readContent(data.content);
+  const fromYdoc = readYdoc(file.ydoc);
+  const content = readContent(file.content);
 
   // INVARIANT : un `content` abîmé ou absent renvoie toujours `corrupted`, même si le `ydoc` se lit.
   // Sans `content`, rien ne prouve que le `ydoc` est complet, et l'ouvrir permettrait d'enregistrer
@@ -81,15 +136,32 @@ export function parseDocument(text: string): ParseResult {
   if (!content) {
     return { ok: false, error: "corrupted" };
   }
-  if (fromYdoc && isSameJson(contentOf(fromYdoc), content)) {
-    return { ok: true, id, ydoc: fromYdoc, version };
-  }
-  return {
-    ok: true,
-    id,
-    ydoc: prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME),
-    version,
-  };
+  const ydoc =
+    fromYdoc && isSameJson(contentOf(fromYdoc), content)
+      ? fromYdoc
+      : prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME);
+  addFileImages(ydoc, content, file.images);
+  return { ok: true, id, ydoc, version };
+}
+
+/**
+ * Range dans le Y.Doc neuf les images de `images` utilisées par `content`. Une entrée absente, d'un
+ * format inconnu ou au base64 illisible est ignorée : l'image s'affiche « Image manquante » (critère 9).
+ */
+function addFileImages(ydoc: Y.Doc, content: DocumentJson, images: unknown): void {
+  if (!isRecord(images)) return;
+  ydoc.transact(() => {
+    for (const hash of imageRefs(content)) {
+      const entry = images[hash];
+      if (!isImageHash(hash) || !isRecord(entry) || !isImageType(entry.type)) continue;
+      if (typeof entry.data !== "string") continue;
+      try {
+        putImage(ydoc, hash, { type: entry.type, data: base64ToBytes(entry.data) });
+      } catch {
+        // Base64 abîmé : l'image reste manquante.
+      }
+    }
+  });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

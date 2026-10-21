@@ -2,6 +2,7 @@
 // adaptés aux règles de Nano Buro. Utilisés par le schéma partagé (src/core/schema.ts).
 import Document from "@tiptap/extension-document";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
+import { IMAGE_GROUP } from "./imageSchema";
 
 /**
  * Groupe propre aux tableaux, à la place du groupe « block » de Tiptap.
@@ -11,8 +12,10 @@ import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table
  */
 export const TABLE_GROUP = "documentTable";
 
-/** Document : des blocs et des tableaux (T1.8). Un document du lot A reste valide. */
-export const DocumentWithTables = Document.extend({ content: `(block | ${TABLE_GROUP})+` });
+/** Document : des blocs, des tableaux (T1.8) et des images (T1.9). Un document du lot A reste valide. */
+export const DocumentWithTables = Document.extend({
+  content: `(block | ${TABLE_GROUP} | ${IMAGE_GROUP})+`,
+});
 
 /**
  * Tableau : toute la largeur de la page, colonnes égales (src/ui/styles/tables.css), sans

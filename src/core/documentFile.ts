@@ -3,6 +3,7 @@
 // titre de la fenêtre et nom du document affiché (U1a).
 import * as Y from "yjs";
 import { contentOf, createDocumentId, parseDocument } from "./fileFormat";
+import { IMAGE_NODE } from "./images";
 import { DEFAULT_FILE_NAME, type DocumentJson, type OpenDocument, type ParseError } from "./types";
 
 export { DEFAULT_FILE_NAME };
@@ -75,11 +76,12 @@ export function markSaved(
 
 /**
  * Vrai si le document a des modifications non enregistrées.
- * Un document jamais enregistré n'en a que s'il contient du texte : le paragraphe vide créé par
- * l'éditeur ne compte pas, pour ne pas demander de confirmation sur une page blanche.
+ * Un document jamais enregistré n'en a que s'il contient du texte ou une image (T1.9, critère 8) :
+ * le paragraphe vide créé par l'éditeur ne compte pas, pour ne pas demander de confirmation sur une
+ * page blanche.
  */
 export function hasUnsavedChanges(document: OpenDocument): boolean {
-  if (document.savedSnapshot === null) return hasText(contentOf(document.ydoc));
+  if (document.savedSnapshot === null) return hasContent(contentOf(document.ydoc));
   return contentSnapshot(document.ydoc) !== document.savedSnapshot;
 }
 
@@ -98,7 +100,11 @@ export function documentTitle(fileName: string | null): string {
   return fileName.replace(/\.nano$/i, "") || fileName;
 }
 
-/** Indique si un document contient au moins un caractère de texte, à n'importe quelle profondeur. */
-function hasText(node: DocumentJson): boolean {
-  return Boolean(node.text) || (node.content ?? []).some(hasText);
+/**
+ * Indique si un document contient au moins un caractère de texte ou une image, à n'importe quelle
+ * profondeur. Une image seule compte : sinon, une page qui n'a qu'une photo ne serait ni restaurée
+ * au rechargement ni protégée par l'alerte avant fermeture (T1.9, critère 8).
+ */
+function hasContent(node: DocumentJson): boolean {
+  return Boolean(node.text) || node.type === IMAGE_NODE || (node.content ?? []).some(hasContent);
 }
