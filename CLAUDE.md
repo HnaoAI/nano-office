@@ -127,6 +127,7 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **D. Images** | T1.9 images, avec le format `.nano` version 2 | #46 |
 | **E. Écrire plus vite** | T2.1 rechercher et remplacer, T2.2 interligne, T2.3 barré, T2.4 majuscules et minuscules | #55, #56, #57, #58 |
 | **F. La page** | T2.5 page A4 et marges, T2.6 imprimer et PDF, T2.7 exporter en Word | #59, #60, #61 |
+| **H. Prêt pour la famille** | H3 fenêtre de mise à jour, A1 aide intégrée | #77, #78 |
 | **G. Assistant** | T3.1 assistant IA facultatif (corriger, traduire), avec choix des modifications | #66 |
 
 ### Quand s'arrêter pour demander au product owner
@@ -200,3 +201,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-21 : Mise en page (T2.5) rangée dans la `Y.Map` « page » du Y.Doc, car y-tiptap ignore les attributs du nœud `doc`. Dans le fichier, elle est écrite en attributs du nœud `doc` de `content`, sans changement de version. Le bouton « Mise en page… » est en fin de barre de mise en forme, pour que l'en-tête tienne sur une ligne.
 - 2026-10-21 : La licence Zlib est ajoutée aux licences acceptées, pour tous les projets : elle est aussi permissive que MIT. Elle permet `pako`, utilisé par la bibliothèque `docx` de l'export Word (T2.7).
 - 2026-10-21 : Assistant IA facultatif (T3.1, lot G, après le lot F). Les règles produit 1 et 2 sont modifiées : il est désactivé par défaut, invisible tant qu'il est éteint, et n'envoie que le texte sélectionné, après un clic, au fournisseur choisi (Claude ou Gemini), avec la clé d'API de l'utilisateur, gardée sur l'ordinateur et jamais dans un fichier. Chaque modification proposée s'accepte ou se refuse une par une, comme dans Cursor. Un abonnement claude.ai ou Gemini ne peut pas être relié à une autre application : il faut une clé d'API.
+- 2026-10-21 : Lot H « prêt pour la famille », à faire après M1 : une aide intégrée et hors ligne (A1), et une fenêtre « Nano Buro se met à jour » avec un N qui tourne, qui bloque l'application pendant la mise à jour au lancement (H3). Elle remplace la décision de H1 « pas de bandeau de mise à jour ». Elle ne s'affiche jamais une fois le travail commencé, et se débloque d'elle-même au bout de 20 s. Ordre : M1, lot H, T2.8, T2.9, puis le lot G.
