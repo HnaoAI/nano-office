@@ -49,6 +49,12 @@ E. Test Playwright : dans un document de 10 pages, faire défiler jusqu'en bas, 
    Aucun test ne change, à part les chemins d'import. Mettre à jour les README des dossiers.
 5. Passer `actions/checkout` et `actions/setup-node` à leur version actuelle (v5 ou suivante), dans `ci.yml`
    et `deploy.yml`. La CI et la publication restent vertes.
+5 bis. **CI lisible et fiable** : la CI de `main` a échoué au hasard sur un test Playwright après la fusion du lot G
+   (2026-10-22), ce qui a bloqué la publication. Ajouter le rapport `github` de Playwright à la CI
+   (`--reporter=github,line`), pour que le nom du test en échec apparaisse dans les annotations. Puis trouver le test
+   instable, en relançant la suite plusieurs fois (`--repeat-each`), et le corriger par une attente déterministe,
+   sans changer ce qu'il vérifie, comme pour le test des polices au lot F. Pas de nouvel essai automatique (`retries`),
+   qui cacherait le défaut.
 6. Vérifier qu'aucun autre fichier de `src/` ne dépasse 300 lignes. Sinon, le signaler dans la PR, sans le découper.
 
 ## Vérification manuelle
