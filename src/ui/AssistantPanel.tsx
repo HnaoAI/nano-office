@@ -1,24 +1,15 @@
 // Panneau de l'assistant sous la barre de mise en forme (T3.1), au style des messages (messages.css) :
 // demande en cours, message d'erreur, barre des modifications proposées (critère 8) et panneau de
-// traduction (critère 12). Les boutons d'une modification s'affichent à côté d'elle (`SuggestionActions`).
+// traduction (critère 12). Les boutons d'une modification s'affichent à côté d'elle (SuggestionActions.tsx,
+// découpé en M1).
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { insertParagraphsAfter, replaceWithParagraphs } from "../editor/assistantEdits";
-import {
-  acceptSuggestions,
-  goToSuggestion,
-  rejectSuggestions,
-  suggestionState,
-} from "../editor/suggestions";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CloseIcon,
-  SuggestionIcon,
-  WarningIcon,
-} from "./icons";
+import { acceptSuggestions, goToSuggestion, rejectSuggestions } from "../editor/suggestionCommands";
+import { suggestionState } from "../editor/suggestions";
+import { ChevronDownIcon, ChevronUpIcon, CloseIcon, SuggestionIcon, WarningIcon } from "./icons";
+import { SuggestionActions } from "./SuggestionActions";
 import type { AssistantStatus, Translation } from "./useAssistant";
 
 const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -157,70 +148,6 @@ function CloseButton({ label, onClick }: { label: string; onClick: () => void })
     >
       <CloseIcon />
     </button>
-  );
-}
-
-/**
- * Boutons « Accepter » et « Refuser » de la modification choisie, juste sous elle dans le texte
- * (critère 8). Ils suivent la page quand elle défile. Un clic sur une autre modification la choisit.
- */
-function SuggestionActions({ editor }: { editor: Editor }) {
-  const active = useEditorState({
-    editor,
-    selector: ({ editor: current }) => {
-      const state = suggestionState(current);
-      return state.suggestions.find((suggestion) => suggestion.id === state.active) ?? null;
-    },
-  });
-  // Redessine à chaque défilement ou changement de taille : la position vient de l'éditeur.
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const redraw = () => setTick((tick) => tick + 1);
-    window.addEventListener("scroll", redraw, true);
-    window.addEventListener("resize", redraw);
-    return () => {
-      window.removeEventListener("scroll", redraw, true);
-      window.removeEventListener("resize", redraw);
-    };
-  }, []);
-  if (!active || editor.isDestroyed) return null;
-  let position: { top: number; left: number };
-  try {
-    const coords = editor.view.coordsAtPos(active.from);
-    position = { top: coords.bottom + 6, left: Math.max(8, coords.left - 4) };
-  } catch {
-    return null;
-  }
-  const label =
-    active.removed && active.insert
-      ? `« ${active.removed} » remplacé par « ${active.insert} »`
-      : active.insert
-        ? `« ${active.insert} » ajouté`
-        : `« ${active.removed} » retiré`;
-  return (
-    <div
-      className="nano-suggestion-actions"
-      role="group"
-      aria-label={`Modification choisie : ${label}`}
-      style={position}
-    >
-      <button
-        type="button"
-        onMouseDown={keepFocus}
-        onClick={() => acceptSuggestions(editor, [active.id])}
-      >
-        <CheckIcon />
-        Accepter
-      </button>
-      <button
-        type="button"
-        onMouseDown={keepFocus}
-        onClick={() => rejectSuggestions(editor, [active.id])}
-      >
-        <CloseIcon />
-        Refuser
-      </button>
-    </div>
   );
 }
 

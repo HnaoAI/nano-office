@@ -18,9 +18,9 @@ import {
   goToSuggestion,
   rejectSuggestions,
   showSuggestions,
-  suggestionState,
   suggestionsFor,
-} from "../../src/editor/suggestions";
+} from "../../src/editor/suggestionCommands";
+import { suggestionState } from "../../src/editor/suggestions";
 import { createTestEditor, docOf, textNode } from "./editorHelpers";
 
 let editor: Editor | null = null;
