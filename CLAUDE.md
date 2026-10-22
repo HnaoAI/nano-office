@@ -128,8 +128,8 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **D. Images** | T1.9 images, avec le format `.nano` version 2 | #46 |
 | **E. Écrire plus vite** | T2.1 rechercher et remplacer, T2.2 interligne, T2.3 barré, T2.4 majuscules et minuscules | #55, #56, #57, #58 |
 | **F. La page** | T2.5 page A4 et marges, T2.6 imprimer et PDF, T2.7 exporter en Word | #59, #60, #61 |
-| **H. Prêt pour la famille** | H3 fenêtre de mise à jour, A1 aide intégrée | #77, #78 |
 | **G. Assistant** | T3.1 assistant IA facultatif (corriger, traduire), avec choix des modifications | #66 |
+| **H. Prêt pour la famille** | H3 fenêtre de mise à jour, A1 aide intégrée | #77, #78 |
 
 ### Quand s'arrêter pour demander au product owner
 
