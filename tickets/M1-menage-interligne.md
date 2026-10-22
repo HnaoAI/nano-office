@@ -45,6 +45,7 @@ E. Test Playwright : dans un document de 10 pages, faire défiler jusqu'en bas, 
    - `src/ui/useDocumentFile.ts` (349 lignes) ;
    - `src/core/wordBlocks.ts` (349 lignes) ;
    - `src/editor/images.ts` (318 lignes), en séparant le collage et le dépôt, comme proposé au lot D.
+   - `src/editor/suggestions.ts` (310 lignes) et `src/ui/AssistantPanel.tsx` (302 lignes), du lot G, s'il est fusionné.
    Aucun test ne change, à part les chemins d'import. Mettre à jour les README des dossiers.
 5. Passer `actions/checkout` et `actions/setup-node` à leur version actuelle (v5 ou suivante), dans `ci.yml`
    et `deploy.yml`. La CI et la publication restent vertes.
