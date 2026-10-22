@@ -12,8 +12,8 @@ jobs:
   verifications:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         if: hashFiles('package.json') != ''
         with:
           node-version-file: .nvmrc
@@ -33,6 +33,8 @@ jobs:
       - name: Navigateur Chromium pour Playwright
         if: hashFiles('package.json') != ''
         run: npx playwright install --with-deps chromium
+      # Rapport « github » : le nom d'un test en échec apparaît dans les annotations de la CI (M1).
+      # Pas de nouvel essai automatique (retries), qui cacherait un test instable.
       - name: Tests d'interface (Playwright)
         if: hashFiles('package.json') != ''
-        run: npm run test:e2e
+        run: npm run test:e2e -- --reporter=github,line
