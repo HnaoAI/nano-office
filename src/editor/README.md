@@ -26,3 +26,5 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1), barré Ctrl/Cmd+Shift+X (T2.3)
 - `userEdits.ts` : reconnaît une modification faite par l'utilisateur, pour la mise à jour au démarrage (`isUserEdit`, H1)
 - `devTestHook.ts` : expose le contenu du Y.Doc aux tests Playwright, en développement seulement
+- `assistantEdits.ts` : assistant (T3.1) : texte sélectionné paragraphe par paragraphe, plages suivies pendant une demande, une étape d'annulation, traduction qui remplace la sélection ou s'insère après (`selectedParagraphs`, `watchRanges`, `replaceWithParagraphs`, `insertParagraphsAfter`)
+- `suggestions.ts` : corrections proposées par l'assistant (T3.1) : plugin qui les affiche par des décorations, hors du document ; accepter, refuser, tout accepter en une annulation, navigation, disparition si le texte change (`Suggestions`, `showSuggestions`, `acceptSuggestions`, `rejectSuggestions`)

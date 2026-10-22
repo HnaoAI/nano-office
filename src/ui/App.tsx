@@ -1,10 +1,13 @@
 // Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché,
-// boîte « Mise en page » (T2.5) et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+// boîtes « Mise en page » (T2.5) et « Réglages » (T3.1), et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+import { useCallback, useState } from "react";
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
 import { MessageBar } from "./MessageBar";
 import { PageSetupDialog } from "./PageSetupDialog";
+import { SettingsDialog } from "./SettingsDialog";
+import { useAssistantSettings } from "./useAssistantSettings";
 import { usePageSetupDialog } from "./usePageSetupDialog";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
@@ -21,6 +24,7 @@ import "./styles/images.css";
 import "./styles/search.css";
 import "./styles/messages.css";
 import "./styles/dialog.css";
+import "./styles/assistant.css";
 import "./styles/print.css";
 
 /**
@@ -56,6 +60,10 @@ export function App() {
   usePrintShortcut(print);
   const exportWord = useWordExport(document, showMessage, noteFileAction);
   const pageDialog = usePageSetupDialog(document?.ydoc ?? null, noteEdit, noteFileAction);
+  // Réglages de l'assistant (T3.1), gardés sur cet ordinateur, communs à tous les documents.
+  const assistant = useAssistantSettings();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
@@ -74,7 +82,12 @@ export function App() {
   }
   return (
     <div className="nano-app">
-      <AppHeader fileName={document.fileName} saveState={saveState} actions={actions} />
+      <AppHeader
+        fileName={document.fileName}
+        saveState={saveState}
+        actions={actions}
+        onSettings={() => setSettingsOpen(true)}
+      />
       {message && (
         <MessageBar
           message={message}
@@ -99,6 +112,7 @@ export function App() {
           onEdit={noteEdit}
           onImageRejected={imageRejected}
           onPageSetup={pageDialog.show}
+          assistant={assistant.config}
         />
       )}
       {pageDialog.current && !pending && (
@@ -106,6 +120,18 @@ export function App() {
           current={pageDialog.current}
           onApply={pageDialog.apply}
           onCancel={pageDialog.close}
+        />
+      )}
+      {settingsOpen && !pending && (
+        <SettingsDialog
+          settings={assistant.settings}
+          keys={assistant.keys}
+          onSave={(settings, keys) => {
+            assistant.save(settings, keys);
+            closeSettings();
+          }}
+          onForgetKeys={assistant.forgetKeys}
+          onCancel={closeSettings}
         />
       )}
       <footer className="nano-footer">
