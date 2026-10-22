@@ -11,11 +11,14 @@ const HEIGHT_VARIABLE = "--sticky-top-height";
 
 /**
  * Partie réellement figée : tout le haut (`.nano-top`), ou seulement le message et la barre
- * (`.nano-top-tools`) dans une fenêtre très basse (critère C). Null si rien n'est figé (impression).
+ * (`.nano-top-tools`) dans une fenêtre très basse ou étroite (critère C). Null si rien n'est figé.
  */
 function stuckPart(top: HTMLElement | null, tools: HTMLElement | null): HTMLElement | null {
   for (const part of [top, tools]) {
-    if (part && getComputedStyle(part).position === "sticky") return part;
+    if (!part) continue;
+    // `display: contents` retire la boîte de `.nano-top` sans changer sa position calculée.
+    const style = getComputedStyle(part);
+    if (style.position === "sticky" && style.display !== "contents") return part;
   }
   return null;
 }
@@ -42,7 +45,7 @@ export function useStickyTop() {
     };
     update();
     // La hauteur change quand la barre passe sur deux lignes, qu'un message ou la recherche
-    // s'ouvre ; la partie figée change quand la fenêtre passe sous 500 px de haut.
+    // s'ouvre ; la partie figée change quand la fenêtre passe sous 500 px de haut ou 600 px de large.
     const observer = new ResizeObserver(update);
     for (const part of [topRef.current, toolsRef.current]) if (part) observer.observe(part);
     window.addEventListener("resize", update);

@@ -214,6 +214,16 @@ test("critère C : dans une fenêtre de moins de 500 px de haut, seule la barre 
   await expect(page.getByRole("banner")).not.toBeInViewport();
   await expect(formatBar(page)).toBeInViewport({ ratio: 1 });
   expect((await box(formatBar(page))).y).toBeLessThan(20);
+  // Le curseur et l'occurrence trouvée ne s'arrêtent pas sous la barre, même ici.
+  await page.keyboard.press("ControlOrMeta+End");
+  for (let line = 0; line < 20; line += 1) await page.keyboard.press("ArrowUp");
+  await expect.poll(async () => (await caretRect(page)).top >= (await barBottom(page))).toBe(true);
+  await page.keyboard.press("ControlOrMeta+f");
+  await page.keyboard.type("Paragraphe 3 :");
+  const active = editor(page).locator(".nano-search-match-active");
+  await expect(active).toBeInViewport({ ratio: 1 });
+  const search = await box(page.getByRole("search", { name: "Rechercher dans le document" }));
+  expect((await box(active)).y).toBeGreaterThanOrEqual(search.y + search.height);
 });
 
 test("critère C : à 390 px de large, rien ne déborde, et la barre sur deux lignes reste figée", async ({
@@ -231,6 +241,8 @@ test("critère C : à 390 px de large, rien ne déborde, et la barre sur deux li
   await expect(formatBar(page)).toBeInViewport({ ratio: 1 });
   expect((await box(formatBar(page))).height).toBeGreaterThan(80);
   await expect(button(page, "Gras")).toBeInViewport({ ratio: 1 });
+  // L'en-tête, sur plusieurs lignes à cette largeur, défile avec la page (choix à confirmer).
+  await expect(page.getByRole("banner")).not.toBeInViewport();
 });
 
 test("critère D : à l'impression, la partie figée ne s'imprime pas et la page reste seule", async ({

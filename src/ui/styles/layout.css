@@ -42,9 +42,10 @@ button:focus-visible {
   background: var(--nano-app-bg);
 }
 
-/* Fenêtre très basse (critère C) : l'en-tête défile avec la page, seuls le message et la barre de mise
-   en forme restent figés, pour laisser de la place au texte. */
-@media (max-height: 499px) {
+/* Fenêtre très basse (critère C) ou étroite : l'en-tête défile avec la page, seuls le message et la
+   barre de mise en forme restent figés, pour laisser de la place au texte. Sous 600 px de large,
+   l'en-tête passe sur plusieurs lignes et cacherait la moitié de la fenêtre. */
+@media (max-height: 499px), (max-width: 600px) {
   .nano-top {
     display: contents;
   }
