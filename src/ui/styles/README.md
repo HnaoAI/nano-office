@@ -13,3 +13,4 @@ Couleurs, rayons et ombres ne sont écrits que dans `tokens.css` (vérifié par 
 - `messages.css` : indicateur d'enregistrement et messages (U1b)
 - `print.css` : impression et PDF : seule la page du document, couleurs exactes, titres jamais seuls en bas de page, lignes de tableau entières, ni recherche ni sélection (T2.6)
 - `dialog.css` : boîte de dialogue de la copie de secours sur la page estompée (U1b), boîte « Mise en page » (T2.5)
+- `assistant.css` : assistant (T3.1) : bouton et boîte « Réglages », groupe « Assistant », panneau au style des messages, marques de suggestion (barré gris, souligné sur gris clair), boutons de la modification choisie, rien à l'impression

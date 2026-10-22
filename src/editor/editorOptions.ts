@@ -12,6 +12,7 @@ import { createImageExtensions, type ImageRejectedHandler } from "./images";
 import { FormatShortcuts } from "./keyboardShortcuts";
 import { createPageSetupHistory } from "./pageSetup";
 import { Search } from "./search";
+import { Suggestions } from "./suggestions";
 import { TableNavigation } from "./tables";
 
 /**
@@ -29,6 +30,7 @@ import { TableNavigation } from "./tables";
  * - Les images sont affichées depuis le Y.Doc, insérées par le bouton, un dépôt ou un collage (T1.9) :
  *   le nœud image du schéma est remplacé par sa version reliée au document, à la même place.
  * - La recherche surligne ses occurrences par des décorations, hors du document (`Search`, T2.1).
+ * - Les corrections de l'assistant s'affichent par des décorations, hors du document (`Suggestions`, T3.1).
  * - Un changement de mise en page s'annule avec Ctrl/Cmd+Z, comme une modification du texte (T2.5).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
@@ -50,6 +52,7 @@ export function createEditorOptions(
       CleanClipboard,
       TableNavigation,
       Search,
+      Suggestions,
       Collaboration.configure({
         document: ydoc,
         field: YJS_FRAGMENT_NAME,
