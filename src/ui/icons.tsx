@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T3.1 assistant), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T3.1 assistant, M1 interligne), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -164,6 +164,16 @@ export function AlignLeftIcon() {
   return (
     <Icon>
       <path d="M4 6h16M4 10h10M4 14h16M4 18h10" />
+    </Icon>
+  );
+}
+
+/** Interligne (M1) : des lignes, avec une double flèche verticale devant elles. */
+export function LineHeightIcon() {
+  return (
+    <Icon>
+      <path d="M11 6h10M11 12h10M11 18h10" />
+      <path d="M5 4v16M2.5 6.5 5 4l2.5 2.5M2.5 17.5 5 20l2.5-2.5" />
     </Icon>
   );
 }

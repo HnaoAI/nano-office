@@ -1,13 +1,17 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1), panneau de
 // l'assistant (T3.1) et éditeur Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a),
 // au format et aux marges du document (T2.5).
+// La barre de mise en forme, le panneau de l'assistant et la recherche s'affichent dans la partie
+// figée de App (M1).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
 import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { createEditorOptions } from "../editor/editorOptions";
+import { scrollBelowStickyTop } from "../editor/stickyScroll";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
 import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
@@ -43,6 +47,10 @@ function pageStyle(setup: PageSetup): CSSProperties {
  * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
  * @param assistant fournisseur, modèle et clé de l'assistant (T3.1) ; null quand il est éteint : ni
  *   bouton, ni panneau, ni requête (critère 4)
+ * @param tools emplacement de la barre de mise en forme, du panneau de l'assistant et de la recherche, dans la partie figée en
+ *   haut de la fenêtre (M1) ; null avant son affichage
+ * @param coveredTop hauteur cachée par la partie figée, pour que le curseur n'y passe jamais (M1,
+ *   critère B) ; fonction stable
  */
 export function DocumentEditor({
   ydoc,
@@ -50,19 +58,26 @@ export function DocumentEditor({
   onImageRejected,
   onPageSetup,
   assistant,
+  tools,
+  coveredTop,
 }: {
   ydoc: Y.Doc;
   onEdit: () => void;
   onImageRejected: (reasons: ImageRejection[]) => void;
   onPageSetup: () => void;
   assistant: AssistantConfig | null;
+  tools: HTMLElement | null;
+  coveredTop: () => number;
 }) {
   // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
-  // `onImageRejected` est stable (useDocumentFile), il ne recrée pas la configuration.
-  const options = useMemo(
-    () => createEditorOptions(ydoc, onImageRejected),
-    [ydoc, onImageRejected],
-  );
+  // `onImageRejected` et `coveredTop` sont stables, ils ne recréent pas la configuration.
+  const options = useMemo(() => {
+    const base = createEditorOptions(ydoc, onImageRejected);
+    return {
+      ...base,
+      editorProps: { ...base.editorProps, ...scrollBelowStickyTop(coveredTop) },
+    };
+  }, [ydoc, onImageRejected, coveredTop]);
   const editor = useEditor({ ...options, autofocus: true }, [ydoc]);
   const pageSetup = usePageSetup(ydoc);
 
@@ -91,7 +106,7 @@ export function DocumentEditor({
 
   const helper = useAssistant(editor, assistant);
 
-  return (
+  const toolbar = (
     <>
       <div className="nano-format-row">
         <Toolbar
@@ -108,15 +123,23 @@ export function DocumentEditor({
           }
         />
       </div>
+      {/* Le panneau reste visible avec la barre : on lance l'assistant n'importe où dans la page (M1). */}
       {assistant && (
         <AssistantPanel
           editor={editor}
           status={helper.status}
           onCancel={helper.cancel}
           onDismiss={helper.dismiss}
+          coveredTop={coveredTop}
         />
       )}
       {search && <SearchBar editor={editor} request={search} onClose={() => setSearch(null)} />}
+    </>
+  );
+
+  return (
+    <>
+      {tools && createPortal(toolbar, tools)}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
       <style>{printPageRule(pageSetup)}</style>
       <main className="nano-workspace">

@@ -1,5 +1,6 @@
 // Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché,
 // boîtes « Mise en page » (T2.5) et « Réglages » (T3.1), et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+// L'en-tête, le message et la barre de mise en forme restent en haut de la fenêtre (M1, `useStickyTop`).
 import { useCallback, useState } from "react";
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
@@ -12,6 +13,7 @@ import { usePageSetupDialog } from "./usePageSetupDialog";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
 import { usePrintShortcut } from "./usePrintShortcut";
+import { useStickyTop } from "./useStickyTop";
 import { useWordExport } from "./useWordExport";
 import "./fonts";
 // Ordre des feuilles : les variables d'abord, puis la mise en page, avant les composants qui la précisent.
@@ -64,6 +66,10 @@ export function App() {
   const assistant = useAssistantSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  // Partie figée (M1) : la barre de mise en forme et la recherche de l'éditeur s'affichent dans
+  // `editorTools`, sous le message, pour rester en haut avec l'en-tête.
+  const { topRef, toolsRef, coveredTop } = useStickyTop();
+  const [editorTools, setEditorTools] = useState<HTMLDivElement | null>(null);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
@@ -72,72 +78,77 @@ export function App() {
     print,
     exportWord,
   };
-  // Pendant la lecture de la copie de secours, rien n'est modifiable (T0d, critère 4).
-  if (!document) {
-    return (
-      <div className="nano-app">
-        <AppHeader fileName={null} saveState={saveState} actions={null} />
-      </div>
-    );
-  }
+  // Pendant la lecture de la copie de secours, rien n'est modifiable (T0d, critère 4) : l'en-tête
+  // s'affiche seul, sans groupe Fichier ni indicateur.
   return (
     <div className="nano-app">
-      <AppHeader
-        fileName={document.fileName}
-        saveState={saveState}
-        actions={actions}
-        onSettings={() => setSettingsOpen(true)}
-      />
-      {message && (
-        <MessageBar
-          message={message}
-          onAction={(action) => (action === "save-as" ? file.saveAs() : file.save())}
-          onClose={dismissMessage}
+      <div className="nano-top" ref={topRef}>
+        <AppHeader
+          fileName={document?.fileName ?? null}
+          saveState={saveState}
+          actions={document ? actions : null}
+          onSettings={document ? () => setSettingsOpen(true) : undefined}
         />
+        <div className="nano-top-tools" ref={toolsRef}>
+          {document && message && (
+            <MessageBar
+              message={message}
+              onAction={(action) => (action === "save-as" ? file.saveAs() : file.save())}
+              onClose={dismissMessage}
+            />
+          )}
+          <div ref={setEditorTools} />
+        </div>
+      </div>
+      {document && (
+        <>
+          {pending ? (
+            // L'éditeur est masqué tant que l'utilisateur n'a pas choisi (T0d, critère 8) ; une page estompée
+            // le remplace, sous la boîte de dialogue (U1b, critère 5).
+            <BackupChoice
+              key={pending.backup.guid}
+              fileName={pending.file.fileName}
+              recover={recover}
+              openAsIs={openAsIs}
+            />
+          ) : (
+            // Une clé par Y.Doc : « Nouveau » et « Ouvrir » recréent l'éditeur (T0c, critère 10).
+            <DocumentEditor
+              key={document.ydoc.guid}
+              ydoc={document.ydoc}
+              onEdit={noteEdit}
+              onImageRejected={imageRejected}
+              onPageSetup={pageDialog.show}
+              assistant={assistant.config}
+              tools={editorTools}
+              coveredTop={coveredTop}
+            />
+          )}
+          {pageDialog.current && !pending && (
+            <PageSetupDialog
+              current={pageDialog.current}
+              onApply={pageDialog.apply}
+              onCancel={pageDialog.close}
+            />
+          )}
+          {settingsOpen && !pending && (
+            <SettingsDialog
+              settings={assistant.settings}
+              keys={assistant.keys}
+              onSave={(settings, keys) => {
+                assistant.save(settings, keys);
+                closeSettings();
+              }}
+              onForgetKeys={assistant.forgetKeys}
+              onCancel={closeSettings}
+            />
+          )}
+          <footer className="nano-footer">
+            <span>{backupLinked ? "Copie de secours à jour" : ""}</span>
+            <span>Fonctionne hors ligne</span>
+          </footer>
+        </>
       )}
-      {pending ? (
-        // L'éditeur est masqué tant que l'utilisateur n'a pas choisi (T0d, critère 8) ; une page estompée
-        // le remplace, sous la boîte de dialogue (U1b, critère 5).
-        <BackupChoice
-          key={pending.backup.guid}
-          fileName={pending.file.fileName}
-          recover={recover}
-          openAsIs={openAsIs}
-        />
-      ) : (
-        // Une clé par Y.Doc : « Nouveau » et « Ouvrir » recréent l'éditeur (T0c, critère 10).
-        <DocumentEditor
-          key={document.ydoc.guid}
-          ydoc={document.ydoc}
-          onEdit={noteEdit}
-          onImageRejected={imageRejected}
-          onPageSetup={pageDialog.show}
-          assistant={assistant.config}
-        />
-      )}
-      {pageDialog.current && !pending && (
-        <PageSetupDialog
-          current={pageDialog.current}
-          onApply={pageDialog.apply}
-          onCancel={pageDialog.close}
-        />
-      )}
-      {settingsOpen && !pending && (
-        <SettingsDialog
-          settings={assistant.settings}
-          keys={assistant.keys}
-          onSave={(settings, keys) => {
-            assistant.save(settings, keys);
-            closeSettings();
-          }}
-          onForgetKeys={assistant.forgetKeys}
-          onCancel={closeSettings}
-        />
-      )}
-      <footer className="nano-footer">
-        <span>{backupLinked ? "Copie de secours à jour" : ""}</span>
-        <span>Fonctionne hors ligne</span>
-      </footer>
     </div>
   );
 }

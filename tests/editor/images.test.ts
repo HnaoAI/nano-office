@@ -13,13 +13,8 @@ import type { DocumentJson } from "../../src/core/types";
 import { currentAlignment, setAlignment } from "../../src/editor/alignment";
 import { BlockIdGenerator } from "../../src/editor/blockIds";
 import { CleanClipboard } from "../../src/editor/clipboard";
-import {
-  createImageExtensions,
-  imageInsertPoint,
-  insertImageNodes,
-  selectedImage,
-  setImageAlt,
-} from "../../src/editor/images";
+import { imageInsertPoint, insertImageNodes } from "../../src/editor/imageInsert";
+import { createImageExtensions, selectedImage, setImageAlt } from "../../src/editor/images";
 import { MISSING_IMAGE_TEXT } from "../../src/editor/imageView";
 import { TableNavigation } from "../../src/editor/tables";
 import { fakePng } from "../core/imageHelpers";

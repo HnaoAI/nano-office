@@ -22,7 +22,7 @@ import {
   type SelectedParagraph,
 } from "../editor/assistantEdits";
 import { focusEditor } from "../editor/focus";
-import { clearSuggestions, showSuggestions, suggestionsFor } from "../editor/suggestions";
+import { clearSuggestions, showSuggestions, suggestionsFor } from "../editor/suggestionCommands";
 import type { AssistantConfig } from "./useAssistantSettings";
 
 /** Traduction affichée dans le panneau, avec les paragraphes d'origine suivis dans le document. */

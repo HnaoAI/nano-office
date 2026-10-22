@@ -72,8 +72,22 @@
   padding: 0 10px;
 }
 
-.nano-line-height-select {
-  width: 112px;
+/* Liste avec une icône devant son texte, dans le même fond gris (interligne, M1) : l'icône est posée
+   sur la liste et laisse passer le clic, qui ouvre la liste. */
+.nano-select-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nano-select-with-icon svg {
+  position: absolute;
+  left: 10px;
+  pointer-events: none;
+}
+
+.nano-select-with-icon .nano-select {
+  padding-left: 36px;
 }
 
 .nano-select:focus-visible {

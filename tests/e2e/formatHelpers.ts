@@ -64,6 +64,17 @@ export async function waitEditorFocus(page: Page) {
   await settleSelection(page);
 }
 
+/**
+ * Laisse passer les 200 ms pendant lesquelles ProseMirror, juste après que l'éditeur a repris le
+ * focus, prend un curseur placé au tout début du document pour une remise à zéro du navigateur, et
+ * le remet où il était (`DOMObserver.flush` de prosemirror-view). Un humain ne tape jamais assez vite
+ * pour le voir ; un test qui choisit une couleur, tape cinq lettres puis appuie sur Début, si. Cause du
+ * test instable de la couleur (T1.7, critère 6), qui a bloqué la publication après le lot G (M1).
+ */
+export async function waitAfterFocus(page: Page) {
+  await page.waitForTimeout(250);
+}
+
 /** Laisse passer le délai de regroupement des annulations de Yjs, pour isoler l'étape suivante. */
 export async function waitUndoGroup(page: Page) {
   await page.waitForTimeout(700);

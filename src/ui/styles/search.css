@@ -1,11 +1,8 @@
 /* Barre « Rechercher et remplacer » (T2.1) : sous la barre de mise en forme, à droite, au style des
    messages d'information (surface blanche, rayon 14 px, ombre d'information). Elle décale la page vers
-   le bas, pour ne jamais cacher le début du texte, et reste visible quand la page défile jusqu'à une
-   occurrence. */
+   le bas, pour ne jamais cacher le début du texte. Elle fait partie de la partie figée (M1, layout.css),
+   et reste donc visible quand la page défile jusqu'à une occurrence. */
 .nano-search-row {
-  position: sticky;
-  top: 12px;
-  z-index: 30;
   display: flex;
   justify-content: flex-end;
   width: calc(100% - 40px);
@@ -119,6 +116,9 @@
 .nano-editor .nano-search-match-active {
   outline: 2px solid var(--nano-ink);
   outline-offset: 0;
+  /* La page défile jusqu'à l'occurrence sans l'arrêter sous la partie figée (M1, critère B) :
+     `--sticky-top-height` est mesurée par src/ui/useStickyTop.ts. */
+  scroll-margin-top: calc(var(--sticky-top-height, 0px) + 16px);
 }
 
 /* Écran étroit (moins de 600 px) : la barre prend toute la largeur. */

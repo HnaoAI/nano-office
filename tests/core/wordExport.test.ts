@@ -6,7 +6,7 @@ import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PAGE_SETUP, uniformMargins, type PageSetup } from "../../src/core/pageSetup";
 import type { DocumentJson } from "../../src/core/types";
-import { nearestHighlight } from "../../src/core/wordBlocks";
+import { nearestHighlight } from "../../src/core/wordColors";
 import {
   exportWord,
   usedFonts,

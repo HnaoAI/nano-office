@@ -9,6 +9,7 @@ import {
   selectText,
   settleSelection,
   start,
+  waitAfterFocus,
   waitUndoGroup,
   ydocJson,
 } from "./formatHelpers";
@@ -180,6 +181,9 @@ test("critère 6 : le trait du bouton montre la couleur sous le curseur, et rest
   await page.keyboard.type("rouge");
   await expect(colorBar(page)).toHaveAttribute("data-color", "#C62828");
   await expect(colorBar(page)).toHaveCSS("background-color", RED);
+  // Début ramène le curseur au tout début du document : pas dans les 200 ms qui suivent le retour
+  // du focus sur l'éditeur, que ProseMirror annulerait (M1).
+  await waitAfterFocus(page);
   await page.keyboard.press("Home");
   await page.keyboard.press("ArrowRight");
   await settleSelection(page);

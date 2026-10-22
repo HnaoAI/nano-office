@@ -142,6 +142,10 @@
 .nano-translation-text {
   flex: 1 1 200px;
   min-width: 0;
+  /* Le panneau fait partie de la partie figée (M1) : une longue traduction défile dans le panneau,
+     sans cacher toute la page. */
+  max-height: 40vh;
+  overflow-y: auto;
   font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -186,6 +190,8 @@
 .nano-editor .nano-suggest-active {
   outline: 2px solid var(--nano-ink);
   outline-offset: 1px;
+  /* Jamais arrêtée sous la partie figée en haut de la fenêtre (M1, critère B, layout.css). */
+  scroll-margin-top: calc(var(--sticky-top-height, 0px) + 16px);
 }
 
 /* Boutons de la modification choisie, juste sous elle. */
