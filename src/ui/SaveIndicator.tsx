@@ -1,6 +1,6 @@
 // Indicateur d'enregistrement de l'en-tête (U1b), selon la maquette Messages.dc.html :
 // « Enregistré » (point plein), « Enregistrement… » (point creux), « Non enregistré » (pastille noire).
-import type { SaveState } from "./useDocumentFile";
+import type { SaveState } from "./documentState";
 
 const LABELS: Record<SaveState, string> = {
   saved: "Enregistré",

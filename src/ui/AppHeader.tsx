@@ -5,7 +5,7 @@ import { APP_VERSION } from "./appVersion";
 import { FileMenu, type FileMenuActions } from "./FileMenu";
 import { GearIcon } from "./icons";
 import { SaveIndicator } from "./SaveIndicator";
-import type { SaveState } from "./useDocumentFile";
+import type { SaveState } from "./documentState";
 
 /**
  * En-tête de l'application.

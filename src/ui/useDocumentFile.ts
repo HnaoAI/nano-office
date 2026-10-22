@@ -1,14 +1,11 @@
 // Hook React du document affiché (T0c) : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Ctrl/Cmd+S,
-// titre de la fenêtre et messages, puis restauration et question de la copie de secours (T0d).
-// Retient aussi les signes de travail commencé, pour la mise à jour au démarrage (H1, critère 6),
-// et donne l'état de l'indicateur d'enregistrement et les actions des messages (U1b).
-// Fichier retrouvé au lancement pour un document restauré (PL3).
-// Sauvegarde automatique dans le fichier, par le même verrou que « Enregistrer » (T1.6), espacée
-// pour un gros fichier (T1.9).
-// La logique vient de src/core/, les fichiers et la copie de secours de src/storage/.
+// titre de la fenêtre et messages, question de la copie de secours (T0d), état de l'indicateur et
+// actions des messages (U1b), sauvegarde automatique par le même verrou que « Enregistrer » (T1.6),
+// espacée pour un gros fichier (T1.9). Découpé en M1 : restauration au lancement et fichier retrouvé
+// (useLaunchRestore.ts, T0d, PL3), signes de travail commencé (useLaunchActivity.ts, H1), types et
+// état de l'indicateur (documentState.ts). Logique dans src/core/, fichiers et copie dans src/storage/.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { NO_ACTIVITY, type LaunchActivity } from "../core/appUpdate";
-import { compareWithBackup, recoveredDocument, restoredDocument } from "../core/backup";
+import { compareWithBackup, recoveredDocument } from "../core/backup";
 import {
   contentSnapshot,
   createNewDocument,
@@ -23,28 +20,20 @@ import type { OpenDocument } from "../core/types";
 import type * as Y from "yjs";
 import { createBackupStore } from "../storage/backupStore";
 import { createFileStore } from "../storage/fileStore";
-import { cancelReloadForUpdate } from "./useAppUpdate";
 import {
   DISCARD_QUESTION,
   READ_ERROR,
   imageRejectedMessage,
-  recoveredMessage,
   saveMessage,
   type FileMessage,
 } from "./fileMessages";
 import type { ImageRejection } from "../editor/imageImport";
+import { saveStateOf, type PendingBackup } from "./documentState";
 import { useAutoSave } from "./useAutoSave";
 import { useBackup } from "./useBackup";
+import { useLaunchActivity } from "./useLaunchActivity";
+import { useLaunchRestore } from "./useLaunchRestore";
 import { useSaveShortcut } from "./useSaveShortcut";
-
-/** État affiché par l'indicateur d'enregistrement de l'en-tête (U1b, critère 2). */
-export type SaveState = "saved" | "saving" | "unsaved";
-
-/** Fichier ouvert dont la copie de secours diffère, en attente du choix de l'utilisateur (T0d, critère 8). */
-export interface PendingBackup {
-  file: OpenDocument;
-  backup: Y.Doc;
-}
 
 /**
  * Document affiché et actions sur les fichiers.
@@ -58,7 +47,7 @@ export function useDocumentFile() {
   const [document, setDocument] = useState<OpenDocument | null>(null);
   const [pending, setPending] = useState<PendingBackup | null>(null);
   const [message, setMessage] = useState<FileMessage | null>(null);
-  const [activity, setActivity] = useState<LaunchActivity>(NO_ACTIVITY);
+  const { activity, noteActivity, noteFileAction } = useLaunchActivity();
   const saving = useRef(false);
   // Copie lisible de `saving` pour l'indicateur (U1b) ; la référence reste le seul verrou d'enregistrement.
   const [writing, setWriting] = useState(false);
@@ -71,13 +60,6 @@ export function useDocumentFile() {
   // Taille du dernier fichier écrit ou ouvert, pour espacer la sauvegarde automatique au-delà de 2 Mo
   // (T1.9). En caractères : le JSON est presque tout en ASCII (base64), un caractère vaut un octet.
   const savedBytes = useRef<{ ydoc: Y.Doc | null; size: number }>({ ydoc: null, size: 0 });
-
-  /** Retient un signe de travail commencé (H1, critère 6) ; il reste vrai jusqu'au lancement suivant. */
-  const noteActivity = useCallback((sign: keyof LaunchActivity) => {
-    // Synchrone : un rechargement de mise à jour déjà décidé est annulé avant tout rendu (H2).
-    cancelReloadForUpdate();
-    setActivity((current) => (current[sign] ? current : { ...current, [sign]: true }));
-  }, []);
 
   const subscribe = useCallback(
     (onChange: () => void) => {
@@ -115,30 +97,10 @@ export function useDocumentFile() {
   );
 
   // Au chargement, le dernier document modifié est restauré depuis sa copie de secours (T0d, critère 4).
-  useEffect(() => {
-    let cancelled = false;
-    const id = backups.lastModifiedId();
-    void (async () => {
-      const restored = id ? restoredDocument(id, await backups.read(id)) : null;
-      // PL3 : le document reprend le fichier où il était enregistré, sans rien y écrire pour l'instant.
-      const file = restored ? await store.restore(restored.id) : null;
-      if (cancelled) return;
-      if (!restored) {
-        setDocument(createNewDocument());
-        return;
-      }
-      // INVARIANT (PL3, critère 4) : le fichier retrouvé n'est réécrit qu'après un enregistrement choisi
-      // par l'utilisateur, qui a vu son nom ; jusque-là, la sauvegarde automatique attend.
-      if (file) pausedAtStart.current = restored.ydoc;
-      // H2 : la restauration n'est pas un signe de travail commencé ; une nouvelle version peut recharger
-      // la page, qui restaure alors le même document, avec le même fichier retrouvé et le même message.
-      setDocument(file ? { ...restored, fileName: file.name } : restored);
-      setMessage(recoveredMessage(file));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [backups, store]);
+  const pauseAtStart = useCallback((ydoc: Y.Doc) => {
+    pausedAtStart.current = ydoc;
+  }, []);
+  useLaunchRestore(backups, store, pauseAtStart, setDocument, setMessage);
 
   /** Demande confirmation avant d'abandonner des modifications non enregistrées (critère 1). */
   function canDiscard(): boolean {
@@ -293,19 +255,7 @@ export function useDocumentFile() {
 
   useSaveShortcut(() => void save(false));
 
-  // Pas d'indicateur pour une page vide sans fichier : « Enregistré » ferait croire qu'un fichier existe
-  // (décision du product owner à la relecture de U1b). Dès la première frappe, il passe à « Non enregistré ».
-  const blank = document !== null && document.fileName === null && !unsaved;
-  const saveState: SaveState | null = writing
-    ? "saving"
-    : unsaved
-      ? "unsaved"
-      : blank
-        ? null
-        : "saved";
-
-  // Stable : DocumentEditor le donne à la configuration de l'éditeur, créée une fois par document.
-  const noteFileAction = useCallback(() => noteActivity("fileAction"), [noteActivity]);
+  const saveState = saveStateOf(document, unsaved, writing);
 
   const imageRejected = useCallback(
     (reasons: ImageRejection[]) => setMessage(imageRejectedMessage(reasons)),
