@@ -2,7 +2,8 @@
 
 Composants React, sans logique métier. Aucun accès direct au disque : passer par `storage/`.
 
-- `App.tsx` : composant racine (en-tête, message, question de la copie de secours, éditeur recréé pour chaque Y.Doc, pied de page)
+- `App.tsx` : composant racine (en-tête, message, question de la copie de secours, éditeur recréé pour chaque Y.Doc, pied de page) ; en-tête, message et barre de mise en forme figés en haut de la fenêtre (M1)
+- `useStickyTop.ts` : mesure la partie figée en haut de la fenêtre, pour que le curseur et les occurrences trouvées ne passent jamais dessous (M1)
 - `AppHeader.tsx` : en-tête : logo, nom et version de l'application (H1), nom du document et du fichier, indicateur d'enregistrement (U1b), groupe Fichier (U1a), bouton « Réglages » (T3.1)
 - `useDocumentFile.ts` : hook du document affiché : Nouveau, Ouvrir, Enregistrer, Ctrl/Cmd+S, titre de la fenêtre (T0c), restauration et question de la copie de secours (T0d), signes de travail commencé (H1), état de l'indicateur et fermeture des messages (U1b), sauvegarde automatique (T1.6), fichier retrouvé au lancement (PL3), message d'une image refusée (T1.9), messages de l'export (T2.7)
 - `useAutoSave.ts` : relie la sauvegarde automatique au Y.Doc affiché, un `AutoSaver` par document (T1.6)
@@ -35,10 +36,10 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
-- `DocumentEditor.tsx` : barre de mise en forme, barre de recherche (T2.1) et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6)
+- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6)
 - `SearchBar.tsx` : barre « Rechercher et remplacer » sous la barre de mise en forme, à droite (T2.1)
 - `useSearchShortcuts.ts` : Ctrl/Cmd+F, Ctrl+H (Windows) et Cmd+Option+F (Mac) sur toute la page, à la touche physique (T2.1)
-- `Toolbar.tsx` : barre de mise en forme flottante (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, tableau, image, mise en page (T2.5), groupe « Assistant » quand il est en marche (T3.1))
+- `Toolbar.tsx` : barre de mise en forme flottante, figée en haut de la fenêtre (M1) (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, tableau, image, mise en page (T2.5), groupe « Assistant » quand il est en marche (T3.1))
 - `SettingsDialog.tsx` : boîte « Réglages » : section « Assistant IA », interrupteur, fournisseur, clé masquée, modèle, texte sur les données envoyées, « Oublier la clé » (T3.1)
 - `useAssistantSettings.ts` : réglages et clés de l'assistant de cet ordinateur, configuration passée à l'éditeur, null quand il est éteint (T3.1)
 - `useAssistant.ts` : « Corriger » et « Traduire en anglais » : demande, Échap, texte suivi pendant la demande, propositions ou traduction, messages ; état en ligne (T3.1)

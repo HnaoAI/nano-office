@@ -28,6 +28,36 @@ button:focus-visible {
   flex-direction: column;
 }
 
+/* Partie figée (M1, critère A) : en-tête, message, barre de mise en forme et recherche restent en haut
+   de la fenêtre ; seule la page défile dessous. Le fond de l'application la recouvre : le texte ne se
+   lit jamais à travers. Elle reste sous les boîtes de dialogue (z-index 10, dialog.css).
+   Le curseur ne passe jamais dessous : voir src/editor/stickyScroll.ts. Pas de `scroll-padding-top`
+   sur la page : le navigateur ferait défiler la page à chaque clic sur la barre, qu'il croirait cachée
+   par cette marge. */
+.nano-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-bottom: 12px;
+  background: var(--nano-app-bg);
+}
+
+/* Fenêtre très basse (critère C) : l'en-tête défile avec la page, seuls le message et la barre de mise
+   en forme restent figés, pour laisser de la place au texte. */
+@media (max-height: 499px) {
+  .nano-top {
+    display: contents;
+  }
+
+  .nano-top-tools {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 8px 0 12px;
+    background: var(--nano-app-bg);
+  }
+}
+
 /* En-tête : logo, nom du document, groupe Fichier. Passe à la ligne sur un écran étroit. */
 .nano-header {
   display: flex;
@@ -143,12 +173,12 @@ button:focus-visible {
   color: var(--nano-on-ink-muted);
 }
 
-/* Le document : une page blanche centrée sur le fond gris. */
+/* Le document : une page blanche centrée sur le fond gris. 24 px sous les 12 px de la partie figée. */
 .nano-workspace {
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 36px 20px 40px;
+  padding: 24px 20px 40px;
 }
 
 /* Mise en page (T2.5) : largeur d'une feuille A4 et marges du document, à l'échelle (1 cm du CSS).
@@ -251,7 +281,7 @@ button:focus-visible {
   }
 
   .nano-workspace {
-    padding: 20px 8px 24px;
+    padding: 8px 8px 24px;
   }
 
   .nano-page {
