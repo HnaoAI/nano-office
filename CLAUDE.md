@@ -91,6 +91,7 @@ Arborescence de `src/` :
 - `storage/` : accès aux fichiers et au stockage de secours, derrière une interface
 - `editor/` : configuration de Tiptap et de ses extensions
 - `ui/` : composants React, sans logique métier
+- `assistant/` : appels aux API d'assistant (Claude, Gemini), derrière une interface. Le seul code autorisé à envoyer du texte de document sur le réseau (règle produit 2, T3.1)
 
 Règles d'import :
 
@@ -202,3 +203,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-21 : La licence Zlib est ajoutée aux licences acceptées, pour tous les projets : elle est aussi permissive que MIT. Elle permet `pako`, utilisé par la bibliothèque `docx` de l'export Word (T2.7).
 - 2026-10-21 : Assistant IA facultatif (T3.1, lot G, après le lot F). Les règles produit 1 et 2 sont modifiées : il est désactivé par défaut, invisible tant qu'il est éteint, et n'envoie que le texte sélectionné, après un clic, au fournisseur choisi (Claude ou Gemini), avec la clé d'API de l'utilisateur, gardée sur l'ordinateur et jamais dans un fichier. Chaque modification proposée s'accepte ou se refuse une par une, comme dans Cursor. Un abonnement claude.ai ou Gemini ne peut pas être relié à une autre application : il faut une clé d'API.
 - 2026-10-21 : Lot H « prêt pour la famille », à faire après M1 : une aide intégrée et hors ligne (A1), et une fenêtre « Nano Buro se met à jour » avec un N qui tourne, qui bloque l'application pendant la mise à jour au lancement (H3). Elle remplace la décision de H1 « pas de bandeau de mise à jour ». Elle ne s'affiche jamais une fois le travail commencé, et se débloque d'elle-même au bout de 20 s. Ordre : M1, lot H, T2.8, T2.9, puis le lot G.
+- 2026-10-22 : L'assistant appelle les API de Claude et de Gemini par `fetch`, sans SDK : celui d'Anthropic entraîne une dépendance sous licence Unlicense (hors des licences acceptées), et celui de Google une vingtaine de paquets pour un seul appel. La section des Réglages s'appelle « Assistant IA », par transparence : on sait que le texte part chez un fournisseur d'IA. Elle n'apparaît que dans les Réglages, jamais dans la barre ni dans le document quand l'assistant est éteint.

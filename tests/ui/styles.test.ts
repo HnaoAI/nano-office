@@ -15,6 +15,7 @@ const STYLE_FILES = [
   "messages",
   "dialog",
   "print",
+  "assistant",
 ];
 const css = STYLE_FILES.map((name) =>
   readFileSync(new URL(`../../src/ui/styles/${name}.css`, import.meta.url), "utf8"),

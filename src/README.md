@@ -7,3 +7,4 @@ Code de l'application. Règles d'import et rôle de chaque dossier : voir `CLAUD
 - `storage/` : accès aux fichiers `.nano` derrière l'interface `FileStore`
 - `editor/` : configuration de Tiptap (collaboration Yjs, identifiants de bloc)
 - `ui/` : composants React, sans logique métier
+- `assistant/` : appels à l'assistant facultatif (Claude ou Gemini) avec la clé de l'utilisateur, seul code qui envoie des données sur le réseau (T3.1)

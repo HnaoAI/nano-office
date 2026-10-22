@@ -25,3 +25,5 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `appUpdate.ts` : décision « recharger maintenant ou attendre » quand une nouvelle version est prête (`decideUpdate`, H1)
 - `appVersion.ts` : numéro de version `v<date>·<commit court>`, ou `dev` (`formatVersion`, H1)
 - `base64.ts` : conversion octets <-> base64 pour l'état Yjs
+- `assistant.ts` : assistant facultatif (T3.1) : réglages (éteint par défaut), modèles proposés, consignes et demande envoyée (la sélection seule), lecture de la réponse, corrections au mot ou au paragraphe entier, messages d'erreur (`buildRequest`, `parseParagraphs`, `correctionChanges`, `failureMessage`)
+- `wordDiff.ts` : comparaison au mot de deux textes et compte des mots, limite de 5 000 mots (`diffWords`, `countWords`, `MAX_ASSISTANT_WORDS`, T3.1)
