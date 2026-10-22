@@ -1,4 +1,4 @@
-// Panneau de l'assistant sous la barre de mise en forme (T3.1), au style des messages (messages.css) :
+// Panneau de l'assistant sous la barre de mise en forme (T3.1), dans la partie figée (M1), au style des messages (messages.css) :
 // demande en cours, message d'erreur, barre des modifications proposées (critère 8) et panneau de
 // traduction (critère 12). Les boutons d'une modification s'affichent à côté d'elle (SuggestionActions.tsx,
 // découpé en M1).
@@ -25,17 +25,20 @@ function suggestionCount(count: number): string {
  * @param status état de la demande (useAssistant)
  * @param onCancel annule la demande en cours
  * @param onDismiss ferme le panneau ; les propositions restantes disparaissent (critère 10)
+ * @param coveredTop hauteur cachée par la partie figée en haut de la fenêtre (M1)
  */
 export function AssistantPanel({
   editor,
   status,
   onCancel,
   onDismiss,
+  coveredTop,
 }: {
   editor: Editor;
   status: AssistantStatus;
   onCancel: () => void;
   onDismiss: () => void;
+  coveredTop: () => number;
 }) {
   const { count } = useEditorState({
     editor,
@@ -131,7 +134,7 @@ export function AssistantPanel({
         </button>
         <CloseButton label="Fermer les propositions" onClick={onDismiss} />
       </div>
-      <SuggestionActions editor={editor} />
+      <SuggestionActions editor={editor} coveredTop={coveredTop} />
     </div>
   );
 }

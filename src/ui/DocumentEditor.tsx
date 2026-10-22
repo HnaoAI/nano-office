@@ -1,7 +1,8 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1), panneau de
 // l'assistant (T3.1) et éditeur Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a),
 // au format et aux marges du document (T2.5).
-// La barre de mise en forme et la recherche s'affichent dans la partie figée de App (M1).
+// La barre de mise en forme, le panneau de l'assistant et la recherche s'affichent dans la partie
+// figée de App (M1).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
@@ -46,7 +47,7 @@ function pageStyle(setup: PageSetup): CSSProperties {
  * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
  * @param assistant fournisseur, modèle et clé de l'assistant (T3.1) ; null quand il est éteint : ni
  *   bouton, ni panneau, ni requête (critère 4)
- * @param tools emplacement de la barre de mise en forme et de la recherche, dans la partie figée en
+ * @param tools emplacement de la barre de mise en forme, du panneau de l'assistant et de la recherche, dans la partie figée en
  *   haut de la fenêtre (M1) ; null avant son affichage
  * @param coveredTop hauteur cachée par la partie figée, pour que le curseur n'y passe jamais (M1,
  *   critère B) ; fonction stable
@@ -122,6 +123,16 @@ export function DocumentEditor({
           }
         />
       </div>
+      {/* Le panneau reste visible avec la barre : on lance l'assistant n'importe où dans la page (M1). */}
+      {assistant && (
+        <AssistantPanel
+          editor={editor}
+          status={helper.status}
+          onCancel={helper.cancel}
+          onDismiss={helper.dismiss}
+          coveredTop={coveredTop}
+        />
+      )}
       {search && <SearchBar editor={editor} request={search} onClose={() => setSearch(null)} />}
     </>
   );
@@ -129,14 +140,6 @@ export function DocumentEditor({
   return (
     <>
       {tools && createPortal(toolbar, tools)}
-      {assistant && (
-        <AssistantPanel
-          editor={editor}
-          status={helper.status}
-          onCancel={helper.cancel}
-          onDismiss={helper.dismiss}
-        />
-      )}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
       <style>{printPageRule(pageSetup)}</style>
       <main className="nano-workspace">

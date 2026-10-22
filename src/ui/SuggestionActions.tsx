@@ -12,8 +12,16 @@ const keepFocus = (event: React.MouseEvent) => event.preventDefault();
 /**
  * Boutons « Accepter » et « Refuser » de la modification choisie, juste sous elle dans le texte
  * (critère 8). Ils suivent la page quand elle défile. Un clic sur une autre modification la choisit.
+ * Ils disparaissent quand la modification passe sous la partie figée en haut de la fenêtre (M1).
+ * @param coveredTop hauteur cachée par la partie figée (useStickyTop)
  */
-export function SuggestionActions({ editor }: { editor: Editor }) {
+export function SuggestionActions({
+  editor,
+  coveredTop,
+}: {
+  editor: Editor;
+  coveredTop: () => number;
+}) {
   const active = useEditorState({
     editor,
     selector: ({ editor: current }) => {
@@ -36,6 +44,7 @@ export function SuggestionActions({ editor }: { editor: Editor }) {
   let position: { top: number; left: number };
   try {
     const coords = editor.view.coordsAtPos(active.from);
+    if (coords.bottom < coveredTop()) return null;
     position = { top: coords.bottom + 6, left: Math.max(8, coords.left - 4) };
   } catch {
     return null;

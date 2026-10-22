@@ -1,6 +1,7 @@
 // Tests d'interface du ticket M1 (barre d'outils figée), dans Chromium : l'en-tête et la barre de
 // mise en forme restent en haut de la fenêtre quand la page défile, sans rien cacher.
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { enableAssistant, fakeProvider } from "./assistantHelpers";
 import { setFakeFiles } from "./fakeFileStore";
 import { button, editor, pasteFromOtherApp, start } from "./formatHelpers";
 
@@ -25,7 +26,7 @@ async function writeTenPages(page: Page) {
     paragraphs.map((text) => `<p>${text}</p>`).join(""),
     paragraphs.join("\n"),
   );
-  await expect(editor(page).locator("p").nth(299)).toContainText("Paragraphe 300");
+  await expect(editor(page).locator("p").last()).toContainText("Paragraphe 300");
   const height = await page.locator(".nano-page").evaluate((element) => element.scrollHeight);
   expect(height).toBeGreaterThan(10 * A4_HEIGHT_PX);
 }
@@ -202,6 +203,37 @@ test("critère B : un message reste visible en haut de la fenêtre, avec la barr
   await expect(formatBar(page)).toBeInViewport({ ratio: 1 });
   const messageBox = await box(message);
   expect((await box(formatBar(page))).y).toBeGreaterThanOrEqual(messageBox.y + messageBox.height);
+});
+
+test("critère B : en bas d'un long document, le panneau de l'assistant s'affiche avec la barre, et ses boutons ne passent pas sur elle", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await enableAssistant(page);
+  await fakeProvider(page, "anthropic", () => ({
+    paragraphs: ["Les enfants jouent dans le jardin."],
+  }));
+  await start(page);
+  await page.keyboard.type("Les enfant joue dans le jardin.");
+  await page.keyboard.press("Enter");
+  await writeTenPages(page);
+  // Le premier paragraphe est sélectionné, puis la page défile tout en bas avant « Corriger ».
+  await editor(page).locator("p").first().click({ clickCount: 3 });
+  await scrollToBottom(page);
+  await button(page, "Corriger").click();
+  const panel = page.getByRole("region", { name: "Modifications proposées" });
+  await expect(panel).toBeInViewport({ ratio: 1 });
+  // La modification choisie, en haut du document, passe sous la partie figée : ses boutons
+  // disparaissent avec elle, puis reviennent quand elle redescend sous la barre.
+  const actions = page.getByRole("group", { name: /Modification choisie/ });
+  const top = await editor(page)
+    .locator(".nano-suggest-active")
+    .first()
+    .evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+  await page.evaluate((y) => window.scrollTo(0, y), top - 40);
+  await expect(actions).toHaveCount(0);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(actions).toBeVisible();
 });
 
 test("critère C : dans une fenêtre de moins de 500 px de haut, seule la barre reste figée, sans l'en-tête", async ({
