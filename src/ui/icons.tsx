@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  * Cadre commun des icônes, selon la charte (docs/design/README.md, « Icônes »).
  * @param size taille en pixels : 18 par défaut ; la maquette met 16 pour Fermer et 22 dans la boîte de dialogue
  */
-function Icon({ children, size = 18 }: { children: ReactNode; size?: number }) {
+export function Icon({ children, size = 18 }: { children: ReactNode; size?: number }) {
   return (
     <svg
       aria-hidden="true"

@@ -254,12 +254,18 @@ test("H2, critère 2 : une frappe dans le document restauré reporte toujours la
 test("H2, critère 2 : une frappe avant que la nouvelle version prenne la main annule le rechargement, et l'alerte avant fermeture reste", async ({
   page,
 }) => {
+  // Adapté par H3 (critère 3) : la fenêtre « se met à jour » bloque désormais toute frappe tant que la
+  // nouvelle version n'a pas pris la main. Une frappe n'est possible qu'après le déblocage au bout de
+  // 20 s (H3, critère 5) ; une prise de main tardive ne doit alors toujours pas recharger la page.
+  await page.clock.install();
   await relaunchWithDraft(page, "Brouillon");
   await simulateUpdate(page, true);
   // La décision de recharger est prise ; la nouvelle version n'a pas encore pris la main.
   await expect
     .poll(() => page.evaluate(() => typeof window.__nanoLaunch?.takeControl))
     .toBe("function");
+  await page.clock.fastForward(20_000);
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await editor(page).press("End");
   await page.keyboard.type(" suite");
   await page.evaluate(() => window.__nanoLaunch?.takeControl?.());

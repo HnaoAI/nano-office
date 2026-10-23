@@ -12,8 +12,8 @@ export { DEFAULT_FILE_NAME };
 export const CORRUPTED_FILE_MESSAGE =
   "Ce fichier est abîmé et ne peut pas être ouvert. Il n'a pas été modifié.";
 
-/** Message affiché pour chaque erreur de lecture (T0c, critère 12). */
-const PARSE_ERROR_MESSAGES: Record<ParseError, string> = {
+/** Message affiché pour chaque erreur de lecture (T0c, critère 12), repris par l'aide (A1). */
+export const PARSE_ERROR_MESSAGES: Record<ParseError, string> = {
   "invalid-json": "Ce fichier n'est pas un document Nano Buro.",
   "not-nano": "Ce fichier n'est pas un document Nano Buro.",
   "unsupported-version":

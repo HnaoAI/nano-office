@@ -37,8 +37,10 @@
 }
 
 /* Messages (U1b) : information sur fond blanc, alerte sur fond noir, avec puce d'icône,
-   action éventuelle à droite et bouton de fermeture. Alignés sur la largeur de la page. */
-.nano-message {
+   action éventuelle à droite et bouton de fermeture. Alignés sur la largeur de la page.
+   Le message « mis à jour » (H3) a le même style d'information. */
+.nano-message,
+.nano-update-notice {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -85,7 +87,8 @@
   overflow-wrap: anywhere;
 }
 
-.nano-message button {
+.nano-message button,
+.nano-update-notice button {
   flex: none;
   height: 36px;
   border: 0;
@@ -107,7 +110,8 @@
   color: var(--nano-ink);
 }
 
-.nano-message .nano-message-close {
+.nano-message .nano-message-close,
+.nano-update-notice .nano-message-close {
   width: 36px;
   display: flex;
   align-items: center;
@@ -127,7 +131,8 @@
 
 /* Écran étroit (moins de 600 px) : marges réduites. */
 @media (max-width: 600px) {
-  .nano-message {
+  .nano-message,
+  .nano-update-notice {
     width: calc(100% - 32px);
   }
 }

@@ -2,10 +2,26 @@
 // (vite-plugin-pwa, `registerType: "prompt"`) et applique une nouvelle version seulement si
 // `decideUpdate` (src/core/appUpdate.ts) le permet. Sinon, elle attend le lancement suivant.
 // Indique aussi à l'alerte avant fermeture (useBackup.ts) que la page se recharge pour une mise à jour (H2).
+// H3 : fenêtre « Nano Buro se met à jour » qui bloque l'application du choix de recharger jusqu'à
+// l'affichage de la nouvelle version (ou 20 s au plus), puis message « mis à jour ».
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { registerSW } from "virtual:pwa-register";
-import { decideUpdate, type LaunchActivity } from "../core/appUpdate";
-import { hasReloadedForUpdate, markReloadedForUpdate } from "../storage/launchMarker";
+import {
+  decideUpdate,
+  showsUpdateWindow,
+  startUpdateWatchdog,
+  type LaunchActivity,
+} from "../core/appUpdate";
+import {
+  clearUpdateNotice,
+  hasReloadedForUpdate,
+  markReloadedForUpdate,
+  markUpdateNotice,
+  takeUpdateNotice,
+} from "../storage/launchMarker";
+import { APP_VERSION } from "./appVersion";
+import { updatedNotice } from "./updateTexts";
+import { setKeyboardLocked } from "./updateLock";
 
 declare global {
   interface Window {
@@ -50,12 +66,22 @@ export function cancelReloadForUpdate(): void {
 }
 
 /**
+ * Vrai si cette page vient d'être rechargée pour une mise à jour (H3). Lu une seule fois, au chargement
+ * du module : React appelle deux fois les initialiseurs d'état en développement (StrictMode).
+ * La fenêtre reste alors affichée, et le clavier bloqué, jusqu'à l'affichage du document (critère 1).
+ */
+const RELOADED_FOR_UPDATE = typeof window !== "undefined" && takeUpdateNotice();
+setKeyboardLocked(RELOADED_FOR_UPDATE);
+
+/**
  * Applique une nouvelle version au lancement, tant que l'utilisateur n'a pas commencé à travailler.
  * INVARIANT : la page n'est jamais rechargée une fois le travail commencé, y compris quand une autre
  * fenêtre de l'application installe la nouvelle version (`onNeedReload`).
  * @param activity signes de travail commencé depuis le lancement (critère 6)
  * @param documentLoaded faux pendant la lecture de la copie de secours
  * @param reloadKeepsDocument vrai si un rechargement rouvrirait le document affiché (H2)
+ * @returns `updating`, vrai tant que la fenêtre « se met à jour » est affichée et l'application bloquée
+ *   (H3) ; `notice`, le message « mis à jour » à afficher, ou null ; `dismissNotice`, qui le ferme
  */
 export function useAppUpdate(
   activity: LaunchActivity,
@@ -66,6 +92,10 @@ export function useAppUpdate(
   const applyUpdate = useRef<(() => Promise<void>) | null>(null);
   const applying = useRef(false);
   const heldControl = useRef<(() => void) | null>(null);
+  // H3 : fenêtre affichée avant le rechargement ; délai dépassé après lui ; message fermé.
+  const [applyingWindow, setApplyingWindow] = useState(false);
+  const [finishTimedOut, setFinishTimedOut] = useState(false);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   const decide = useEffectEvent((ready: boolean) =>
     decideUpdate({
@@ -83,8 +113,10 @@ export function useAppUpdate(
       // n'est pas rechargée : la nouvelle version s'applique au lancement suivant (H2, relecture).
       if (reloadingForUpdate) window.location.reload();
     } else if (decide(true) === "reload" && markReloadedForUpdate()) {
-      // Une autre fenêtre a installé la nouvelle version et celle-ci n'a rien de commencé.
+      // Une autre fenêtre a installé la nouvelle version et celle-ci n'a rien de commencé. Le rechargement
+      // est immédiat : la fenêtre de H3 s'affiche seulement sur la page rechargée.
       reloadingForUpdate = true;
+      markUpdateNotice();
       window.location.reload();
     }
   });
@@ -100,13 +132,55 @@ export function useAppUpdate(
   }, []);
 
   useEffect(() => {
-    if (applying.current || decide(updateReady) !== "reload") return;
+    if (applying.current || !showsUpdateWindow(decide(updateReady))) return;
     // Le souvenir est écrit avant le rechargement ; s'il ne peut pas l'être, on attend le lancement suivant.
     if (!markReloadedForUpdate()) return;
     applying.current = true;
     reloadingForUpdate = true;
+    // H3, critères 1 et 3 : la fenêtre s'affiche et bloque tout avant le rechargement. La décision est
+    // prise dans cet effet, seul endroit où elle peut l'être : l'état suit donc ici.
+    markUpdateNotice();
+    setKeyboardLocked(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setApplyingWindow(true);
     void applyUpdate.current?.();
   }, [updateReady, documentLoaded, activity]);
+
+  // H3, critère 1 : après le rechargement, la fenêtre reste jusqu'à l'affichage du document.
+  const finishing = RELOADED_FOR_UPDATE && !documentLoaded && !finishTimedOut;
+  const updating = applyingWindow || finishing;
+  // H3, critère 6 : le message « mis à jour » remplace alors la fenêtre.
+  const notice =
+    RELOADED_FOR_UPDATE && documentLoaded && !noticeDismissed ? updatedNotice(APP_VERSION) : null;
+
+  useEffect(() => {
+    setKeyboardLocked(updating);
+  }, [updating]);
+
+  // H3, critère 5 : jamais bloqué pour toujours. Au bout de 20 s, la fenêtre se ferme avec la version
+  // actuelle ; une prise de main tardive ne recharge plus la page, et la mise à jour attend le lancement suivant.
+  useEffect(() => {
+    if (!applyingWindow) return;
+    return startUpdateWatchdog(() => {
+      cancelReloadForUpdate();
+      clearUpdateNotice();
+      setKeyboardLocked(false);
+      setApplyingWindow(false);
+    });
+  }, [applyingWindow]);
+
+  useEffect(() => {
+    if (!RELOADED_FOR_UPDATE) return;
+    return startUpdateWatchdog(() => setFinishTimedOut(true));
+  }, []);
+
+  // H3, critère 6 : le message disparaît seul à la première frappe.
+  useEffect(() => {
+    if (!notice) return;
+    const dismiss = () => setNoticeDismissed(true);
+    window.addEventListener("keydown", dismiss, { once: true });
+    return () => window.removeEventListener("keydown", dismiss);
+  }, [notice]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -127,4 +201,6 @@ export function useAppUpdate(
       },
     };
   }, [activity]);
+
+  return { updating, notice, dismissNotice: () => setNoticeDismissed(true) };
 }

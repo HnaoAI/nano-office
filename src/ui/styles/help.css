@@ -1,0 +1,271 @@
+/* Panneau d'aide (A1), à droite de la page : surface blanche et ombre de la barre de mise en forme,
+   titres en 15 px (600), texte en 14 px, raccourcis dans des pastilles en IBM Plex Mono 12 px.
+   Il reste sous les boîtes de dialogue (z-index 10) et au-dessus de la partie figée (z-index 5).
+   Il ne s'imprime pas : print.css n'imprime que la page du document. */
+.nano-help {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 8;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--nano-radius-bar);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-bar);
+  color: var(--nano-document-text);
+}
+
+/* Groupe « Réglages » et « Aide » au bout de l'en-tête, au style du groupe Fichier (A1). */
+.nano-header-tools {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--nano-radius-group);
+  background: var(--nano-group-bg);
+}
+
+.nano-header-tools .nano-settings-button {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+}
+
+/* Bouton « Aide », panneau ouvert : bouton activé, sur fond d'encre (charte). */
+.nano-header-tools button[aria-expanded="true"] {
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+}
+
+/* Écran large : la page se décale vers la gauche pour rester visible à côté du panneau. */
+@media (min-width: 1240px) {
+  .nano-help-open {
+    padding-right: 392px;
+  }
+}
+
+.nano-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px 22px;
+  border-bottom: 1px solid var(--nano-group-bg);
+}
+
+.nano-help-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nano-help h2:focus,
+.nano-help h3:focus {
+  outline: none;
+}
+
+.nano-help-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  color: var(--nano-text-quiet);
+  cursor: pointer;
+}
+
+.nano-help button:focus-visible,
+.nano-help a:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-help-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 22px 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.nano-help-contents ol {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nano-help-contents button {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  color: var(--nano-text-secondary);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nano-help-contents button:hover {
+  background: var(--nano-surface-muted);
+}
+
+.nano-help-section {
+  padding-top: 18px;
+  border-top: 1px solid var(--nano-group-bg);
+  margin-top: 18px;
+  scroll-margin-top: 0;
+}
+
+.nano-help-section h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nano-help-section h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.nano-help-section p,
+.nano-help-steps {
+  margin: 0 0 10px;
+}
+
+.nano-help-steps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.nano-help-with-icon {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.nano-help-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-ink);
+}
+
+/* Messages repliés (décision du PO, PR 81) : le titre seul, déplié au clic ; plusieurs ouverts à la fois. */
+.nano-help-message {
+  margin-bottom: 6px;
+}
+
+.nano-help-message summary {
+  padding: 6px 10px;
+  border-radius: var(--nano-radius-button);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nano-help-message summary:hover {
+  background: var(--nano-surface-muted);
+}
+
+.nano-help-message summary:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-help-message[open] {
+  margin-bottom: 14px;
+}
+
+.nano-help-message[open] summary {
+  margin-bottom: 6px;
+}
+
+/* Graisse 600, intégrée à l'application : une graisse 700 serait demandée au réseau (critère 2). */
+.nano-help strong {
+  font-weight: 600;
+}
+
+/* La phrase affichée par l'application, telle quelle, au style discret d'une citation. */
+.nano-help-section .nano-help-shown {
+  margin-bottom: 6px;
+  padding: 8px 12px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-text-secondary);
+}
+
+.nano-help-shortcuts {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.nano-help-shortcuts th {
+  padding: 12px 0 4px;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--nano-text-quiet);
+  text-align: left;
+}
+
+.nano-help-shortcuts td {
+  padding: 4px 0;
+  vertical-align: middle;
+}
+
+.nano-help-shortcuts td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nano-help kbd {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-surface-muted);
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-ink);
+}
+
+.nano-help-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--nano-group-bg);
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+  overflow-wrap: anywhere;
+}
+
+.nano-help-footer a {
+  color: var(--nano-text-secondary);
+}
+
+/* Petite largeur : le panneau occupe tout l'écran (critère 1). */
+@media (max-width: 700px) {
+  .nano-help {
+    inset: 0;
+    width: auto;
+    border-radius: 0;
+  }
+}

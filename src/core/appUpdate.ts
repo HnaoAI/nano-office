@@ -1,5 +1,7 @@
 // Décision « recharger maintenant ou attendre » quand une nouvelle version de l'application est prête
-// (ticket H1, critères 5 à 8 ; H2 : un document restauré ne reporte plus la mise à jour). Logique pure : le service worker et le stockage sont dans src/ui/useAppUpdate.ts.
+// (ticket H1, critères 5 à 8 ; H2 : un document restauré ne reporte plus la mise à jour), et fenêtre
+// « Nano Buro se met à jour » avec son délai de 20 s (H3). Logique pure : le service worker et le
+// stockage sont dans src/ui/useAppUpdate.ts.
 
 /**
  * Signes que l'utilisateur a commencé à travailler depuis le lancement (H1, critère 6).
@@ -65,4 +67,33 @@ export function decideUpdate(state: LaunchState): UpdateDecision {
   if (!state.updateReady || !state.documentLoaded) return "wait";
   if (!state.reloadKeepsDocument) return "next-launch";
   return "reload";
+}
+
+/**
+ * Délai au-delà duquel la fenêtre « Nano Buro se met à jour » se ferme et débloque l'application avec
+ * la version actuelle (H3, critère 5) : service worker bloqué, ou connexion perdue pendant le téléchargement.
+ */
+export const UPDATE_WINDOW_TIMEOUT_MS = 20_000;
+
+/**
+ * Vrai si la fenêtre « Nano Buro se met à jour » doit s'afficher (H3, critères 1 et 4) : seulement quand
+ * la mise à jour au lancement est décidée, donc jamais une fois le travail commencé.
+ */
+export function showsUpdateWindow(decision: UpdateDecision): boolean {
+  return decision === "reload";
+}
+
+/**
+ * Lance le délai de la fenêtre de mise à jour (H3, critère 5).
+ * INVARIANT : l'application n'est jamais bloquée pour toujours ; `onGiveUp` est appelé une seule fois,
+ * au bout de `timeoutMs`, sauf si la fonction renvoyée a été appelée avant.
+ * @param onGiveUp ferme la fenêtre et débloque l'application ; la mise à jour attend le lancement suivant
+ * @returns arrête le délai (nouvelle version affichée) ; sans effet après le déblocage
+ */
+export function startUpdateWatchdog(
+  onGiveUp: () => void,
+  timeoutMs: number = UPDATE_WINDOW_TIMEOUT_MS,
+): () => void {
+  const timer = setTimeout(onGiveUp, timeoutMs);
+  return () => clearTimeout(timer);
 }

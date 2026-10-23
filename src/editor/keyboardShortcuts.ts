@@ -22,6 +22,8 @@ interface Modifiers {
  */
 export interface Shortcut extends Modifiers {
   code: string;
+  /** Nom de l'action, affiché dans le tableau des raccourcis de l'aide (A1, critère 3.7). */
+  label: string;
   run: (editor: Editor) => boolean;
 }
 
@@ -33,6 +35,7 @@ function headingShortcuts(mac: boolean): Shortcut[] {
   const levels: BlockStyleLevel[] = [0, 1, 2, 3];
   return levels.map((level) => ({
     code: `Digit${String(level)}`,
+    label: level === 0 ? "Texte normal" : `Titre ${String(level)}`,
     mod: true,
     ...(mac ? { alt: true } : { shift: true }),
     run: (editor: Editor) => {
@@ -46,6 +49,7 @@ function headingShortcuts(mac: boolean): Shortcut[] {
 const LIST_SHORTCUTS: Shortcut[] = [
   {
     code: "Digit8",
+    label: "Liste à puces",
     mod: true,
     shift: true,
     run: (editor) => {
@@ -55,6 +59,7 @@ const LIST_SHORTCUTS: Shortcut[] = [
   },
   {
     code: "Digit7",
+    label: "Liste numérotée",
     mod: true,
     shift: true,
     run: (editor) => {
@@ -62,8 +67,13 @@ const LIST_SHORTCUTS: Shortcut[] = [
       return true;
     },
   },
-  { code: "Tab", run: indentListItem },
-  { code: "Tab", shift: true, run: outdentListItem },
+  { code: "Tab", label: "Liste : décaler à droite", run: indentListItem },
+  {
+    code: "Tab",
+    label: "Liste : décaler à gauche",
+    shift: true,
+    run: outdentListItem,
+  },
 ];
 
 /**
@@ -73,13 +83,14 @@ const LIST_SHORTCUTS: Shortcut[] = [
  */
 const ALIGNMENT_SHORTCUTS: Shortcut[] = (
   [
-    ["KeyL", "left"],
-    ["KeyE", "center"],
-    ["KeyR", "right"],
-    ["KeyJ", "justify"],
-  ] as [string, TextAlignment][]
-).map(([code, alignment]) => ({
+    ["KeyL", "left", "Aligner à gauche"],
+    ["KeyE", "center", "Centrer"],
+    ["KeyR", "right", "Aligner à droite"],
+    ["KeyJ", "justify", "Justifier"],
+  ] as [string, TextAlignment, string][]
+).map(([code, alignment, label]) => ({
   code,
+  label,
   mod: true,
   shift: true,
   run: (editor: Editor) => {
@@ -91,6 +102,7 @@ const ALIGNMENT_SHORTCUTS: Shortcut[] = (
 /** Barré (T2.3, critère 2) : Ctrl/Cmd+Shift+X, comme Google Docs (Ctrl/Cmd+Shift+S enregistre ailleurs). */
 const STRIKE_SHORTCUT: Shortcut = {
   code: "KeyX",
+  label: "Barré",
   mod: true,
   shift: true,
   run: (editor) => {

@@ -26,7 +26,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `pageSetup.ts` : mise en page dans l'historique d'annulation : la `Y.Map` « page » suivie par Ctrl/Cmd+Z, un changement isolé de la frappe (`createPageSetupHistory`, T2.5)
 - `stickyScroll.ts` : défilement de l'éditeur sous la partie figée de l'interface : le curseur n'est jamais caché par la barre (`scrollBelowStickyTop`, M1)
 - `focus.ts` : redonne le focus à l'éditeur tout de suite après un clic sur la barre (`focusEditor`, lot A)
-- `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1), barré Ctrl/Cmd+Shift+X (T2.3)
+- `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1), barré Ctrl/Cmd+Shift+X (T2.3), avec leur nom affiché dans l'aide (A1)
 - `userEdits.ts` : reconnaît une modification faite par l'utilisateur, pour la mise à jour au démarrage (`isUserEdit`, H1)
 - `devTestHook.ts` : expose le contenu du Y.Doc aux tests Playwright, en développement seulement
 - `assistantEdits.ts` : assistant (T3.1) : texte sélectionné paragraphe par paragraphe, plages suivies pendant une demande, une étape d'annulation, traduction qui remplace la sélection ou s'insère après (`selectedParagraphs`, `watchRanges`, `replaceWithParagraphs`, `insertParagraphsAfter`)
