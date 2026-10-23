@@ -181,6 +181,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Gras, italique et barré : sélectionnez le texte, puis cliquez sur « Gras », « Italique » ou « Barré ». « Aa » passe la sélection en MAJUSCULES, en minuscules ou avec une majuscule au début de chaque phrase.",
+      },
+      {
+        kind: "text",
         icon: "color",
         text: "Couleurs : sélectionnez le texte, puis « Couleur du texte » ou « Surlignage », et choisissez une pastille.",
       },
@@ -203,6 +207,10 @@ export const HELP_SECTIONS: HelpSection[] = [
         kind: "text",
         icon: "page",
         text: "Mise en page : « Mise en page… », au bout de la barre, choisit l'orientation de la feuille et ses marges.",
+      },
+      {
+        kind: "text",
+        text: "Rechercher et remplacer : la recherche s'ouvre avec le raccourci indiqué dans « Raccourcis clavier ». Tapez le mot cherché, puis passez d'un résultat à l'autre avec Entrée. « Remplacer… » permet de remplacer un mot ou tous à la fois. Un seul « Annuler » remet tout comme avant.",
       },
       {
         kind: "text",
@@ -276,7 +284,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         kind: "text",
         icon: "lock",
-        text: "Vos documents restent sur votre ordinateur et dans votre dossier synchronisé. Nano Buro n'envoie rien sur Internet, sauf si vous allumez l'assistant IA : il ne télécharge que ses propres mises à jour. Pas de publicité, pas de compte à créer.",
+        text: "Vos documents restent sur votre ordinateur et dans votre dossier synchronisé. Nano Buro n'envoie rien sur Internet : il ne fait que télécharger ses propres mises à jour. Seule exception, l'assistant IA, si vous décidez de l'allumer. Pas de publicité, pas de compte à créer.",
       },
       {
         kind: "text",
