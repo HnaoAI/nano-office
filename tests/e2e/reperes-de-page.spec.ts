@@ -16,6 +16,7 @@ import {
   saveAndReopen,
   start,
   topBlocks,
+  waitAfterFocus,
   waitEditorFocus,
   WINDOWS_USER_AGENT,
 } from "./formatHelpers";
@@ -204,13 +205,21 @@ test.describe("T2.8 : repères de page", () => {
     await start(page);
     await openDocument(page, THREE_PAGES);
     await expect(marks(page)).toHaveCount(2);
+    await waitAfterFocus(page);
     await editor(page).press("ControlOrMeta+End");
+    const blocksBefore = (await topBlocks(page)).length;
     for (let index = 0; index < 30; index++) await editor(page).press("Enter");
-    await expect(marks(page)).not.toHaveCount(2);
-    const count = await marks(page).count();
-    await expect(counter(page)).toContainText(`sur ${String(count + 1)}`);
+    await expect.poll(async () => (await topBlocks(page)).length).toBe(blocksBefore + 30);
+    // Repères et compteur relus ensemble, une fois la frappe terminée : une page de plus au moins.
+    const shown = async () => {
+      const count = await marks(page).count();
+      const text = (await counter(page).textContent()) ?? "";
+      return text.endsWith(`sur ${String(count + 1)}`) ? count : -1;
+    };
+    await expect.poll(shown).toBeGreaterThan(2);
     for (let index = 0; index < 30; index++) await editor(page).press("Backspace");
     await expect(marks(page)).toHaveCount(2);
+    await expect(counter(page)).toContainText("sur 3");
   });
 
   test("critère 4 : un document de 100 pages se calcule sans bloquer la saisie", async ({
