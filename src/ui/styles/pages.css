@@ -1,0 +1,66 @@
+/* Repères de page et saut de page manuel (T2.8), sur la feuille du document. Découpés de layout.css
+   (décision du PO du 2026-10-24). Le compteur « Page 3 sur 7 » est dans le pied de page (layout.css). */
+/* Saut de page manuel (T2.8, critère 7) : une ligne discrète « Saut de page », centrée dans la feuille.
+   Le libellé vient d'ici, pas du document : il n'est ni enregistré, ni copié, ni imprimé (print.css). */
+.nano-editor .nano-page-break {
+  margin: 0 0 16px;
+  padding: 2px 0;
+  border-radius: var(--nano-radius-button);
+  text-align: center;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--nano-text-quiet);
+  cursor: default;
+  user-select: none;
+}
+
+.nano-editor .nano-page-break::before {
+  content: "Saut de page";
+}
+
+.nano-editor .nano-page-break.ProseMirror-selectednode {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 2px;
+}
+
+/* Repères de page (T2.8, critères 1 et 2) : posés sur la feuille, ils ne décalent rien et ne reçoivent
+   pas les clics. Le trait traverse la feuille de bord à bord ; le numéro de la page suivante est dans la
+   marge de droite, juste sous le trait. */
+.nano-page-marks {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nano-page-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--nano-separator-strong);
+  transform: translateY(-0.5px);
+}
+
+.nano-page-number {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  width: var(--page-margin-right, 2.5cm);
+  text-align: center;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--nano-text-quiet);
+}
+
+/* Écran étroit (moins de 600 px) : le numéro tient dans la marge réduite de la page (layout.css). */
+@media (max-width: 600px) {
+  .nano-page-number {
+    width: 20px;
+  }
+}

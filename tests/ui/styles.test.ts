@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 const STYLE_FILES = [
   "tokens",
   "layout",
+  "pages",
   "toolbar",
   "pickers",
   "tables",

@@ -25,6 +25,7 @@ import "./fonts";
 // Ordre des feuilles : les variables d'abord, puis la mise en page, avant les composants qui la précisent.
 import "./styles/tokens.css";
 import "./styles/layout.css";
+import "./styles/pages.css";
 import "./styles/toolbar.css";
 import "./styles/pickers.css";
 import "./styles/tables.css";
