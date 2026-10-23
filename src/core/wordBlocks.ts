@@ -1,5 +1,6 @@
 // Conversion des blocs d'un document Nano Buro (JSON de Tiptap) en éléments de la bibliothèque `docx`
-// (MIT), pour l'export Word (T2.7) : paragraphes, titres, listes, tableaux, images et texte mis en forme.
+// (MIT), pour l'export Word (T2.7) : paragraphes, titres, listes, tableaux, images, sauts de page (T2.8) et texte
+// mis en forme.
 // Logique pure, sans navigateur ; le document Word complet est assemblé par wordExport.ts, les
 // couleurs sont converties par wordColors.ts (découpage M1).
 import {
@@ -8,6 +9,7 @@ import {
   HeadingLevel,
   ImageRun,
   LineRuleType,
+  PageBreak,
   Paragraph,
   Table,
   TableCell,
@@ -273,6 +275,9 @@ export function convertBlock(
       return [tableBlock(node, context)];
     case "image":
       return [imageBlock(node, context)];
+    case "pageBreak":
+      // Saut de page de Word (T2.8, critère 6), dans son propre paragraphe, comme Ctrl+Entrée dans Word.
+      return [new Paragraph({ children: [new PageBreak()] })];
     default:
       return [new Paragraph({ children: [new TextRun({ text: plainText(node) })] })];
   }

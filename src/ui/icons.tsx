@@ -262,6 +262,16 @@ export function PageSetupIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+/** Saut de page (T2.8, critère 6) : le bas d'une feuille et le haut de la suivante, séparés par un pointillé. */
+export function PageBreakIcon() {
+  return (
+    <Icon>
+      <path d="M6 3v6h12V3M6 21v-6h12v6" />
+      <path d="M3 12h2M8 12h2M14 12h2M19 12h2" />
+    </Icon>
+  );
+}
+
 /** Engrenage du bouton « Réglages » (T3.1, critère 1). */
 export function GearIcon({ size = 18 }: { size?: number }) {
   return (

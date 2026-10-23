@@ -1,4 +1,5 @@
-/* Mise en page (U1a) : bases, en-tête, groupe Fichier, page du document, pied de page. */
+/* Mise en page (U1a) : bases, en-tête, groupe Fichier, page du document, pied de page.
+   Repères de page, saut de page manuel et pied de page figé avec le compteur de pages (T2.8). */
 *,
 *::before,
 *::after {
@@ -186,6 +187,7 @@ button:focus-visible {
 /* Mise en page (T2.5) : largeur d'une feuille A4 et marges du document, à l'échelle (1 cm du CSS).
    Les variables sont posées sur la page par DocumentEditor.tsx ; sans elles, portrait et marges Normales. */
 .nano-page {
+  position: relative;
   width: 100%;
   max-width: var(--page-width, 21cm);
   min-height: var(--page-height, 29.7cm);
@@ -265,15 +267,87 @@ button:focus-visible {
   line-height: 1.4;
 }
 
+/* Saut de page manuel (T2.8, critère 7) : une ligne discrète « Saut de page », centrée dans la feuille.
+   Le libellé vient d'ici, pas du document : il n'est ni enregistré, ni copié, ni imprimé (print.css). */
+.nano-editor .nano-page-break {
+  margin: 0 0 16px;
+  padding: 2px 0;
+  border-radius: var(--nano-radius-button);
+  text-align: center;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--nano-text-quiet);
+  cursor: default;
+  user-select: none;
+}
+
+.nano-editor .nano-page-break::before {
+  content: "Saut de page";
+}
+
+.nano-editor .nano-page-break.ProseMirror-selectednode {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 2px;
+}
+
+/* Repères de page (T2.8, critères 1 et 2) : posés sur la feuille, ils ne décalent rien et ne reçoivent
+   pas les clics. Le trait traverse la feuille de bord à bord ; le numéro de la page suivante est dans la
+   marge de droite, juste sous le trait. */
+.nano-page-marks {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nano-page-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--nano-separator-strong);
+  transform: translateY(-0.5px);
+}
+
+.nano-page-number {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  width: var(--page-margin-right, 2.5cm);
+  text-align: center;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--nano-text-quiet);
+}
+
+/* Pied de page figé en bas de la fenêtre (T2.8, critère 5) : le compteur « Page 3 sur 7 » reste visible
+   pendant le défilement, au centre, entre la copie de secours et « Fonctionne hors ligne ». Le fond de
+   l'application le sépare du texte, comme la partie figée du haut (M1). */
 .nano-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 28px 22px;
+  padding: 10px 28px 12px;
+  background: var(--nano-app-bg);
   font-family: var(--nano-font-mono);
   font-size: 12px;
   color: var(--nano-text-quiet);
+}
+
+/* Fenêtre basse ou étroite : le pied de page défile avec la page, pour laisser la place au texte (M1). */
+@media (max-height: 499px), (max-width: 600px) {
+  .nano-footer {
+    position: static;
+  }
 }
 
 /* Écran étroit (moins de 600 px) : marges réduites, quelle que soit la mise en page (T2.5, critère 2). */
@@ -289,6 +363,10 @@ button:focus-visible {
   .nano-page {
     min-height: 70vh;
     padding: 32px 20px;
+  }
+
+  .nano-page-number {
+    width: 20px;
   }
 
   .nano-footer {

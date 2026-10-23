@@ -1,12 +1,13 @@
 // Raccourcis de mise en forme de Nano Buro, reconnus à la touche physique (`event.code`) et non au
 // caractère produit (`event.key`), pour fonctionner sur un clavier AZERTY (décision du 2026-10-18).
-// Les raccourcis équivalents de Tiptap sont retirés dans src/core/schema.ts.
+// Les raccourcis équivalents de Tiptap sont retirés dans src/core/schema.ts. Saut de page : Ctrl/Cmd+Entrée (T2.8).
 import { Extension, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { BlockStyleLevel, TextAlignment } from "../core/schema";
 import { setAlignment } from "./alignment";
 import { setBlockStyle } from "./blockStyle";
 import { indentListItem, outdentListItem, toggleList } from "./lists";
+import { insertPageBreak } from "./pageBreak";
 import { isMacPlatform } from "./platform";
 
 /** Touches modificatrices d'un raccourci. `mod` est Cmd sur Mac, Ctrl ailleurs. */
@@ -111,9 +112,23 @@ const STRIKE_SHORTCUT: Shortcut = {
   },
 };
 
+/** Saut de page (T2.8, critère 6) : Ctrl/Cmd+Entrée, comme Word et Google Docs. */
+const PAGE_BREAK_SHORTCUT: Shortcut = {
+  code: "Enter",
+  label: "Saut de page",
+  mod: true,
+  run: insertPageBreak,
+};
+
 /** Liste de tous les raccourcis, pour la plateforme donnée. */
 export function formatShortcuts(mac: boolean): Shortcut[] {
-  return [...headingShortcuts(mac), ...LIST_SHORTCUTS, ...ALIGNMENT_SHORTCUTS, STRIKE_SHORTCUT];
+  return [
+    ...headingShortcuts(mac),
+    ...LIST_SHORTCUTS,
+    ...ALIGNMENT_SHORTCUTS,
+    STRIKE_SHORTCUT,
+    PAGE_BREAK_SHORTCUT,
+  ];
 }
 
 /**

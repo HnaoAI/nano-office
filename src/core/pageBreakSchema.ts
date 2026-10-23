@@ -23,8 +23,8 @@ export const PAGE_BREAK_ATTRIBUTE = "data-page-break";
  * Rendu HTML : `<div data-page-break>` avec `break-before: page`, pour qu'il coupe aussi la page à
  * l'impression et dans un e-mail. Le libellé « Saut de page » vient de la feuille de style (pas de texte
  * dans le document, ni dans une copie vers une autre application).
- * Lu depuis un `<br>` ou un `<hr>` marqué `page-break-before: always` (Word, Google Docs) ; un autre
- * élément ainsi marqué est précédé d'un saut de page par src/editor/clipboard.ts.
+ * Lu depuis un `<br>` ou un `<hr>` marqué `page-break-before: always` (Word, Google Docs) entre deux
+ * blocs ; dans un paragraphe, ou sur un autre élément, src/editor/clipboard.ts le convertit avant.
  */
 export const PageBreakNode = Node.create({
   name: PAGE_BREAK_NODE,

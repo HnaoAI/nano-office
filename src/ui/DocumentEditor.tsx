@@ -1,6 +1,7 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1), panneau de
 // l'assistant (T3.1) et éditeur Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a),
-// au format et aux marges du document (T2.5).
+// au format et aux marges du document (T2.5), avec ses repères de page et le compteur « Page 3 sur 7 »
+// du pied de page (T2.8).
 // La barre de mise en forme, le panneau de l'assistant et la recherche s'affichent dans la partie
 // figée de App (M1).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
@@ -14,12 +15,15 @@ import { createEditorOptions } from "../editor/editorOptions";
 import { scrollBelowStickyTop } from "../editor/stickyScroll";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
+import { pageCounterText } from "../core/pageBreaks";
 import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
 import { AssistantPanel } from "./AssistantPanel";
+import { PageMarksLayer } from "./PageMarksLayer";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import { useAssistant } from "./useAssistant";
 import type { AssistantConfig } from "./useAssistantSettings";
+import { usePageLayout } from "./usePageLayout";
 import { usePageSetup } from "./usePageSetup";
 import { useSearchShortcuts } from "./useSearchShortcuts";
 
@@ -51,6 +55,9 @@ function pageStyle(setup: PageSetup): CSSProperties {
  *   haut de la fenêtre (M1) ; null avant son affichage
  * @param coveredTop hauteur cachée par la partie figée, pour que le curseur n'y passe jamais (M1,
  *   critère B) ; fonction stable
+ * @param coveredBottom hauteur cachée par le pied de page figé (T2.8) ; fonction stable
+ * @param counter emplacement du compteur « Page 3 sur 7 » dans le pied de page (T2.8, critère 5) ; null
+ *   avant son affichage
  */
 export function DocumentEditor({
   ydoc,
@@ -60,6 +67,8 @@ export function DocumentEditor({
   assistant,
   tools,
   coveredTop,
+  coveredBottom,
+  counter,
 }: {
   ydoc: Y.Doc;
   onEdit: () => void;
@@ -68,18 +77,22 @@ export function DocumentEditor({
   assistant: AssistantConfig | null;
   tools: HTMLElement | null;
   coveredTop: () => number;
+  coveredBottom: () => number;
+  counter: HTMLElement | null;
 }) {
   // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
-  // `onImageRejected` et `coveredTop` sont stables, ils ne recréent pas la configuration.
+  // `onImageRejected`, `coveredTop` et `coveredBottom` sont stables, ils ne recréent pas la configuration.
   const options = useMemo(() => {
     const base = createEditorOptions(ydoc, onImageRejected);
     return {
       ...base,
-      editorProps: { ...base.editorProps, ...scrollBelowStickyTop(coveredTop) },
+      editorProps: { ...base.editorProps, ...scrollBelowStickyTop(coveredTop, coveredBottom) },
     };
-  }, [ydoc, onImageRejected, coveredTop]);
+  }, [ydoc, onImageRejected, coveredTop, coveredBottom]);
   const editor = useEditor({ ...options, autofocus: true }, [ydoc]);
   const pageSetup = usePageSetup(ydoc);
+  const [sheet, setSheet] = useState<HTMLElement | null>(null);
+  const marks = usePageLayout(editor, sheet, pageSetup);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {
     if (isUserEdit(transaction)) onEdit();
@@ -140,15 +153,24 @@ export function DocumentEditor({
   return (
     <>
       {tools && createPortal(toolbar, tools)}
+      {counter &&
+        createPortal(
+          <span className="nano-page-counter">
+            {pageCounterText(marks.current, marks.layout.pageCount)}
+          </span>,
+          counter,
+        )}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
       <style>{printPageRule(pageSetup)}</style>
       <main className="nano-workspace">
         <article
+          ref={setSheet}
           className="nano-page"
           data-orientation={pageSetup.orientation}
           style={pageStyle(pageSetup)}
         >
           <EditorContent editor={editor} />
+          <PageMarksLayer starts={marks.layout.starts} offset={marks.offset} />
         </article>
       </main>
     </>
