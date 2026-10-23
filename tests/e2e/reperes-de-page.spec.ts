@@ -14,6 +14,7 @@ import {
   MAC_USER_AGENT,
   pasteFromOtherApp,
   saveAndReopen,
+  settleSelection,
   start,
   topBlocks,
   waitAfterFocus,
@@ -404,12 +405,17 @@ test.describe("T2.8 : saut de page", () => {
     await editor(page).press("ControlOrMeta+Enter");
     await editor(page).pressSequentially("Deux");
     await editor(page).press("ControlOrMeta+a");
+    await settleSelection(page);
     await editor(page).press("ControlOrMeta+c");
     await editor(page).press("ControlOrMeta+End");
+    await settleSelection(page);
     await editor(page).press("Enter");
     await editor(page).press("ControlOrMeta+v");
+    // Le collage est lu après l'événement : on attend le document, au lieu de le lire tout de suite.
+    const pageBreaks = async () =>
+      (await topBlocks(page)).filter((block) => block.type === "pageBreak").length;
+    await expect.poll(pageBreaks).toBe(2);
     const blocks = await topBlocks(page);
-    expect(blocks.filter((block) => block.type === "pageBreak")).toHaveLength(2);
     const ids = blocks.map((block) => block.attrs?.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
