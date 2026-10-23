@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { CORRUPTED_FILE_MESSAGE, PARSE_ERROR_MESSAGES } from "../../src/core/documentFile";
 import { formatShortcuts, matchesShortcut } from "../../src/editor/keyboardShortcuts";
 import { recoveredMessage, saveMessage } from "../../src/ui/fileMessages";
-import { HELP_MESSAGES, HELP_SECTIONS, type HelpBlock } from "../../src/ui/help/helpContent";
+import { HELP_SECTIONS, type HelpBlock } from "../../src/ui/help/helpContent";
+import { HELP_MESSAGES } from "../../src/ui/help/helpMessages";
 import {
   helpShortcutGroups,
   shortcutKeys,

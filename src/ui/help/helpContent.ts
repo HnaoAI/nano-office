@@ -2,15 +2,11 @@
 // directement dans la PR. Aucun rendu Markdown : HelpPanel.tsx affiche ces blocs tels quels.
 // INVARIANT : les phrases des messages viennent des mêmes constantes que l'application (critère 4),
 // jamais d'une copie : une phrase changée dans l'application change aussi dans l'aide.
-import { CORRUPTED_FILE_MESSAGE, PARSE_ERROR_MESSAGES } from "../../core/documentFile";
-import { recoveredMessage, saveMessage } from "../fileMessages";
 import { SAVE_STATE_LABELS } from "../SaveIndicator";
 import { PRINT_SHORTCUT, SAVE_SHORTCUT } from "../shortcuts";
 import { UPDATE_REASSURANCE, UPDATE_TITLE } from "../updateTexts";
 import type { HelpIconName } from "./helpIcons";
-
-/** Nom de fichier pris en exemple dans les messages cités. */
-const EXAMPLE_FILE = "Lettre.nano";
+import { HELP_MESSAGES } from "./helpMessages";
 
 /**
  * Un bloc d'une section :
@@ -32,23 +28,6 @@ export interface HelpSection {
   title: string;
   blocks: HelpBlock[];
 }
-
-/**
- * Messages de l'application cités par l'aide, dans l'ordre du critère 3.4, avec la phrase exacte affichée
- * (critère 4). Exportés pour le test qui vérifie qu'ils viennent des mêmes constantes.
- */
-export const HELP_MESSAGES = {
-  recovered: recoveredMessage(null).text,
-  changedElsewhere: saveMessage({ status: "conflict", name: EXAMPLE_FILE })?.text ?? "",
-  permission: recoveredMessage({
-    name: EXAMPLE_FILE,
-    needsPermission: true,
-    changedElsewhere: false,
-  }).text,
-  corrupted: CORRUPTED_FILE_MESSAGE,
-  newerVersion: PARSE_ERROR_MESSAGES["unsupported-version"],
-  saveFailed: saveMessage({ status: "failed" })?.text ?? "",
-};
 
 /** Sections de l'aide, dans l'ordre du critère 3. */
 export const HELP_SECTIONS: HelpSection[] = [
@@ -208,12 +187,12 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         kind: "text",
         icon: "table",
-        text: "Tableaux : « Insérer un tableau », puis choisissez sa taille dans la grille. Quand le curseur est dans un tableau, le groupe « Tableau » ajoute ou retire des lignes et des colonnes.",
+        text: "Tableaux : « Insérer un tableau », puis choisissez sa taille dans la grille. Quand le curseur est dans un tableau, des boutons apparaissent dans la barre pour ajouter ou retirer des lignes et des colonnes.",
       },
       {
         kind: "text",
         icon: "image",
-        text: "Images : « Insérer une image », ou collez-la, ou faites-la glisser dans le document. Cliquez sur l'image pour lui donner un texte de remplacement.",
+        text: "Images : « Insérer une image », ou collez-la, ou faites-la glisser dans le document. Pour la décrire, cliquez sur l'image, puis sur « Texte de remplacement ».",
       },
       {
         kind: "text",
@@ -260,6 +239,10 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: "Raccourcis clavier",
     blocks: [
       { kind: "text", text: "Les touches affichées sont celles de cet ordinateur." },
+      {
+        kind: "text",
+        text: "Sur un clavier français, la barre / s'obtient avec Shift et la touche « : ».",
+      },
       { kind: "shortcuts" },
     ],
   },
@@ -293,7 +276,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         kind: "text",
         icon: "lock",
-        text: "Vos documents restent sur votre ordinateur et dans votre dossier synchronisé. Nano Buro n'envoie rien sur Internet : il ne télécharge que ses propres mises à jour. Pas de publicité, pas de compte à créer.",
+        text: "Vos documents restent sur votre ordinateur et dans votre dossier synchronisé. Nano Buro n'envoie rien sur Internet, sauf si vous allumez l'assistant IA : il ne télécharge que ses propres mises à jour. Pas de publicité, pas de compte à créer.",
       },
       {
         kind: "text",

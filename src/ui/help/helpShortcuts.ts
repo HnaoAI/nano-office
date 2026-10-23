@@ -1,7 +1,7 @@
 // Tableau des raccourcis clavier de l'aide (A1, critère 3.7), affiché avec les touches de l'ordinateur
 // utilisé (⌘ et ⌥ sur Mac, Ctrl et Shift sur PC). Les raccourcis de mise en forme viennent de la liste
 // réelle (src/editor/keyboardShortcuts.ts) ; ceux de la page sont décrits ici, et
-// tests/ui/helpShortcuts.test.ts vérifie que chacun déclenche bien l'action réelle.
+// tests/ui/help.test.ts vérifie que chacun déclenche bien l'action réelle.
 import { formatShortcuts } from "../../editor/keyboardShortcuts";
 
 /** Un raccourci : touche physique (`event.code`) et modificateurs exacts. `mod` est Cmd sur Mac, Ctrl ailleurs. */
