@@ -24,6 +24,7 @@ Même arborescence que `src/`.
   - `reseau.spec.ts` : aucune donnée de document sur le réseau pendant l'édition, l'ouverture et l'enregistrement (T0e)
   - `hors-ligne.spec.ts` : version construite installable et hors ligne, polices du document hors ligne (T0e, T1.4, projet Playwright « pwa », après `npm run build`)
   - `mise-a-jour.spec.ts` : numéro de version « dev », signes de travail commencé avant une mise à jour (H1), mise à jour simulée malgré un document restauré, qui revient à l'identique (H2)
+  - `fenetre-mise-a-jour.spec.ts` : fenêtre « Nano Buro se met à jour » : affichage, blocage, message « mis à jour », déblocage au bout de 20 s, moins d'animations (H3)
   - `publication.spec.ts` : version construite sous /nano-office/, installable, hors ligne, numéro de version (H1, projet Playwright « pages »)
   - `interface.spec.ts` : structure de l'interface et polices intégrées (U1a)
   - `titres.spec.ts` : titres, raccourcis Mac et Windows, AltGr, Entrée, `# `, annulation (T1.1)

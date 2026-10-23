@@ -1,0 +1,56 @@
+/* Fenêtre « Nano Buro se met à jour » (H3, critère 2) : boîte de dialogue de la charte (dialog.css),
+   au-dessus de tout, avec un N d'environ 48 px qui tourne sur son axe vertical, un tour en 1,6 s. */
+.nano-update-layer {
+  z-index: 30;
+}
+
+.nano-update {
+  width: 420px;
+  align-items: center;
+  text-align: center;
+}
+
+.nano-update:focus {
+  outline: none;
+}
+
+/* La perspective donne du relief à la rotation `rotateY`. */
+.nano-update-mark {
+  perspective: 240px;
+}
+
+.nano-update-n {
+  display: block;
+  font-family: var(--nano-font-sans);
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--nano-ink);
+  animation: nano-update-spin 1.6s linear infinite;
+}
+
+@keyframes nano-update-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+/* Critère 7 : moins d'animations demandées, le N ne tourne pas ; il pulse doucement en opacité. */
+@media (prefers-reduced-motion: reduce) {
+  .nano-update-n {
+    animation: nano-update-pulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes nano-update-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
