@@ -160,9 +160,47 @@ test("critère 4 : la phrase d'un fichier abîmé est la même dans l'aide et da
   const shownByApp = await page.getByRole("alert").textContent();
   expect(shownByApp).toBe(CORRUPTED_FILE_MESSAGE);
   await helpButton(page).click();
+  // Messages repliés (décision du PO, PR 81) : on déplie d'abord celui du fichier abîmé.
+  await panel(page).getByText("Fichier abîmé", { exact: true }).click();
   await expect(panel(page).locator(".nano-help-shown", { hasText: shownByApp ?? "" })).toHaveText(
     shownByApp ?? "",
   );
+  await expect(
+    panel(page).locator(".nano-help-shown", { hasText: shownByApp ?? "" }),
+  ).toBeVisible();
+});
+
+test("critère 3.4 : les messages sont repliés au départ, un clic ou Entrée les déplie, plusieurs à la fois", async ({
+  page,
+}) => {
+  await start(page);
+  await helpButton(page).click();
+  const messages = panel(page).locator("details.nano-help-message");
+  await expect(messages).toHaveCount(6);
+  await expect(messages.locator("summary")).toHaveText([
+    "Document récupéré",
+    "Fichier modifié ailleurs",
+    "Autorisation à redonner",
+    "Fichier abîmé",
+    "Fichier d'une version plus récente",
+    "Échec de l'enregistrement",
+  ]);
+  for (const message of await messages.all()) {
+    await expect(message).not.toHaveAttribute("open");
+    await expect(message.locator(".nano-help-shown")).toBeHidden();
+  }
+  // Clic sur le premier titre.
+  await messages.nth(0).locator("summary").click();
+  await expect(messages.nth(0).locator(".nano-help-shown")).toBeVisible();
+  await expect(messages.nth(0)).toContainText("Que faire :");
+  // Entrée au clavier sur le deuxième : le premier reste ouvert.
+  await messages.nth(1).locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(messages.nth(1).locator(".nano-help-shown")).toBeVisible();
+  await expect(messages.nth(0).locator(".nano-help-shown")).toBeVisible();
+  // Espace replie le deuxième.
+  await page.keyboard.press("Space");
+  await expect(messages.nth(1).locator(".nano-help-shown")).toBeHidden();
 });
 
 test("critère 6 : l'aide ne s'imprime pas et n'est jamais enregistrée dans le document", async ({

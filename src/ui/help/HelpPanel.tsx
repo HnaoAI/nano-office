@@ -67,14 +67,15 @@ function Block({ block }: { block: HelpBlock }) {
       );
     case "message":
       return (
-        <div className="nano-help-message">
-          <h4>{block.title}</h4>
+        // Replié : seul le titre est visible ; un clic, Entrée ou Espace le déplie (décision du PO, PR 81).
+        <details className="nano-help-message">
+          <summary>{block.title}</summary>
           <p className="nano-help-shown">{block.shown}</p>
           <p>
             <strong>Que faire : </strong>
             {block.todo}
           </p>
-        </div>
+        </details>
       );
     case "shortcuts":
       return <ShortcutTable />;

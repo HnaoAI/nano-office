@@ -167,8 +167,33 @@
   color: var(--nano-ink);
 }
 
+/* Messages repliés (décision du PO, PR 81) : le titre seul, déplié au clic ; plusieurs ouverts à la fois. */
 .nano-help-message {
+  margin-bottom: 6px;
+}
+
+.nano-help-message summary {
+  padding: 6px 10px;
+  border-radius: var(--nano-radius-button);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nano-help-message summary:hover {
+  background: var(--nano-surface-muted);
+}
+
+.nano-help-message summary:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-help-message[open] {
   margin-bottom: 14px;
+}
+
+.nano-help-message[open] summary {
+  margin-bottom: 6px;
 }
 
 /* Graisse 600, intégrée à l'application : une graisse 700 serait demandée au réseau (critère 2). */
