@@ -17,3 +17,6 @@ export const PRINT_SHORTCUT = IS_MAC ? "⌘P" : "Ctrl+P";
  * suivi du chiffre du niveau (0 pour le texte normal).
  */
 export const HEADING_MOD = IS_MAC ? "Cmd+Option" : "Ctrl+Shift";
+
+/** Raccourci de l'aide affiché dans l'infobulle du bouton « Aide » (A1) : ⌘/ sur Mac, Ctrl+/ ailleurs. */
+export const HELP_SHORTCUT = IS_MAC ? "⌘/" : "Ctrl+/";

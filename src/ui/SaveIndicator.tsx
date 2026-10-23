@@ -2,7 +2,8 @@
 // « Enregistré » (point plein), « Enregistrement… » (point creux), « Non enregistré » (pastille noire).
 import type { SaveState } from "./documentState";
 
-const LABELS: Record<SaveState, string> = {
+/** Textes de la pastille, repris par l'aide (A1). */
+export const SAVE_STATE_LABELS: Record<SaveState, string> = {
   saved: "Enregistré",
   saving: "Enregistrement…",
   unsaved: "Non enregistré",
@@ -17,7 +18,7 @@ export function SaveIndicator({ state }: { state: SaveState }) {
   return (
     <span className={`nano-save-state nano-save-state-${state}`}>
       <span className="nano-save-dot" aria-hidden="true" />
-      {LABELS[state]}
+      {SAVE_STATE_LABELS[state]}
     </span>
   );
 }

@@ -1,10 +1,13 @@
 // Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché,
-// boîtes « Mise en page » (T2.5) et « Réglages » (T3.1), fenêtre et message de mise à jour (H3), et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+// boîtes « Mise en page » (T2.5) et « Réglages » (T3.1), fenêtre et message de mise à jour (H3),
+// panneau d'aide à droite (A1), et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
 // L'en-tête, le message et la barre de mise en forme restent en haut de la fenêtre (M1, `useStickyTop`).
 import { useCallback, useState } from "react";
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
+import { HelpPanel } from "./help/HelpPanel";
+import { useHelpPanel } from "./help/useHelpPanel";
 import { MessageBar } from "./MessageBar";
 import { PageSetupDialog } from "./PageSetupDialog";
 import { SettingsDialog } from "./SettingsDialog";
@@ -30,6 +33,7 @@ import "./styles/messages.css";
 import "./styles/dialog.css";
 import "./styles/assistant.css";
 import "./styles/update.css";
+import "./styles/help.css";
 import "./styles/print.css";
 
 /**
@@ -69,6 +73,8 @@ export function App() {
   // Réglages de l'assistant (T3.1), gardés sur cet ordinateur, communs à tous les documents.
   const assistant = useAssistantSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Aide (A1) : une boîte ouverte compte comme travail commencé, pour qu'une mise à jour ne la ferme pas (H1).
+  const help = useHelpPanel(noteFileAction);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
   // Partie figée (M1) : la barre de mise en forme et la recherche de l'éditeur s'affichent dans
   // `editorTools`, sous le message, pour rester en haut avec l'en-tête.
@@ -86,13 +92,17 @@ export function App() {
   // s'affiche seul, sans groupe Fichier ni indicateur.
   return (
     <>
-      <div className="nano-app" inert={update.updating}>
+      <div
+        className={help.open && document ? "nano-app nano-help-open" : "nano-app"}
+        inert={update.updating}
+      >
         <div className="nano-top" ref={topRef}>
           <AppHeader
             fileName={document?.fileName ?? null}
             saveState={saveState}
             actions={document ? actions : null}
             onSettings={document ? () => setSettingsOpen(true) : undefined}
+            help={document ? help : undefined}
           />
           <div className="nano-top-tools" ref={toolsRef}>
             {update.notice && <UpdateNotice text={update.notice} onClose={update.dismissNotice} />}
@@ -149,6 +159,7 @@ export function App() {
                 onCancel={closeSettings}
               />
             )}
+            {help.open && <HelpPanel onClose={help.close} />}
             <footer className="nano-footer">
               <span>{backupLinked ? "Copie de secours à jour" : ""}</span>
               <span>Fonctionne hors ligne</span>

@@ -4,7 +4,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 
 - `App.tsx` : composant racine (en-tête, message, question de la copie de secours, éditeur recréé pour chaque Y.Doc, pied de page) ; en-tête, message et barre de mise en forme figés en haut de la fenêtre (M1)
 - `useStickyTop.ts` : mesure la partie figée en haut de la fenêtre, pour que le curseur et les occurrences trouvées ne passent jamais dessous (M1)
-- `AppHeader.tsx` : en-tête : logo, nom et version de l'application (H1), nom du document et du fichier, indicateur d'enregistrement (U1b), groupe Fichier (U1a), bouton « Réglages » (T3.1)
+- `AppHeader.tsx` : en-tête : logo, nom et version de l'application (H1), nom du document et du fichier, indicateur d'enregistrement (U1b), groupe Fichier (U1a), bouton « Réglages » (T3.1), bouton « Aide » (A1)
 - `useDocumentFile.ts` : hook du document affiché : Nouveau, Ouvrir, Enregistrer, Ctrl/Cmd+S, titre de la fenêtre (T0c), restauration et question de la copie de secours (T0d), état de l'indicateur et fermeture des messages (U1b), sauvegarde automatique (T1.6), fichier retrouvé au lancement (PL3), message d'une image refusée (T1.9), messages de l'export (T2.7)
 - `useLaunchRestore.ts` : au lancement, restaure le dernier document modifié depuis sa copie de secours (T0d), avec le fichier retrouvé (PL3)
 - `useLaunchActivity.ts` : signes de travail commencé depuis le lancement, pour la mise à jour au démarrage (H1)
@@ -29,7 +29,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `PageSetupDialog.tsx` : boîte « Mise en page » : orientation, marges Normales, Étroites, Larges ou Personnalisées (T2.5)
 - `usePageSetupDialog.ts` : ouverture de la boîte « Mise en page », application au Y.Doc affiché, retour du focus (T2.5)
 - `usePageSetup.ts` : mise en page du document affiché, relue à chaque changement et à chaque annulation (T2.5)
-- `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres)
+- `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres, ⌘/ ou Ctrl+/ de l'aide)
 - `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), recherche (T2.1), barré (T2.3), mise en page (T2.5), interligne (M1)
 - `fonts.ts` : polices intégrées : IBM Plex Sans et Mono de l'interface (U1a), cinq polices du document en quatre graisses (T1.4)
 - `ParagraphStyleSelect.tsx` : liste déroulante « Style du paragraphe » : texte normal, titre 1 à 3 (T1.1)
@@ -53,4 +53,5 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `useAssistant.ts` : « Corriger » et « Traduire en anglais » : demande, Échap, texte suivi pendant la demande, propositions ou traduction, messages ; état en ligne (T3.1)
 - `AssistantButtons.tsx` : groupe « Assistant » de la barre, grisé sans sélection, hors ligne ou pendant une demande (T3.1)
 - `AssistantPanel.tsx` : panneau de l'assistant au style des messages : demande en cours, erreur, barre des modifications proposées, traduction (T3.1)
+- `help/` : aide intégrée et hors ligne (A1) : contenu, panneau, raccourcis affichés, icônes (voir `help/README.md`)
 - `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

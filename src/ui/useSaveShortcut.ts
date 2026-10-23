@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent } from "react";
 
 /** Vrai pour Ctrl+S (Windows) ou Cmd+S (Mac), sans autre touche de modification. */
-function isSaveShortcut(event: KeyboardEvent): boolean {
+export function isSaveShortcut(event: KeyboardEvent): boolean {
   return (
     (event.ctrlKey || event.metaKey) &&
     !event.altKey &&
