@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import { CellSelection } from "@tiptap/pm/tables";
 import { documentExtensions, documentSchema } from "../../src/core/schema";
 import { BlockIdGenerator } from "../../src/editor/blockIds";
 import { CleanClipboard } from "../../src/editor/clipboard";
@@ -228,6 +229,45 @@ describe("T2.8 : saut de page", () => {
       "—",
       "paragraph:Deuxième",
     ]);
+  });
+
+  it("critère 6 : avec des cellules sélectionnées, rien n'est effacé et le saut de page suit le tableau", () => {
+    const cell = (id: string, value: string): DocumentJson => ({
+      type: "tableCell",
+      attrs: { id },
+      content: [para(`${id}-p`, value)],
+    });
+    const target = create(
+      {
+        type: "table",
+        content: [
+          { type: "tableRow", content: [cell("c-1", "X00"), cell("c-2", "X01")] },
+          { type: "tableRow", content: [cell("c-3", "X10"), cell("c-4", "X11")] },
+        ],
+      },
+      para("p-1", "Suite"),
+    );
+    const cells: number[] = [];
+    target.state.doc.descendants((node, pos) => {
+      if (node.type.name === "tableCell") cells.push(pos);
+    });
+    target.view.dispatch(
+      target.state.tr.setSelection(
+        CellSelection.create(target.state.doc, cells[0] ?? 0, cells[3] ?? 0),
+      ),
+    );
+    insertPageBreak(target);
+    expect(blocks(target)).toEqual(["table:X00X01X10X11", "—", "paragraph:", "paragraph:Suite"]);
+  });
+
+  it("critère 8 : un saut de page de Word dans une cellule collée est ignoré, sans couper le tableau", () => {
+    const target = create(para("p-1", ""));
+    pasteHtml(
+      target,
+      "<table><tr><td><p>Un<br style='page-break-before:always'>deux</p></td><td><p style='page-break-before:always'>Trois</p></td></tr></table>",
+    );
+    expect(blocks(target).filter((block) => block.startsWith("table"))).toHaveLength(1);
+    expect(blocks(target)).not.toContain("—");
   });
 
   it("un `<br>` ou un `<hr>` ordinaire n'est pas un saut de page", () => {

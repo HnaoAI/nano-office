@@ -65,6 +65,15 @@ export function textAreaHeight(setup: PageSetup): number {
 }
 
 /**
+ * Largeur de la zone de texte d'une page A4, en pixels : la feuille sans les marges de gauche et de
+ * droite, dans l'orientation du document (T2.5).
+ */
+export function textAreaWidth(setup: PageSetup): number {
+  const { width } = pageSize(setup.orientation);
+  return (width - setup.margins.left - setup.margins.right) * PX_PER_CM;
+}
+
+/**
  * Calcule les coupures de page, comme l'impression de Chromium (T2.8, critère 3) :
  * - un morceau qui dépasse le bas de la page passe à la suivante ; un paragraphe est coupé entre deux
  *   lignes, avec au moins deux lignes de chaque côté (sinon il passe en entier à la page suivante) ;
@@ -88,11 +97,9 @@ export function computePageBreaks(
   const starts: PageStart[] = [];
   if (!(pageHeight > 0)) return { pageCount: 1, starts };
   let pageStart = 0;
-  let hasContent = false;
   const newPage = (start: number, y: number) => {
     starts.push({ page: starts.length + 2, y, start });
     pageStart = start;
-    hasContent = false;
   };
   // Coupure avant le morceau `index`, ou avant les titres qui le précèdent sur la même page.
   const breakBefore = (index: number): number => {
@@ -115,16 +122,16 @@ export function computePageBreaks(
     if (!unit) break;
     const limit = pageStart + pageHeight;
     if (unit.kind === "break") {
-      // Un saut de page en tête de document ne crée pas de page vide, comme à l'impression.
-      if (hasContent || starts.length > 0) {
-        const next = units[index + 1];
-        newPage(next ? next.top : unit.bottom, next ? (unit.bottom + next.top) / 2 : unit.bottom);
-      }
+      const next = units[index + 1];
+      const start = next ? next.top : unit.bottom;
+      // Un saut de page qui ouvre le document ne crée pas de page vide, comme à l'impression : la page 1
+      // commence après lui (sa ligne « Saut de page » n'est pas imprimée). Les suivants comptent.
+      if (index === 0) pageStart = start;
+      else newPage(start, next ? (unit.bottom + next.top) / 2 : unit.bottom);
       index++;
       continue;
     }
     if (unit.bottom <= limit + EPSILON) {
-      hasContent = true;
       index++;
       continue;
     }
@@ -173,4 +180,48 @@ export function pageAt(layout: PageLayout, y: number): number {
 /** Texte du compteur du pied de page : « Page 3 sur 7 » (critère 5). */
 export function pageCounterText(page: number, pageCount: number): string {
   return `Page ${String(page)} sur ${String(pageCount)}`;
+}
+
+/**
+ * Place à l'écran des coupures calculées à la largeur de l'impression, quand la feuille affichée est plus
+ * étroite (fenêtre étroite, aide ouverte) et que le texte y passe à la ligne ailleurs. Le nombre de pages
+ * reste celui de l'impression ; chaque repère est mis entre les mêmes blocs, ou, au milieu d'un
+ * paragraphe, à la limite entre deux lignes la plus proche de la même proportion du paragraphe.
+ * @param layout coupures calculées à la largeur de l'impression
+ * @param printed morceaux mesurés à cette largeur
+ * @param shown mêmes morceaux, dans le même ordre, mesurés à l'écran
+ * @param shownLinesOf lignes d'un morceau affiché à l'écran
+ */
+export function placeOnScreen(
+  layout: PageLayout,
+  printed: readonly PageUnit[],
+  shown: readonly PageUnit[],
+  shownLinesOf: (index: number) => readonly LineBox[],
+): PageLayout {
+  let previous = 0;
+  const starts = layout.starts.map((pageStart) => {
+    const index = printed.findIndex((unit) => unit.bottom > pageStart.start + EPSILON);
+    const unit = printed[index];
+    const target = shown[index];
+    let y = shown.at(-1)?.bottom ?? pageStart.y;
+    if (unit && target) {
+      if (pageStart.start <= unit.top + EPSILON) {
+        const before = shown[index - 1];
+        y = before ? (before.bottom + target.top) / 2 : target.top;
+      } else {
+        const share = (pageStart.start - unit.top) / Math.max(unit.bottom - unit.top, 1);
+        const wanted = target.top + share * (target.bottom - target.top);
+        const limits = shownLinesOf(index)
+          .slice(1)
+          .map((line) => line.top);
+        y = limits.reduce(
+          (best, limit) => (Math.abs(limit - wanted) < Math.abs(best - wanted) ? limit : best),
+          limits[0] ?? wanted,
+        );
+      }
+    }
+    previous = Math.max(previous, y);
+    return { ...pageStart, y: previous };
+  });
+  return { pageCount: layout.pageCount, starts };
 }

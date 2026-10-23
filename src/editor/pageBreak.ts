@@ -4,6 +4,7 @@
 import { Extension, type Editor } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { NodeSelection, Plugin, PluginKey, TextSelection, type Selection } from "@tiptap/pm/state";
+import { CellSelection } from "@tiptap/pm/tables";
 import { PAGE_BREAK_NODE } from "../core/pageBreakSchema";
 import { dispatchAsOneStep } from "./assistantEdits";
 
@@ -38,7 +39,8 @@ export function pageBreakInsertPoint(selection: Selection): {
 
 /**
  * Insère un saut de page au curseur (critère 6), en une seule étape d'annulation qui ne se fond pas avec la
- * frappe (critère 7). Un texte sélectionné est remplacé, comme dans Word. Le curseur se place au début de
+ * frappe (critère 7). Un texte sélectionné est remplacé, comme dans Word ; des cellules sélectionnées ne
+ * sont jamais effacées. Le curseur se place au début de
  * la nouvelle page.
  * @returns faux si le schéma n'a pas de saut de page
  */
@@ -48,7 +50,12 @@ export function insertPageBreak(editor: Editor): boolean {
   const paragraph = state.schema.nodes.paragraph;
   if (!type || !paragraph) return false;
   const tr = state.tr;
-  if (!(state.selection instanceof NodeSelection) && !state.selection.empty) tr.deleteSelection();
+  // Cellules sélectionnées : rien n'est effacé, le saut de page se place après le tableau.
+  const replaces =
+    !state.selection.empty &&
+    !(state.selection instanceof NodeSelection) &&
+    !(state.selection instanceof CellSelection);
+  if (replaces) tr.deleteSelection();
   const { pos, mode } = pageBreakInsertPoint(tr.selection);
   const pageBreak = type.create();
   let cursor: number;

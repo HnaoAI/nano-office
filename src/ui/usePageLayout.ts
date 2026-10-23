@@ -1,12 +1,19 @@
 // Repères de page du document affiché (T2.8) : coupures recalculées au plus une fois par image affichée,
-// après une modification, un changement de taille ou de mise en page, et page visible au milieu de la
-// fenêtre pour le compteur « Page 3 sur 7 ». La mesure est dans src/editor/pageMeasure.ts, le calcul
-// dans src/core/pageBreaks.ts.
+// après une modification, un changement de taille ou de mise en page, toujours à la largeur de la feuille
+// imprimée, et page visible au milieu de la fenêtre pour le compteur « Page 3 sur 7 ». La mesure est dans
+// src/editor/pageMeasure.ts, le calcul dans src/core/pageBreaks.ts.
 import type { Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
-import { computePageBreaks, pageAt, textAreaHeight, type PageLayout } from "../core/pageBreaks";
+import {
+  computePageBreaks,
+  pageAt,
+  placeOnScreen,
+  textAreaHeight,
+  textAreaWidth,
+  type PageLayout,
+} from "../core/pageBreaks";
 import type { PageSetup } from "../core/pageSetup";
-import { measurePage } from "../editor/pageMeasure";
+import { measurePage, withTextWidth } from "../editor/pageMeasure";
 
 /** Nom de la mesure de performance d'un calcul, lue par les tests d'interface (critère 4). */
 export const PAGE_LAYOUT_MEASURE = "nano-page-layout";
@@ -40,6 +47,7 @@ export function usePageLayout(
     if (!sheet) return;
     const view = editor.view;
     const pageHeight = textAreaHeight(setup);
+    const printWidth = textAreaWidth(setup);
     let layout: PageLayout = EMPTY.layout;
     let offset = 0;
     let frame = 0;
@@ -61,8 +69,22 @@ export function usePageLayout(
       frame = 0;
       if (view.isDestroyed) return;
       performance.mark(`${PAGE_LAYOUT_MEASURE}-start`);
-      const { units, linesOf } = measurePage(view);
-      const next = computePageBreaks(units, pageHeight, linesOf);
+      const shown = measurePage(view);
+      let next: PageLayout;
+      if (Math.abs(view.dom.getBoundingClientRect().width - printWidth) <= 1) {
+        next = computePageBreaks(shown.units, pageHeight, shown.linesOf);
+      } else {
+        // Feuille plus étroite que l'impression : coupures calculées à la largeur imprimée (critère 3),
+        // puis placées entre les mêmes blocs ou les mêmes lignes à l'écran.
+        const printed = withTextWidth(view, printWidth, () => {
+          const page = measurePage(view);
+          return {
+            units: page.units,
+            layout: computePageBreaks(page.units, pageHeight, page.linesOf),
+          };
+        });
+        next = placeOnScreen(printed.layout, printed.units, shown.units, shown.linesOf);
+      }
       offset = view.dom.getBoundingClientRect().top - sheet.getBoundingClientRect().top;
       // Mêmes coupures : l'objet précédent est gardé, pour ne pas redessiner les repères.
       if (JSON.stringify(next) !== JSON.stringify(layout)) layout = next;

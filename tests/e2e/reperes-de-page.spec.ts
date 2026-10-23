@@ -460,6 +460,7 @@ test.describe("T2.8 : discrétion", () => {
     await expect(marks(page)).toHaveCount(1);
     await page.emulateMedia({ media: "print" });
     await expect(page.locator(".nano-page-marks")).toBeHidden();
+    await expect(counter(page)).toBeHidden();
     const printed = await page.locator(".nano-editor .nano-page-break").evaluate((element) => ({
       label: getComputedStyle(element, "::before").content,
       height: element.getBoundingClientRect().height,
@@ -529,6 +530,52 @@ test.describe("T2.8 : nombre de pages comparé au PDF de Chromium", () => {
     );
     const shown = await shownPageCount(page);
     expect(shown).toBeGreaterThanOrEqual(4);
+    expect(pdfPageCount(await page.pdf({ preferCSSPageSize: true }))).toBe(shown);
+  });
+
+  test("critère 3 : fenêtre plus étroite que la feuille (700 px, portrait) : même nombre de pages que le PDF", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 700, height: 800 });
+    await start(page);
+    await openDocument(page, [
+      heading("h-1", 1, "Journal de vacances"),
+      ...Array.from({ length: 40 }, (_, index) => para(`a-${index}`, 3)),
+    ]);
+    const shown = await shownPageCount(page);
+    expect(shown).toBeGreaterThanOrEqual(4);
+    expect(pdfPageCount(await page.pdf({ preferCSSPageSize: true }))).toBe(shown);
+  });
+
+  test("critère 3 : feuille paysage dans une fenêtre de 1 100 px : même nombre de pages que le PDF", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await start(page);
+    await openDocument(
+      page,
+      [
+        heading("h-1", 1, "Journal de vacances"),
+        ...Array.from({ length: 40 }, (_, index) => para(`a-${index}`, 3)),
+        table("t-1", 10),
+      ],
+      { orientation: "landscape", margins: { top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 } },
+    );
+    const shown = await shownPageCount(page);
+    expect(shown).toBeGreaterThanOrEqual(4);
+    expect(pdfPageCount(await page.pdf({ preferCSSPageSize: true }))).toBe(shown);
+  });
+
+  test("critère 3 : sauts de page en tête de document : même nombre de pages que le PDF", async ({
+    page,
+  }) => {
+    await start(page);
+    await openDocument(page, [PAGE_BREAK("br-1"), PAGE_BREAK("br-2"), para("p-1", 2)]);
+    expect(await shownPageCount(page)).toBe(2);
+    expect(pdfPageCount(await page.pdf({ preferCSSPageSize: true }))).toBe(2);
+    await openDocument(page, [PAGE_BREAK("br-3"), ...THREE_PAGES]);
+    const shown = await shownPageCount(page);
+    expect(shown).toBe(3);
     expect(pdfPageCount(await page.pdf({ preferCSSPageSize: true }))).toBe(shown);
   });
 });

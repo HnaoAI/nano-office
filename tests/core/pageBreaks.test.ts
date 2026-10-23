@@ -5,8 +5,10 @@ import {
   computePageBreaks,
   pageAt,
   pageCounterText,
+  placeOnScreen,
   PX_PER_CM,
   textAreaHeight,
+  textAreaWidth,
   type LineBox,
   type PageUnit,
   type PageUnitKind,
@@ -187,6 +189,23 @@ describe("T2.8 : calcul des coupures de page", () => {
     expect(result.pageCount).toBe(1);
   });
 
+  it("critère 6 : la ligne d'un saut de page qui ouvre le document ne compte pas sur la page 1", () => {
+    // Le saut de page (24 px et sa marge) n'est pas imprimé : la page 1 commence au paragraphe.
+    const { units, result } = layout([{ kind: "break" }, { kind: "text", lines: 51 }]);
+    const start = nth(units, 1).top;
+    expect(nth(result.starts, 0).start).toBe(start + 50 * LINE - LINE);
+  });
+
+  it("critère 6 : deux sauts de page en tête de document laissent la page 1 vide, comme à l'impression", () => {
+    const { units, result } = layout([
+      { kind: "break" },
+      { kind: "break" },
+      { kind: "text", lines: 2 },
+    ]);
+    expect(result.pageCount).toBe(2);
+    expect(firstUnits(units, result.starts)).toEqual([2]);
+  });
+
   it("critère 6 : deux sauts de page de suite laissent une page vide", () => {
     const { result } = layout([
       { kind: "text", lines: 2 },
@@ -229,6 +248,46 @@ describe("T2.8 : calcul des coupures de page", () => {
     expect(pageAt(result, 2500)).toBe(3);
     expect(pageAt(result, 99999)).toBe(7);
     expect(pageCounterText(3, 7)).toBe("Page 3 sur 7");
+  });
+
+  it("critère 3 : la zone de texte a la largeur de la feuille sans les marges de gauche et de droite", () => {
+    expect(textAreaWidth(DEFAULT_PAGE_SETUP)).toBeCloseTo(16 * PX_PER_CM);
+    expect(
+      textAreaWidth({
+        orientation: "landscape",
+        margins: { top: 1, bottom: 1, left: 2, right: 3 },
+      }),
+    ).toBeCloseTo((29.7 - 5) * PX_PER_CM);
+  });
+
+  it("critère 3 : dans une feuille plus étroite, les coupures de l'impression restent entre les mêmes blocs ou lignes", () => {
+    // À l'impression : 3 blocs de 400 px ; à l'écran, plus étroit : 3 blocs de 600 px (lignes de 20 px).
+    const printed: PageUnit[] = [0, 1, 2].map((index) => ({
+      kind: "text",
+      top: index * 416,
+      bottom: index * 416 + 400,
+    }));
+    const shown: PageUnit[] = [0, 1, 2].map((index) => ({
+      kind: "text",
+      top: index * 616,
+      bottom: index * 616 + 600,
+    }));
+    const shownLines = (index: number): LineBox[] =>
+      Array.from({ length: 30 }, (_, line) => ({
+        top: nth(shown, index).top + line * LINE,
+        bottom: nth(shown, index).top + (line + 1) * LINE,
+      }));
+    const layout = {
+      pageCount: 3,
+      starts: [
+        // Entre le 2e et le 3e bloc, puis au milieu du 3e bloc (à la moitié de sa hauteur).
+        { page: 2, y: 824, start: 832 },
+        { page: 3, y: 1032, start: 1032 },
+      ],
+    };
+    const placed = placeOnScreen(layout, printed, shown, shownLines);
+    expect(placed.pageCount).toBe(3);
+    expect(placed.starts.map(({ y }) => y)).toEqual([(1216 + 1232) / 2, 1232 + 300]);
   });
 
   it("une page de hauteur nulle (mesure impossible) ne bloque pas", () => {

@@ -30,9 +30,10 @@ export interface MeasuredPage {
 /**
  * Lignes déjà mesurées, par nœud du document. Un nœud ProseMirror ne change jamais : un paragraphe
  * modifié est un nouveau nœud, et seul lui est remesuré (critère 4). La taille de l'élément est gardée,
- * pour remesurer si la largeur de la page ou une police chargée plus tard change ses lignes.
+ * pour remesurer si la largeur de la page ou une police chargée plus tard change ses lignes. Deux tailles
+ * au plus par nœud : celle de l'écran et celle de l'impression (`withTextWidth`).
  */
-const lineCache = new WeakMap<ProseMirrorNode, CachedLines>();
+const lineCache = new WeakMap<ProseMirrorNode, CachedLines[]>();
 
 /** Élément qui affiche le nœud à la position donnée, ou null (nœud pas encore affiché). */
 function elementAt(view: EditorView, pos: number): HTMLElement | null {
@@ -145,13 +146,38 @@ export function measurePage(view: EditorView): MeasuredPage {
     const entry = measured[index];
     if (!entry) return [];
     const { piece, box } = entry;
-    let cached = lineCache.get(piece.node);
-    if (!cached || cached.width !== box.width || cached.height !== box.height) {
+    const entries = lineCache.get(piece.node) ?? [];
+    let cached = entries.find((entry) => entry.width === box.width && entry.height === box.height);
+    if (!cached) {
       cached = { width: box.width, height: box.height, lines: measureLines(piece.element, box) };
-      lineCache.set(piece.node, cached);
+      lineCache.set(piece.node, [cached, ...entries].slice(0, 2));
     }
     const top = box.top - origin;
     return cached.lines.map((line) => ({ top: top + line.top, bottom: top + line.bottom }));
   };
   return { units, linesOf };
+}
+
+/**
+ * Lance `measure` pendant que la zone de texte a la largeur de la feuille imprimée, puis lui rend sa
+ * largeur. Dans une fenêtre plus étroite que la feuille, le texte passe à la ligne ailleurs qu'à
+ * l'impression : les coupures sont donc calculées à la largeur imprimée (critère 3). Le tout se fait
+ * dans la même image, avant l'affichage : rien ne bouge à l'écran.
+ * @param view vue ProseMirror de l'éditeur
+ * @param width largeur de la zone de texte imprimée, en pixels
+ * @param measure mesure et calcul à faire à cette largeur ; rien ne doit en être gardé qui dépende du DOM
+ */
+export function withTextWidth<T>(view: EditorView, width: number, measure: () => T): T {
+  const { style } = view.dom;
+  const previous = { width: style.width, maxWidth: style.maxWidth, flex: style.flex };
+  style.width = `${String(width)}px`;
+  style.maxWidth = "none";
+  style.flex = "none";
+  try {
+    return measure();
+  } finally {
+    style.width = previous.width;
+    style.maxWidth = previous.maxWidth;
+    style.flex = previous.flex;
+  }
 }
