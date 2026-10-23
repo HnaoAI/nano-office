@@ -23,7 +23,7 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `documentFile.ts` : nouveau document, ouverture avec message d'erreur en français, modifications non enregistrées (une image seule compte, T1.9), titre de la fenêtre (T0c), nom du document dans l'en-tête (U1a)
 - `backup.ts` : copie de secours relue dans un Y.Doc neuf, comparaison avec un fichier ouvert, document récupéré ou restauré (T0d), images comprises (T1.9)
 - `autoSave.ts` : déclenchement de la sauvegarde automatique : 3 secondes après la dernière modification, 30 secondes au plus (10 et 60 secondes au-delà de 2 Mo, T1.9), jamais deux écritures à la fois, pause après un échec (`AutoSaver`, T1.6)
-- `appUpdate.ts` : décision « recharger maintenant ou attendre » quand une nouvelle version est prête (`decideUpdate`, H1)
+- `appUpdate.ts` : décision « recharger maintenant ou attendre » quand une nouvelle version est prête (`decideUpdate`, H1), fenêtre « se met à jour » et son délai de 20 s (`showsUpdateWindow`, `startUpdateWatchdog`, H3)
 - `appVersion.ts` : numéro de version `v<date>·<commit court>`, ou `dev` (`formatVersion`, H1)
 - `base64.ts` : conversion octets <-> base64 pour l'état Yjs
 - `assistant.ts` : assistant facultatif (T3.1) : réglages (éteint par défaut), modèles proposés, consignes et demande envoyée (la sélection seule), lecture de la réponse, corrections au mot ou au paragraphe entier, messages d'erreur (`buildRequest`, `parseParagraphs`, `correctionChanges`, `failureMessage`)

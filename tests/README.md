@@ -12,6 +12,7 @@ Même arborescence que `src/`.
   - `wordExport.test.ts` : export en Word : nom proposé, titres, mise en forme, listes, tableaux, images, page et marges, polices embarquées, surlignage, document vide, texte long, accents et emojis (T2.7)
   - `wordDiff.test.ts`, `assistant.test.ts` : comparaison au mot, compte des mots, demande et réponse de l'assistant, repli au paragraphe, messages d'erreur (T3.1)
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
+  - `updateWindow.test.ts` : fenêtre « Nano Buro se met à jour » et son délai de 20 s, horloge simulée (H3)
 - `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`) ; réglages et clés de l'assistant (`assistantSettingsStore.test.ts`, T3.1) ; fichier retenu entre deux lancements (`fileMemory.test.ts`, PL3) ; fichier modifié ailleurs, non écrasé par la sauvegarde automatique (`changedOnDisk.test.ts`, T1.6) ; fichier exporté, enregistré, téléchargé, annulé ou en échec (`exportStore.test.ts`, T2.7)
 - `assistant/` : tests Vitest des appels à Claude et à Gemini avec un faux `fetch` : adresses, en-têtes, contenu envoyé, erreurs, délai, annulation (`providers.test.ts`, T3.1)
 - `ui/` : tests Vitest de la feuille de style : variables de la charte, aucune nouvelle variable après U1a (`styles.test.ts`) ; raccourcis de la barre de recherche, AltGr compris (`searchShortcuts.test.ts`, T2.1)
