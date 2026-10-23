@@ -3,13 +3,15 @@
 Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèques.
 
 - `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `NanoFileV2`, `ParseResult`) et constantes du format
-- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), barré (T2.3)
+- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), barré (T2.3), sauts de page (T2.8)
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `lineHeight.ts` : interligne (T2.2) : valeurs proposées, hauteur de ligne CSS équivalente à Word (`cssLineHeight`), attribut de bloc `lineHeight`
 - `search.ts` : recherche d'un texte dans un paragraphe, majuscules ignorées ou non, textes « 3 sur 12 » et « 12 remplacements » (`findInText`, `searchStatus`, T2.1)
 - `textCase.ts` : majuscules et minuscules selon les règles du français, phrase et mot pris dans leur paragraphe (`convertCase`, `CASE_MODES`, T2.4)
 - `tableSchema.ts` : tableaux : document qui accepte les tableaux, tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
 - `pageSetup.ts` : mise en page (T2.5) : orientation et marges d'une page A4, `Y.Map` « page » du Y.Doc, attributs du nœud `doc` de `content`, marges écrites et lues à la française (`readPageSetup`, `writePageSetup`, `withPageSetupAttrs`), règle `@page` de l'impression (`printPageRule`, T2.6)
+- `pageBreaks.ts` : coupures de page (T2.8) : calcul pur à partir des hauteurs mesurées, avec les règles de l'impression (deux lignes de chaque côté d'une coupure, titre jamais seul en bas de page, ligne de tableau et image entières, saut de page manuel), page d'une hauteur donnée, texte « Page 3 sur 7 » (`computePageBreaks`, `pageAt`, `pageCounterText`, `textAreaHeight`)
+- `pageBreakSchema.ts` : nœud « saut de page » du schéma, dans son propre groupe : jamais dans une liste ni un tableau ; rendu `break-before: page`, lu depuis `page-break-before: always` (`PageBreakNode`, T2.8)
 - `wordExport.ts` : export en fichier Word `.docx` avec `docx` (T2.7) : styles des titres de Word, listes, page A4 avec orientation et marges, polices embarquées, nom proposé (`buildWordDocument`, `exportWord`, `wordFileName`, `usedFonts`)
 - `wordBlocks.ts` : conversion des blocs pour Word (T2.7) : paragraphes, titres, listes, tableaux, images (`convertBlock`)
 - `wordColors.ts` : couleur du texte pour Word et surlignage ramené aux couleurs de Word (`wordColor`, `nearestHighlight`, T2.7)

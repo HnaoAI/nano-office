@@ -10,6 +10,7 @@ import Highlight from "@tiptap/extension-highlight";
 import { isSafeCssValue, TextStyleAttributes } from "./textStyle";
 import { DocumentWithTables, tableExtensions } from "./tableSchema";
 import { ImageNode } from "./imageSchema";
+import { PageBreakNode } from "./pageBreakSchema";
 import { LineHeightAttribute } from "./lineHeight";
 import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
@@ -27,7 +28,10 @@ export const YJS_FRAGMENT_NAME = "default";
 /** Nom de l'attribut qui porte l'identifiant stable d'un bloc. */
 export const BLOCK_ID_ATTRIBUTE = "id";
 
-/** Types de nœuds qui portent un identifiant de bloc (règle produit 5), cellules (T1.8) et images (T1.9) comprises. */
+/**
+ * Types de nœuds qui portent un identifiant de bloc (règle produit 5), cellules (T1.8), images (T1.9) et
+ * sauts de page (T2.8) compris.
+ */
 export const BLOCK_TYPES_WITH_ID = [
   "paragraph",
   "heading",
@@ -35,6 +39,7 @@ export const BLOCK_TYPES_WITH_ID = [
   "tableCell",
   "tableHeader",
   "image",
+  "pageBreak",
 ];
 
 /** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
@@ -162,7 +167,8 @@ const DocumentStrike = Strike.extend({
 /**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
  * puces et numérotées (T1.2), alignement (T1.3), gras, italique, barré (T2.3), police et taille (T1.4),
- * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), identifiant de bloc. T0b les
+ * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), sauts de page (T2.8),
+ * identifiant de bloc. T0b les
  * réutilise telles quelles, sans redéfinir le schéma (l'éditeur configure seulement `ImageNode`).
  */
 export const documentExtensions = [
@@ -174,6 +180,7 @@ export const documentExtensions = [
   DocumentListItem,
   ...tableExtensions,
   ImageNode,
+  PageBreakNode,
   Text,
   Bold,
   Italic,
