@@ -54,29 +54,34 @@ export function AppHeader({
           <div className="nano-header-spacer" />
           {saveState && <SaveIndicator state={saveState} />}
           <FileMenu {...actions} />
-          {onSettings && (
-            <button
-              type="button"
-              className="nano-settings-button"
-              aria-label="Réglages"
-              title="Réglages"
-              onClick={onSettings}
-            >
-              <GearIcon />
-            </button>
-          )}
-          {help && (
-            // Même bouton que « Réglages » (assistant.css).
-            <button
-              type="button"
-              className="nano-settings-button"
-              aria-label="Aide"
-              aria-expanded={help.open}
-              title={`Aide (${HELP_SHORTCUT})`}
-              onClick={help.toggle}
-            >
-              <HelpIcon />
-            </button>
+          {(onSettings || help) && (
+            // « Réglages » et « Aide » dans un même groupe, au style du groupe Fichier : l'en-tête tient
+            // sur une ligne à 1 280 px, même avec la pastille « Non enregistré » (A1).
+            <div className="nano-header-tools">
+              {onSettings && (
+                <button
+                  type="button"
+                  className="nano-settings-button"
+                  aria-label="Réglages"
+                  title="Réglages"
+                  onClick={onSettings}
+                >
+                  <GearIcon />
+                </button>
+              )}
+              {help && (
+                <button
+                  type="button"
+                  className="nano-settings-button"
+                  aria-label="Aide"
+                  aria-expanded={help.open}
+                  title={`Aide (${HELP_SHORTCUT})`}
+                  onClick={help.toggle}
+                >
+                  <HelpIcon />
+                </button>
+              )}
+            </div>
           )}
         </>
       )}

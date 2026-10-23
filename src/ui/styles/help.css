@@ -17,8 +17,24 @@
   color: var(--nano-document-text);
 }
 
-/* Bouton « Aide » de l'en-tête, panneau ouvert : bouton activé, sur fond d'encre (charte). */
-.nano-header button[aria-expanded="true"] {
+/* Groupe « Réglages » et « Aide » au bout de l'en-tête, au style du groupe Fichier (A1). */
+.nano-header-tools {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--nano-radius-group);
+  background: var(--nano-group-bg);
+}
+
+.nano-header-tools .nano-settings-button {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+}
+
+/* Bouton « Aide », panneau ouvert : bouton activé, sur fond d'encre (charte). */
+.nano-header-tools button[aria-expanded="true"] {
   background: var(--nano-ink);
   color: var(--nano-on-ink);
 }

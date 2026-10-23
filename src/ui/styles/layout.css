@@ -135,7 +135,8 @@ button:focus-visible {
 }
 
 .nano-header-spacer {
-  flex: 1 1 24px;
+  /* Base nulle (A1) : l'espace libre ne fait jamais passer l'en-tête à la ligne ; l'écart de 16 px reste. */
+  flex: 1 1 0;
 }
 
 .nano-file-menu {
