@@ -210,4 +210,40 @@ describe("T2.12 : liens", () => {
     target.view.someProp("handleKeyDown", (keyDown) => keyDown(target.view, event));
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  it("critère 2 : un lien mailto mal encodé, collé ou lu dans un fichier, reste du texte sans plantage", () => {
+    const target = start(EMPTY);
+    expect(() =>
+      pasteHtml(target, '<p><a href="mailto:caf%E9@exemple.fr">la mairie</a></p>'),
+    ).not.toThrow();
+    expect(links(target)).toEqual([["la mairie", null]]);
+    const reopened = createTestEditor(
+      docOf(textNode("la mairie", { type: "link", attrs: { href: "mailto:caf%E9@exemple.fr" } })),
+    );
+    expect(reopened.state.doc.textContent).toBe("la mairie");
+    reopened.destroy();
+  });
+
+  it("critère 5 : un lien collé, ici ou depuis le web, n'est pas souligné en plus", () => {
+    const source = start(
+      docOf(textNode("le site", { type: "link", attrs: { href: "https://exemple.fr" } })),
+    );
+    const { html } = copyAll(source);
+    const inside = createTestEditor();
+    pasteHtml(inside, html);
+    const outside = createTestEditor();
+    pasteHtml(
+      outside,
+      '<p><a href="https://exemple.fr" style="text-decoration: underline">le site</a></p>',
+    );
+    for (const target of [inside, outside]) {
+      let names: string[] = [];
+      target.state.doc.descendants((node) => {
+        if (node.isText) names = node.marks.map((mark) => mark.type.name);
+        return true;
+      });
+      expect(names).toEqual(["link"]);
+      target.destroy();
+    }
+  });
 });

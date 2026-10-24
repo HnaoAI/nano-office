@@ -25,7 +25,15 @@ export function isAllowedLinkUrl(url: unknown): url is string {
     return false;
   }
   if (!(LINK_PROTOCOLS as readonly string[]).includes(parsed.protocol)) return false;
-  if (parsed.protocol === "mailto:") return EMAIL.test(decodeURIComponent(parsed.pathname));
+  if (parsed.protocol === "mailto:") {
+    // Une adresse mal encodée (« caf%E9@… », vieux sites en Latin-1) est refusée, jamais une exception : elle
+    // ferait perdre le collage, ou empêcherait d'ouvrir le document qui la contient.
+    try {
+      return EMAIL.test(decodeURIComponent(parsed.pathname));
+    } catch {
+      return false;
+    }
+  }
   return parsed.hostname !== "";
 }
 
@@ -39,7 +47,9 @@ export function normalizeLinkInput(input: string): string | null {
   if (text === "") return null;
   if (EMAIL.test(text)) return `mailto:${text}`;
   if (SCHEME.test(text) && !/^[^:/]+\.[^:/]+:\d+/u.test(text)) {
-    return isAllowedLinkUrl(text) ? text : null;
+    // Protocole en minuscules (« MAILTO: » devient « mailto: »), pour que le texte affiché le retire aussi.
+    const url = text.replace(SCHEME, (scheme) => scheme.toLowerCase());
+    return isAllowedLinkUrl(url) ? url : null;
   }
   const url = `https://${text.replace(/^\/+/u, "")}`;
   if (!isAllowedLinkUrl(url)) return null;

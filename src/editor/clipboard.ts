@@ -250,12 +250,19 @@ export interface PasteCleaning {
  */
 export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
   const { internal, contextTextStyle, newBlockIds } = options;
-  const content = mapFragment(slice.content, (node) => {
-    if (node.isText) {
+  const content = mapFragment(slice.content, (pasted) => {
+    if (pasted.isText) {
+      // Le soulignement d'un lien est en style (src/core/links.ts) : la règle de lecture du souligné (T2.10)
+      // le relirait comme une marque à part, qui resterait après « Retirer le lien » (T2.12, critère 5).
+      const linked = pasted.marks.some((mark) => mark.type.name === "link");
+      const node = linked
+        ? pasted.mark(pasted.marks.filter((mark) => mark.type.name !== "underline"))
+        : pasted;
       if (internal) return node;
       const marks = node.marks.filter((mark) => !EXTERNAL_MARKS_REMOVED.includes(mark.type.name));
       return node.mark(contextTextStyle ? contextTextStyle.addToSet(marks) : marks);
     }
+    const node = pasted;
     const attrs = { ...node.attrs };
     if (newBlockIds && BLOCK_TYPES_WITH_ID.includes(node.type.name)) {
       attrs[BLOCK_ID_ATTRIBUTE] = null;

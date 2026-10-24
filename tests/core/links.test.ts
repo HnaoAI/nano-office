@@ -48,4 +48,15 @@ describe("T2.12 : adresses des liens", () => {
     expect(normalizeLinkInput(long)).toBe(long);
     expect(normalizeLinkInput("exemple.fr/vacances-🏖️")).toBe("https://exemple.fr/vacances-🏖️");
   });
+
+  it("critère 2 : une adresse mailto mal encodée est refusée, sans plantage", () => {
+    expect(() => isAllowedLinkUrl("mailto:caf%E9@exemple.fr")).not.toThrow();
+    expect(isAllowedLinkUrl("mailto:caf%E9@exemple.fr")).toBe(false);
+    expect(normalizeLinkInput("mailto:caf%E9@exemple.fr")).toBeNull();
+  });
+
+  it("critère 1 : un protocole tapé en majuscules est mis en minuscules", () => {
+    expect(normalizeLinkInput("MAILTO:Foo@bar.fr")).toBe("mailto:Foo@bar.fr");
+    expect(normalizeLinkInput("HTTPS://exemple.fr")).toBe("https://exemple.fr");
+  });
 });
