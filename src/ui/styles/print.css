@@ -61,8 +61,11 @@
   }
 
   /* Repères et numéros de page ne s'impriment pas ; le saut de page manuel coupe la page sans rien
-     afficher (T2.8, critères 6 et 9). Sa coupure vient de son style `break-before: page`. */
-  .nano-page-marks {
+     afficher (T2.8, critères 6 et 9). Sa coupure vient de son style `break-before: page`. L'en-tête et le
+     pied de page de l'écran non plus (T2.16) : l'impression a ses zones de marge `@page`, écrites par
+     DocumentEditor.tsx d'après src/core/headerFooter.ts. */
+  .nano-page-marks,
+  .nano-margin-texts {
     display: none;
   }
 

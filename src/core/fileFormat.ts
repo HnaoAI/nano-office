@@ -16,6 +16,7 @@ import {
   removeAllImages,
 } from "./images";
 import { migrateToCurrent } from "./migrations";
+import { headerFooterFromAttrs, withHeaderFooterAttrs, writeHeaderFooter } from "./headerFooter";
 import { pageSetupFromAttrs, withPageSetupAttrs, writePageSetup } from "./pageSetup";
 import { documentSchema, YJS_FRAGMENT_NAME } from "./schema";
 import {
@@ -34,13 +35,14 @@ export function createDocumentId(): string {
 
 /**
  * Contenu d'un Y.Doc au format JSON de Tiptap (celui écrit dans `content`) : le fragment du document,
- * avec la mise en page en attributs du nœud `doc` quand elle est réglée (T2.5, critère 6).
+ * avec la mise en page en attributs du nœud `doc` quand elle est réglée (T2.5, critère 6), ainsi que les
+ * numéros de page, l'en-tête et le pied de page (T2.15, T2.16).
  */
 export function contentOf(ydoc: Y.Doc): DocumentJson {
   const fragment = yXmlFragmentToProsemirrorJSON(
     ydoc.getXmlFragment(YJS_FRAGMENT_NAME),
   ) as DocumentJson;
-  return withPageSetupAttrs(fragment, ydoc);
+  return withHeaderFooterAttrs(withPageSetupAttrs(fragment, ydoc), ydoc);
 }
 
 /**
@@ -154,9 +156,10 @@ export function parseDocument(text: string): ParseResult {
     ydoc = fromYdoc;
   } else {
     // Reconstruit à partir de `content` : la mise en page, attributs du nœud `doc`, n'est pas dans le
-    // fragment ; elle est remise dans sa `Y.Map` (T2.5).
+    // fragment ; elle est remise dans sa `Y.Map` (T2.5), avec les numéros, l'en-tête et le pied de page.
     ydoc = prosemirrorJSONToYDoc(documentSchema, content, YJS_FRAGMENT_NAME);
     writePageSetup(ydoc, pageSetupFromAttrs(content.attrs));
+    writeHeaderFooter(ydoc, headerFooterFromAttrs(content.attrs));
   }
   addFileImages(ydoc, content, file.images);
   return { ok: true, id, ydoc, version };

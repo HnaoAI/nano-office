@@ -26,9 +26,11 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `usePrintShortcut.ts` : Ctrl/Cmd+P sur toute la page, à la touche physique, jamais avec AltGr (T2.6)
 - `useWordExport.ts` : « Exporter en Word… » : charge l'export à la demande, écrit le fichier par `storage/`, affiche le message (T2.7)
 - `wordAssets.ts` : polices (fichiers WOFF intégrés, convertis) et images (WebP converti en PNG) à embarquer dans le fichier Word (`loadWordFonts`, `loadWordImages`, T2.7)
-- `PageSetupDialog.tsx` : boîte « Mise en page » : orientation, marges Normales, Étroites, Larges ou Personnalisées (T2.5)
-- `usePageSetupDialog.ts` : ouverture de la boîte « Mise en page », application au Y.Doc affiché, retour du focus (T2.5)
-- `usePageSetup.ts` : mise en page du document affiché, relue à chaque changement et à chaque annulation (T2.5)
+- `PageSetupDialog.tsx` : boîte « Mise en page » : orientation, marges Normales, Étroites, Larges ou Personnalisées (T2.5), puis numéros, en-tête et pied de page
+- `HeaderFooterFields.tsx` : parties « Numéros de page » (T2.15) et « En-tête et pied de page » (T2.16) de la boîte « Mise en page »
+- `usePageSetupDialog.ts` : ouverture de la boîte « Mise en page », au besoin sur le champ de l'en-tête ou du pied de page (T2.16), application au Y.Doc affiché en une étape d'annulation, retour du focus (T2.5)
+- `usePageSetup.ts` : mise en page (T2.5), numéros, en-tête et pied de page (T2.15, T2.16) du document affiché, relus à chaque changement et à chaque annulation
+- `HeaderFooterLayer.tsx` : en-tête et pied de page à l'écran, en gris clair dans les marges et près des repères de page, double clic pour les modifier (T2.16)
 - `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres, ⌘/ ou Ctrl+/ de l'aide)
 - `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), recherche (T2.1), barré (T2.3), souligné (T2.10), mise en page (T2.5), interligne (M1), saut de page (T2.8), retrait (T2.14), lien (T2.12), encadré (T2.19)
 - `fonts.ts` : polices intégrées : IBM Plex Sans et Mono de l'interface (U1a), cinq polices du document en quatre graisses (T1.4)
@@ -47,7 +49,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
-- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6), repères de page et compteur « Page 3 sur 7 » (T2.8), compteur de mots (T2.11), bulle des liens (T2.12), panneau « Plan » (T2.9)
+- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6) avec les numéros, l'en-tête et le pied de page (T2.15, T2.16), repères de page et compteur « Page 3 sur 7 » (T2.8), compteur de mots (T2.11), bulle des liens (T2.12), panneau « Plan » (T2.9)
 - `useWordCount.ts` : statistiques du document affiché et mots sélectionnés, recalculées au plus une fois par image (T2.11)
 - `WordCounter.tsx` : compteur de mots du pied de page, à côté de « Page 3 sur 7 », et fenêtre des statistiques au clic (T2.11)
 - `usePageLayout.ts` : repères de page du document affiché (T2.8) : coupures recalculées au plus une fois par image affichée, page visible au milieu de la fenêtre

@@ -160,7 +160,9 @@ export function App() {
             )}
             {pageDialog.current && !pending && (
               <PageSetupDialog
-                current={pageDialog.current}
+                current={pageDialog.current.setup}
+                currentHeaderFooter={pageDialog.current.headerFooter}
+                focus={pageDialog.current.field}
                 onApply={pageDialog.apply}
                 onCancel={pageDialog.close}
               />

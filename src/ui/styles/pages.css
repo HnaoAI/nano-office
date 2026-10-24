@@ -64,3 +64,72 @@
     width: 20px;
   }
 }
+
+/* En-tête et pied de page à l'écran (T2.16, critère 3) : en gris clair, dans la largeur du texte, en haut de
+   la première page, en bas de la dernière et de part et d'autre de chaque repère. Seul le texte reçoit les
+   clics (double clic : « Mise en page… ») ; à côté, un clic atteint le document. */
+.nano-margin-texts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nano-margin-text {
+  position: absolute;
+  left: var(--page-margin-left, 2.5cm);
+  right: var(--page-margin-right, 2.5cm);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--nano-font-sans);
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--nano-text-disabled);
+  user-select: none;
+}
+
+.nano-margin-text span {
+  pointer-events: auto;
+  cursor: default;
+}
+
+.nano-margin-text-first {
+  top: calc(var(--page-margin-top, 2.5cm) / 2);
+  transform: translateY(-50%);
+}
+
+.nano-margin-text-last {
+  bottom: calc(var(--page-margin-bottom, 2.5cm) / 2);
+  transform: translateY(50%);
+}
+
+/* Près d'un repère, le texte est plus petit, pour tenir dans l'espace entre deux paragraphes. */
+.nano-margin-text-above,
+.nano-margin-text-below {
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.nano-margin-text-above {
+  transform: translateY(calc(-100% - 1px));
+}
+
+.nano-margin-text-below {
+  transform: translateY(1px);
+}
+
+/* Écran étroit (moins de 600 px) : la page a des marges réduites (layout.css). */
+@media (max-width: 600px) {
+  .nano-margin-text {
+    left: 20px;
+    right: 20px;
+  }
+
+  .nano-margin-text-first {
+    top: 16px;
+  }
+
+  .nano-margin-text-last {
+    bottom: 16px;
+  }
+}

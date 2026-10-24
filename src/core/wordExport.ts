@@ -1,17 +1,31 @@
 // Export d'un document en fichier Word `.docx` (T2.7) avec la bibliothèque `docx` (MIT) : styles des
 // titres de Word, listes, page A4 avec l'orientation et les marges du document (T2.5), polices
-// embarquées. Logique pure, testée sans navigateur ; les blocs sont convertis par wordBlocks.ts.
+// embarquées, numéros de page (T2.15), en-tête et pied de page (T2.16) de Word. Logique pure, testée sans navigateur ; les blocs sont convertis par wordBlocks.ts.
 // L'écriture du fichier passe par src/storage/exportStore.ts.
 import {
   AlignmentType,
   CharacterSet,
   Document,
+  Footer,
+  Header,
   LevelFormat,
   Packer,
+  PageNumber,
   PageOrientation,
+  Paragraph,
+  Tab,
+  TabStopType,
+  TextRun,
   type ILevelsOptions,
 } from "docx";
 import { documentTitle } from "./documentFile";
+import {
+  DEFAULT_HEADER_FOOTER,
+  marginBoxes,
+  type HeaderFooter,
+  type MarginBoxes,
+  type MarginPart,
+} from "./headerFooter";
 import { pageSize, type PageSetup } from "./pageSetup";
 import { DEFAULT_FONT, DOCUMENT_FONTS } from "./textStyle";
 import type { DocumentJson } from "./types";
@@ -44,6 +58,8 @@ export interface WordExportInput {
   images: ReadonlyMap<string, WordImage>;
   /** Polices à embarquer ; vide : seuls leurs noms sont écrits (T2.7, critère 4). */
   fonts: readonly WordFont[];
+  /** Numéros de page, en-tête et pied de page (T2.15, T2.16) ; aucun par défaut. */
+  headerFooter?: HeaderFooter;
 }
 
 /** Type MIME d'un fichier Word. */
@@ -103,6 +119,73 @@ function headingStyle(points: number, after: number, cssLine: number) {
   };
 }
 
+/** Texte des en-têtes et pieds de page : IBM Plex Sans 10 pt, couleur du texte discret, comme à l'impression. */
+const MARGIN_RUN = { font: DEFAULT_FONT, size: 20, color: "5F5F5C" } as const;
+
+/** Morceaux d'une zone de marge en texte de Word : le numéro est le champ de numéro de page de Word. */
+function marginRuns(parts: readonly MarginPart[] | undefined): TextRun[] {
+  return (parts ?? []).map((part) =>
+    part.kind === "page"
+      ? new TextRun({ ...MARGIN_RUN, children: [PageNumber.CURRENT] })
+      : new TextRun({ ...MARGIN_RUN, text: part.text }),
+  );
+}
+
+/**
+ * Une ligne d'en-tête ou de pied de page de Word : la zone de gauche, puis une tabulation centrée et
+ * une tabulation à droite, comme les en-têtes de Word, pour les zones du centre et de droite.
+ * @param zones zones du haut ou du bas d'une page
+ * @param widthTwips largeur de la zone de texte
+ */
+function marginParagraph(zones: MarginBoxes["top"], widthTwips: number): Paragraph {
+  return new Paragraph({
+    tabStops: [
+      { type: TabStopType.CENTER, position: Math.round(widthTwips / 2) },
+      { type: TabStopType.RIGHT, position: widthTwips },
+    ],
+    spacing: { before: 0, after: 0 },
+    children: [
+      ...marginRuns(zones.left),
+      new TextRun({ ...MARGIN_RUN, children: [new Tab()] }),
+      ...marginRuns(zones.center),
+      new TextRun({ ...MARGIN_RUN, children: [new Tab()] }),
+      ...marginRuns(zones.right),
+    ],
+  });
+}
+
+/**
+ * En-têtes et pieds de page de Word (T2.15, critère 3 ; T2.16, critère 5), avec une première page
+ * différente quand une case « première page » est cochée. Rien quand aucun n'est réglé.
+ */
+function wordHeadersFooters(settings: HeaderFooter, widthTwips: number) {
+  const others = marginBoxes(settings, false);
+  if (Object.keys(others.top).length + Object.keys(others.bottom).length === 0) return {};
+  const first = marginBoxes(settings, true);
+  const titlePage = JSON.stringify(first) !== JSON.stringify(others);
+  const header = (boxes: MarginBoxes) =>
+    new Header({ children: [marginParagraph(boxes.top, widthTwips)] });
+  const footer = (boxes: MarginBoxes) =>
+    new Footer({ children: [marginParagraph(boxes.bottom, widthTwips)] });
+  return {
+    titlePage,
+    headers: titlePage
+      ? { default: header(others), first: header(first) }
+      : { default: header(others) },
+    footers: titlePage
+      ? { default: footer(others), first: footer(first) }
+      : { default: footer(others) },
+  };
+}
+
+/**
+ * Distance entre le bord de la feuille et l'en-tête (ou le pied de page), en centimètres : la ligne de
+ * 10 pt est centrée dans la marge, comme à l'impression.
+ */
+function marginTextDistance(marginCm: number): number {
+  return Math.max(0, marginCm / 2 - 0.21);
+}
+
 /**
  * Document Word d'un document Nano Buro.
  * @param input contenu, mise en page, images et polices
@@ -117,6 +200,10 @@ export function buildWordDocument(input: WordExportInput): Document {
     nextListInstance: 1,
   };
   const children = (input.content.content ?? []).flatMap((block) => convertBlock(block, context));
+  const margins = wordHeadersFooters(
+    input.headerFooter ?? DEFAULT_HEADER_FOOTER,
+    twips(size.width - left - right),
+  );
   return new Document({
     creator: "Nano Buro",
     styles: {
@@ -164,12 +251,15 @@ export function buildWordDocument(input: WordExportInput): Document {
               bottom: twips(bottom),
               left: twips(left),
               right: twips(right),
-              header: 0,
-              footer: 0,
+              header: twips(marginTextDistance(top)),
+              footer: twips(marginTextDistance(bottom)),
               gutter: 0,
             },
           },
+          titlePage: margins.titlePage === true ? true : undefined,
         },
+        headers: margins.headers,
+        footers: margins.footers,
         // Word refuse une section vide : un document vide garde un paragraphe vide.
         children: children.length > 0 ? children : convertBlock({ type: "paragraph" }, context),
       },
