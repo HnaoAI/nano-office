@@ -35,7 +35,13 @@ export function useWordCount(editor: Editor): WordCount {
             doc,
             selection.ranges.map(({ $from, $to }) => ({ from: $from.pos, to: $to.pos })),
           ).words;
+      // Les mesures s'ajoutent à chaque image : au-delà de 100, les plus anciennes sont effacées, pour que la liste
+      // du navigateur ne grossisse pas pendant une longue séance de frappe.
+      if (performance.getEntriesByName(WORD_COUNT_MEASURE).length >= 100) {
+        performance.clearMeasures(WORD_COUNT_MEASURE);
+      }
       performance.measure(WORD_COUNT_MEASURE, `${WORD_COUNT_MEASURE}-start`);
+      performance.clearMarks(`${WORD_COUNT_MEASURE}-start`);
       setCount((previous) =>
         previous.document === document && previous.selectedWords === selectedWords
           ? previous
