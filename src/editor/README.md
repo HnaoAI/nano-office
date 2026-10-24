@@ -9,7 +9,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `lists.ts` : listes à puces et numérotées : type de la liste du curseur, Tab et Shift+Tab sur trois niveaux (T1.2)
 - `alignment.ts` : alignement à gauche, centré, à droite ou justifié des paragraphes et titres (`setAlignment`, `currentAlignment`, T1.3)
 - `lineHeight.ts` : interligne des blocs sélectionnés et lecture au curseur (`setLineHeight`, `currentLineHeight`, T2.2)
-- `indent.ts` : retrait (T2.14) : boutons qui décalent l'élément dans une liste, sinon les paragraphes et titres sélectionnés, en une transaction ; état des boutons (`changeIndent`, `indentAvailability`)
+- `indent.ts` : retrait (T2.14) : boutons qui décalent l'élément dans une liste, sinon les paragraphes et titres sélectionnés, et sur une sélection mixte chaque ligne selon sa nature (B2), en une transaction ; état des boutons (`changeIndent`, `indentAvailability`)
 - `links.ts` : liens (T2.12) : poser, modifier, retirer en une étape d'annulation, lien au curseur, Ctrl/Cmd+clic qui ouvre un nouvel onglet (`noopener`), Ctrl/Cmd+K qui demande la fenêtre « Lien » (`applyLink`, `removeLink`, `currentLink`, `openLink`, `LinkClick`)
 - `callout.ts` : encadrés (T2.19) : encadrer la sélection, changer le style, retirer en rendant les paragraphes, Entrée deux fois en fin d'encadré pour en sortir, chacun en une étape d'annulation (`setCallout`, `removeCallout`, `currentCallout`, `canWrapInCallout`, `CalloutKeys`)
 - `search.ts` : rechercher et remplacer (T2.1) : plugin qui surligne les occurrences par des décorations, jamais dans le document ; suivante, précédente, remplacer, tout remplacer en une transaction (`Search`, `setSearch`, `goToMatch`, `replaceCurrent`, `replaceAll`)
