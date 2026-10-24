@@ -52,7 +52,7 @@ Un ticket est terminé quand :
   puis continuer. Pousser après chaque ticket terminé (dans un lot) et au moins toutes les heures de travail,
   pour que rien ne soit perdu si la session s'arrête et que le relecteur puisse suivre l'avancement.
   Passer la PR en « prête » (ready for review) seulement quand tout le travail est fini.
-- **Ne jamais pousser sur `main` sans mon accord.**
+- **Ne jamais pousser sur `main` sans mon accord.** Le CLAUDE.md d'un projet peut déléguer la fusion des PR au relecteur, à des conditions précises.
 - Ne jamais commiter de secret (clé, mot de passe, jeton).
 
 ## Dépendances
