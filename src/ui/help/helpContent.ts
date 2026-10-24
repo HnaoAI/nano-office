@@ -210,7 +210,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
-        text: "Plan : le bouton « Plan », au bout de la barre, liste les titres du document avec leur page. Cliquez sur un titre pour y aller. Faites-le glisser pour déplacer toute sa partie, ou utilisez Alt+Shift et une flèche (Option+Shift sur Mac).",
+        text: "Plan : le bouton « Plan », au bout de la barre, liste les titres du document avec leur page. Cliquez sur un titre pour y aller. Faites-le glisser pour déplacer toute sa partie. Au clavier : cliquez sur le titre dans le plan, puis Alt+Shift et une flèche (Option+Shift sur Mac) le font monter ou descendre d'une place. Une partie déjà en tête ne monte pas, et une sous-partie reste dans sa partie.",
       },
       {
         kind: "text",
