@@ -143,9 +143,23 @@ Il s'arrête et demande seulement si la question :
 
 ### Vérification et publication
 
-Tant que la famille n'a pas l'adresse de l'application, le product owner fusionne dès que la CI est verte
-et vérifie sur la version publiée (GitHub Pages), sur le Mac et le PC, sans Terminal. Un défaut se corrige
+Tant que la famille n'a pas l'adresse de l'application, la PR est fusionnée dès que la CI est verte (voir « Fusion des PR »),
+et le product owner vérifie sur la version publiée (GitHub Pages), sur le Mac et le PC, sans Terminal. Un défaut se corrige
 dans une PR suivante, ou par « Revert ». La PR donne une liste de vérification courte : 10 points au plus par lot.
+
+### Fusion des PR
+
+Depuis le 2026-10-24, le product owner délègue la fusion au **relecteur** (la session Claude chargée des relectures),
+pas aux sessions qui développent. Le relecteur fusionne une PR, sans attendre le product owner, quand :
+
+1. la CI est verte et la PR n'a pas de conflit ;
+2. la relecture est faite et ne laisse aucun point bloquant ;
+3. aucune question pour le product owner n'attend sa réponse, et aucun test existant n'a été changé sans son accord.
+
+Exception : une PR qui **change le format `.nano`** ou la façon d'enregistrer les fichiers attend un « ok » du product owner
+avant d'être fusionnée. Les PR de cadrage (tickets, règles, journal), écrites à partir de ses décisions, sont fusionnées
+dès que leur CI est verte. Après chaque fusion, le relecteur vérifie la publication et dit au product owner ce qu'il
+peut vérifier sur la version publiée. Une session de développement ne fusionne jamais elle-même.
 
 ## Relecture et échanges sur la PR
 
@@ -210,3 +224,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-23 : Lot H. La fenêtre « Nano Buro se met à jour » bloque la frappe ; le test H2 « frappe avant la prise de main » est adapté en conséquence, avec l'accord du PO, sans changer l'invariant vérifié. « Réglages » et « Aide » sont groupés dans l'en-tête. Dans l'aide, les messages sont repliés, et un clic les déplie.
 - 2026-10-24 : Repères de page (T2.8) calculés à la largeur de la feuille imprimée, même dans une fenêtre plus étroite, pour que le nombre de pages soit toujours celui du PDF. Le pied de page reste en bas de la fenêtre pour montrer « Page 3 sur 7 ».
 - 2026-10-24 : Un saut de page est un bloc du document, jamais dans une liste ni dans un tableau, comme une image. Il s'insère comme dans Word, avec Ctrl/Cmd+Entrée.
+- 2026-10-24 : La fusion des PR est déléguée au relecteur, quand la CI est verte, la relecture sans point bloquant et aucune question en attente. Les PR qui changent le format `.nano` ou l'enregistrement attendent un « ok » du product owner. Les sessions de développement ne fusionnent jamais elles-mêmes. Le product owner vérifie ensuite sur la version publiée.
