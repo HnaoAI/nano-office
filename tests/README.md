@@ -10,6 +10,7 @@ Même arborescence que `src/`.
   - `images.test.ts`, `fileFormatV2.test.ts`, `imagesBackup.test.ts` : images, format version 2 et migration depuis la version 1, copie de secours avec images (T1.9) ; `imageHelpers.ts` : faux PNG, document illustré, fichier version 1
   - `pageSetup.test.ts` : mise en page : préréglages, valeurs par défaut, attributs du nœud `doc`, aller-retour du format, copie de secours, modification (T2.5)
   - `pageBreaks.test.ts` : calcul des coupures de page : deux lignes de chaque côté, titre en bas de page, ligne de tableau, image, saut de page manuel, document vide, 100 pages, compteur (T2.8) ; `pageBreakFormat.test.ts` : saut de page gardé dans le fichier `.nano` avec son identifiant, et dans l'export Word (T2.8)
+  - `outline.test.ts` : plan du document : lignes du plan, parties imbriquées, document sans titre, saut de page, titre actif, déplacement avant et après, clavier, identifiants gardés, 200 titres (T2.9)
   - `wordExport.test.ts` : export en Word : nom proposé, titres, mise en forme, listes, tableaux, images, page et marges, polices embarquées, surlignage, document vide, texte long, accents et emojis (T2.7)
   - `wordDiff.test.ts`, `assistant.test.ts` : comparaison au mot, compte des mots, demande et réponse de l'assistant, repli au paragraphe, messages d'erreur (T3.1)
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
