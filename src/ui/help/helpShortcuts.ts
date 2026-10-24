@@ -64,12 +64,14 @@ export function helpShortcutGroups(mac: boolean): HelpShortcutGroup[] {
   ];
 }
 
-/** Nom affiché d'une touche physique : `Digit1` → 1, `KeyX` → X, `Slash` → /, `Enter` → Entrée (T2.8). */
+/** Nom affiché d'une touche physique : `Digit1` → 1, `KeyX` → X, `Slash` → /, `Enter` → Entrée (T2.8), `Period` → . (T2.13). */
 function keyName(code: string): string {
   if (code.startsWith("Digit")) return code.slice(5);
   if (code.startsWith("Key")) return code.slice(3);
   if (code === "Slash") return "/";
   if (code === "Enter") return "Entrée";
+  if (code === "Period") return ".";
+  if (code === "Comma") return ",";
   return code;
 }
 

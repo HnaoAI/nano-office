@@ -1,6 +1,7 @@
 // Raccourcis de mise en forme de Nano Buro, reconnus à la touche physique (`event.code`) et non au
 // caractère produit (`event.key`), pour fonctionner sur un clavier AZERTY (décision du 2026-10-18).
 // Les raccourcis équivalents de Tiptap sont retirés dans src/core/schema.ts. Saut de page : Ctrl/Cmd+Entrée (T2.8).
+// Souligné : Ctrl/Cmd+U (T2.10). Lien : Ctrl/Cmd+K (T2.12). Exposant et indice : Ctrl/Cmd+. et Ctrl/Cmd+, (T2.13), aussi au caractère produit.
 import { Extension, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { BlockStyleLevel, TextAlignment } from "../core/schema";
@@ -8,6 +9,7 @@ import { setAlignment } from "./alignment";
 import { setBlockStyle } from "./blockStyle";
 import { indentListItem, outdentListItem, toggleList } from "./lists";
 import { insertPageBreak } from "./pageBreak";
+import { requestLinkEditing } from "./links";
 import { isMacPlatform } from "./platform";
 
 /** Touches modificatrices d'un raccourci. `mod` est Cmd sur Mac, Ctrl ailleurs. */
@@ -23,6 +25,11 @@ interface Modifiers {
  */
 export interface Shortcut extends Modifiers {
   code: string;
+  /**
+   * Caractère produit, reconnu aussi, avec ou sans Shift : sur un clavier AZERTY, le point demande Shift
+   * (T2.13, critère 2). Absent pour les raccourcis reconnus à la touche physique seulement.
+   */
+  key?: string;
   /** Nom de l'action, affiché dans le tableau des raccourcis de l'aide (A1, critère 3.7). */
   label: string;
   run: (editor: Editor) => boolean;
@@ -112,6 +119,59 @@ const STRIKE_SHORTCUT: Shortcut = {
   },
 };
 
+/** Souligné (T2.10, critère 2) : Ctrl/Cmd+U, comme Word et Google Docs. */
+const UNDERLINE_SHORTCUT: Shortcut = {
+  code: "KeyU",
+  label: "Souligné",
+  mod: true,
+  run: (editor) => {
+    editor.commands.toggleUnderline();
+    return true;
+  },
+};
+
+/**
+ * Exposant et indice (T2.13, critère 2) : Ctrl/Cmd+. et Ctrl/Cmd+, comme Google Docs. Reconnus à la touche
+ * physique d'un clavier QWERTY, ou au caractère « . » ou « , » : sur un clavier AZERTY, le point s'obtient
+ * avec Shift+; et la virgule avec la touche M de QWERTY.
+ */
+const SCRIPT_SHORTCUTS: Shortcut[] = [
+  {
+    code: "Period",
+    key: ".",
+    label: "Exposant",
+    mod: true,
+    run: (editor) => {
+      editor.commands.toggleSuperscript();
+      return true;
+    },
+  },
+  {
+    code: "Comma",
+    key: ",",
+    label: "Indice",
+    mod: true,
+    run: (editor) => {
+      editor.commands.toggleSubscript();
+      return true;
+    },
+  },
+];
+
+/**
+ * Lien (T2.12, critère 1) : Ctrl/Cmd+K, comme Word et Google Docs. Toujours consommé dans l'éditeur, pour ne
+ * pas placer le curseur dans la barre de recherche du navigateur.
+ */
+const LINK_SHORTCUT: Shortcut = {
+  code: "KeyK",
+  label: "Lien",
+  mod: true,
+  run: (editor) => {
+    requestLinkEditing(editor);
+    return true;
+  },
+};
+
 /** Saut de page (T2.8, critère 6) : Ctrl/Cmd+Entrée, comme Word et Google Docs. */
 const PAGE_BREAK_SHORTCUT: Shortcut = {
   code: "Enter",
@@ -126,7 +186,10 @@ export function formatShortcuts(mac: boolean): Shortcut[] {
     ...headingShortcuts(mac),
     ...LIST_SHORTCUTS,
     ...ALIGNMENT_SHORTCUTS,
+    UNDERLINE_SHORTCUT,
     STRIKE_SHORTCUT,
+    ...SCRIPT_SHORTCUTS,
+    LINK_SHORTCUT,
     PAGE_BREAK_SHORTCUT,
   ];
 }
@@ -140,13 +203,11 @@ export function formatShortcuts(mac: boolean): Shortcut[] {
 export function matchesShortcut(event: KeyboardEvent, shortcut: Shortcut, mac: boolean): boolean {
   const mod = mac ? event.metaKey : event.ctrlKey;
   const other = mac ? event.ctrlKey : event.metaKey;
-  return (
-    event.code === shortcut.code &&
-    mod === Boolean(shortcut.mod) &&
-    !other &&
-    event.shiftKey === Boolean(shortcut.shift) &&
-    event.altKey === Boolean(shortcut.alt)
-  );
+  const modifiers =
+    mod === Boolean(shortcut.mod) && !other && event.altKey === Boolean(shortcut.alt);
+  if (!modifiers) return false;
+  if (shortcut.key !== undefined && event.key === shortcut.key) return true;
+  return event.code === shortcut.code && event.shiftKey === Boolean(shortcut.shift);
 }
 
 /**

@@ -59,9 +59,11 @@ test("critère 1 : deux boutons après Gras et Italique, nommés Couleur du text
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
   const italic = names.indexOf("Italique");
   // Depuis T2.3, le bouton Barré s'intercale entre Italique et les couleurs (T2.3, critère 1).
-  expect(names.slice(italic - 1, italic + 4)).toEqual([
+  // Souligné (T2.10) entre Italique et Barré : test adapté avec l'accord du PO (PR n° 100).
+  expect(names.slice(italic - 1, italic + 5)).toEqual([
     "Gras",
     "Italique",
+    "Souligné",
     "Barré",
     "Couleur du texte",
     "Surlignage",

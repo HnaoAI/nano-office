@@ -117,3 +117,116 @@
   outline: none;
   background: var(--nano-surface-muted);
 }
+
+/* Exposant et indice sous les quatre choix de casse (T2.13) : séparateur fin, choix actif sur fond gris clair,
+   comme l'alignement activé. */
+.nano-menu-separator {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--nano-group-bg);
+}
+
+.nano-menu .nano-menu {
+  padding: 0;
+}
+
+.nano-format-bar .nano-menu-item[aria-checked="true"] {
+  background: var(--nano-group-bg);
+  font-weight: 500;
+}
+
+/* Liens (T2.12) : fenêtre « Lien » de la barre, au style de la fenêtre « Texte de remplacement » (images.css),
+   et bulle d'un lien sous le texte, au style des messages d'information. La couleur du lien est celle du
+   document (bleu de la palette), posée en style par src/core/links.ts : elle n'est jamais écrite ici. */
+.nano-format-bar .nano-link-form {
+  left: 0;
+  right: auto;
+  width: 320px;
+}
+
+.nano-link-refused {
+  margin: 0;
+  color: var(--nano-ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.nano-link-form .nano-alt-text-input[aria-invalid="true"] {
+  border-color: var(--nano-ink);
+}
+
+.nano-editor a[href] {
+  cursor: text;
+}
+
+.nano-link-bubble {
+  position: fixed;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 6px 6px 6px 12px;
+  border-radius: var(--nano-radius-message);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-info);
+  font-family: var(--nano-font-sans);
+  font-size: 13px;
+  color: var(--nano-text-secondary);
+}
+
+.nano-link-bubble-address {
+  overflow: hidden;
+  min-width: 0;
+  margin-right: 6px;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nano-link-bubble button {
+  flex: none;
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.nano-link-bubble button:hover {
+  background: var(--nano-group-bg);
+}
+
+.nano-link-bubble button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+@media print {
+  .nano-link-bubble {
+    display: none;
+  }
+}
+
+/* Menu « Encadré » (T2.19) : un petit aperçu de chaque style devant son nom. */
+.nano-callout-swatch {
+  flex: none;
+  width: 18px;
+  height: 14px;
+  margin-right: 10px;
+  border: 1px solid var(--nano-text-secondary);
+  border-radius: var(--nano-radius-page);
+}
+
+.nano-callout-swatch-border-shaded {
+  background: var(--nano-surface-muted);
+}
+
+.nano-callout-swatch-shaded {
+  border-color: transparent;
+  background: var(--nano-group-bg);
+}

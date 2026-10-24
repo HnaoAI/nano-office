@@ -51,6 +51,11 @@
     break-inside: avoid;
   }
 
+  /* Encadré (T2.19, critère 5) : jamais coupé sur deux pages s'il tient sur une seule ; le fond gris s'imprime. */
+  .nano-editor .nano-callout {
+    break-inside: avoid;
+  }
+
   .nano-editor .nano-image-frame {
     break-inside: avoid;
   }
