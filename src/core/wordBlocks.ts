@@ -85,6 +85,7 @@ function runOptions(node: DocumentJson, style: BlockStyle): IRunOptions {
     const attrs = mark.attrs ?? {};
     if (mark.type === "bold") options.bold = true;
     if (mark.type === "italic") options.italics = true;
+    if (mark.type === "underline") options.underline = {};
     if (mark.type === "strike") options.strike = true;
     if (mark.type === "highlight") options.highlight = nearestHighlight(attrs.color);
     if (mark.type === "textStyle") {

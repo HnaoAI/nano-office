@@ -16,6 +16,7 @@ import Text from "@tiptap/extension-text";
 import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
 import Strike from "@tiptap/extension-strike";
+import Underline from "@tiptap/extension-underline";
 
 /**
  * Nom du fragment Yjs qui contient le document.
@@ -165,8 +166,16 @@ const DocumentStrike = Strike.extend({
 });
 
 /**
+ * Souligné (T2.10) : marque `underline`, rendue en `<u>` (lisible par un e-mail) et relue depuis `<u>` ou un style
+ * `text-decoration: underline`, donc gardée dans un collage extérieur, comme le gras. Sans les raccourcis Mod-u de
+ * Tiptap, reconnus au caractère produit (remplacés par Ctrl/Cmd+U à la touche physique dans
+ * src/editor/keyboardShortcuts.ts).
+ */
+const DocumentUnderline = Underline.extend({ addKeyboardShortcuts: () => ({}) });
+
+/**
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
- * puces et numérotées (T1.2), alignement (T1.3), gras, italique, barré (T2.3), police et taille (T1.4),
+ * puces et numérotées (T1.2), alignement (T1.3), gras, italique, souligné (T2.10), barré (T2.3), police et taille (T1.4),
  * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), sauts de page (T2.8),
  * identifiant de bloc. T0b les
  * réutilise telles quelles, sans redéfinir le schéma (l'éditeur configure seulement `ImageNode`).
@@ -184,6 +193,7 @@ export const documentExtensions = [
   Text,
   Bold,
   Italic,
+  DocumentUnderline,
   DocumentStrike,
   TextStyle,
   TextStyleAttributes,

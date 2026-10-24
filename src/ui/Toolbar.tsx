@@ -1,5 +1,5 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
-// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Barré (T2.3), couleur du texte et surlignage
+// style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Souligné (T2.10), Barré (T2.3), couleur du texte et surlignage
 // (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9),
 // saut de page (T2.8) | mise en page (T2.5), plan (T2.9) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
@@ -14,7 +14,15 @@ import { selectedImage } from "../editor/images";
 import { insertPageBreak } from "../editor/pageBreak";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
-import { OutlineIcon, PageBreakIcon, PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
+import {
+  OutlineIcon,
+  PageBreakIcon,
+  PageSetupIcon,
+  RedoIcon,
+  StrikeIcon,
+  UnderlineIcon,
+  UndoIcon,
+} from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
 import { AssistantButtons } from "./AssistantButtons";
 import { CaseButton } from "./CaseButton";
@@ -36,7 +44,7 @@ export interface ToolbarAssistant {
 }
 
 /**
- * Barre de mise en forme. Gras, Italique et Barré indiquent leur état avec `aria-pressed`.
+ * Barre de mise en forme. Gras, Italique, Souligné et Barré indiquent leur état avec `aria-pressed`.
  * Les séparateurs ajoutés par T1 sont décoratifs (`aria-hidden`), comme dans la maquette ; seul le
  * premier garde le rôle `separator` (U1a).
  * INVARIANT : les noms accessibles (« Annuler », « Rétablir », « Gras », « Italique ») ne changent pas,
@@ -62,6 +70,7 @@ export function Toolbar({
     selector: ({ editor: current }) => ({
       bold: current.isActive("bold"),
       italic: current.isActive("italic"),
+      underline: current.isActive("underline"),
       strike: current.isActive("strike"),
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
@@ -131,6 +140,16 @@ export function Toolbar({
         onClick={() => editor.chain().focus().toggleItalic().run()}
       >
         I
+      </button>
+      <button
+        type="button"
+        aria-label="Souligné"
+        aria-pressed={state.underline}
+        title={`Souligné (${MOD}+U)`}
+        onMouseDown={keepFocus}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+      >
+        <UnderlineIcon />
       </button>
       <button
         type="button"
