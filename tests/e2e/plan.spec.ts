@@ -236,7 +236,7 @@ test.describe("T2.9 : plan du document", () => {
     await start(page);
     await openDocument(page, EXPOSE);
     await openPlan(page);
-    await expect(item(page, "Le vent")).toHaveAttribute("aria-current", "true");
+    await expect(item(page, "Le vent")).toHaveAttribute("aria-current", "location");
     await item(page, "Conclusion").click();
     await expect(editor(page)).toBeFocused();
     await settleSelection(page);
@@ -248,12 +248,12 @@ test.describe("T2.9 : plan du document", () => {
     const below = (title?.y ?? 0) - ((top?.y ?? 0) + (top?.height ?? 0));
     expect(below).toBeGreaterThanOrEqual(0);
     expect(below).toBeLessThan(60);
-    await expect(item(page, "» Conclusion")).toHaveAttribute("aria-current", "true");
-    await expect(item(page, "Le vent")).not.toHaveAttribute("aria-current", "true");
+    await expect(item(page, "» Conclusion")).toHaveAttribute("aria-current", "location");
+    await expect(item(page, "Le vent")).not.toHaveAttribute("aria-current");
     await expect(item(page, "» Conclusion")).toHaveCSS("background-color", "rgb(243, 243, 241)");
     // Le curseur dans une sous-partie met en évidence son sous-titre.
     await editor(page).getByText("En Chine").click();
-    await expect(item(page, "En Chine")).toHaveAttribute("aria-current", "true");
+    await expect(item(page, "En Chine")).toHaveAttribute("aria-current", "location");
   });
 
   test("critères 4 à 6 : glisser une partie avec tableau et image, puis un Ctrl/Cmd+Z remet tout en place", async ({
@@ -434,16 +434,98 @@ test.describe("T2.9 : plan du document", () => {
     await expect(panel(page).locator(".nano-outline-item")).toHaveCount(200);
     await editor(page).getByText("Partie 198", { exact: true }).click();
     await page.keyboard.press("End");
-    const started = Date.now();
-    await page.keyboard.type(" été 🌾 fin", { delay: 0 });
+    // Délai de chaque touche, de son appui à l'image affichée après la suivante.
+    await page.evaluate(() => {
+      const delays: number[] = [];
+      (window as unknown as { __keyDelays: number[] }).__keyDelays = delays;
+      window.addEventListener(
+        "keydown",
+        () => {
+          const started = performance.now();
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => delays.push(performance.now() - started)),
+          );
+        },
+        { capture: true },
+      );
+    });
+    await page.keyboard.type(" été 🌾 fin", { delay: 30 });
     await expect(item(page, "Partie 198 été 🌾 fin")).toBeVisible();
-    expect(Date.now() - started).toBeLessThan(3_000);
-    await expect(item(page, "Partie 198 été 🌾 fin")).toHaveAttribute("aria-current", "true");
+    const delays = await page.evaluate(
+      () => (window as unknown as { __keyDelays: number[] }).__keyDelays,
+    );
+    expect(delays.length).toBeGreaterThan(5);
+    const average = delays.reduce((sum, delay) => sum + delay, 0) / delays.length;
+    // Deux images à 60 par seconde font 33 ms : la frappe n'attend pas le plan.
+    expect(average).toBeLessThan(80);
+    await expect(item(page, "Partie 198 été 🌾 fin")).toHaveAttribute("aria-current", "location");
     // Déplacer une partie de Titre 1 trois parties plus haut reste rapide.
     await item(page, "Partie 198 été 🌾 fin").focus();
     for (let step = 0; step < 3; step += 1) await page.keyboard.press("Alt+Shift+ArrowUp");
     await expect(panel(page).locator(".nano-outline-item").nth(189)).toHaveText(/^Partie 198/);
     await expect(panel(page).locator(".nano-outline-item").nth(190)).toHaveText(/^Partie 199/);
+  });
+
+  test("critère 2 : le numéro de page d'un titre suit le texte ajouté au-dessus de lui", async ({
+    page,
+  }) => {
+    await start(page);
+    await openDocument(page, [heading("h-1", 1, "Début"), para("p-1"), heading("h-2", 1, "Suite")]);
+    await openPlan(page);
+    const number = item(page, "Suite").locator(".nano-outline-page");
+    await expect(number).toHaveText("1");
+    await editor(page).getByText(SENTENCE.trim().slice(0, 20)).click();
+    await page.keyboard.press("End");
+    for (let index = 0; index < 40; index += 1) await page.keyboard.press("Enter");
+    await expect(number).toHaveText("2");
+  });
+
+  test("cas limite : une partie déposée dans le document ou ailleurs ne change rien", async ({
+    page,
+  }) => {
+    await start(page);
+    await openDocument(page, EXPOSE);
+    const before = await ydocJson(page);
+    await openPlan(page);
+    const from = await item(page, "Conclusion").boundingBox();
+    const to = await editor(page).getByText("Histoire").boundingBox();
+    if (!from || !to) throw new Error("invisible");
+    await page.mouse.move(from.x + 20, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + 10, to.y + 5, { steps: 8 });
+    await page.mouse.move(to.x + 12, to.y + 6);
+    await page.mouse.up();
+    await expect(panel(page).locator(".nano-outline-drop")).toHaveCount(0);
+    expect(await ydocJson(page)).toEqual(before);
+  });
+
+  test("cas limite : une partie posée à la fin d'un document qui finit par un tableau", async ({
+    page,
+  }) => {
+    await start(page);
+    await openDocument(page, [
+      heading("h-1", 1, "Premier"),
+      para("p-1"),
+      heading("h-2", 1, "Second"),
+      table("t"),
+    ]);
+    await openPlan(page);
+    const from = await item(page, "Premier").boundingBox();
+    const end = await panel(page).locator(".nano-outline-end").boundingBox();
+    if (!from || !end) throw new Error("invisible");
+    await page.mouse.move(from.x + 20, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(end.x + 20, end.y + end.height / 2, { steps: 8 });
+    await page.mouse.move(end.x + 22, end.y + end.height / 2 + 1);
+    await expect(panel(page).locator(".nano-outline-end.nano-outline-drop")).toHaveCount(1);
+    await page.mouse.up();
+    const ids = await topIds(page);
+    expect(ids.slice(0, 2)).toEqual(["h-2", "table"]);
+    // Le paragraphe vide qui suit un tableau final (T1.8) part avec lui ; rien d'autre n'est ajouté.
+    expect(ids).toHaveLength(5);
+    expect(ids.slice(-2)).toEqual(["h-1", "p-1"]);
+    await page.keyboard.press("ControlOrMeta+z");
+    expect((await topIds(page)).slice(0, 4)).toEqual(["h-1", "p-1", "h-2", "table"]);
   });
 
   test("critère 8 : le panneau ne s'imprime pas et n'entre pas dans le document", async ({
@@ -455,6 +537,8 @@ test.describe("T2.9 : plan du document", () => {
     await page.emulateMedia({ media: "print" });
     await expect(panel(page)).toBeHidden();
     await expect(page.locator(".nano-page")).toBeVisible();
+    // Le décalage de la page à côté du plan ne s'imprime pas.
+    await expect(page.locator(".nano-workspace")).toHaveCSS("padding-left", "0px");
     await page.emulateMedia({ media: "screen" });
     await expect(panel(page)).toBeVisible();
     expect(JSON.stringify(await ydocJson(page))).not.toContain("Plan");

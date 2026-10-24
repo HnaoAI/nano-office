@@ -210,6 +210,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Plan : le bouton « Plan », au bout de la barre, liste les titres du document avec leur page. Cliquez sur un titre pour y aller. Faites-le glisser pour déplacer toute sa partie, ou utilisez Alt+Shift et une flèche (Option+Shift sur Mac).",
+      },
+      {
+        kind: "text",
         text: "Rechercher et remplacer : la recherche s'ouvre avec le raccourci indiqué dans « Raccourcis clavier ». Tapez le mot cherché, puis passez d'un résultat à l'autre avec Entrée. « Remplacer… » permet de remplacer un mot ou tous à la fois. Un seul « Annuler » remet tout comme avant.",
       },
       {

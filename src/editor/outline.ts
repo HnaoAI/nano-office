@@ -11,6 +11,7 @@ import {
   topBlockPos,
   type OutlineEntry,
 } from "../core/outline";
+import { BLOCK_ID_ATTRIBUTE } from "../core/schema";
 import { dispatchAsOneStep } from "./assistantEdits";
 
 /** Espace laissé entre la barre figée et le titre atteint, en pixels, comme pour le curseur (M1). */
@@ -115,6 +116,6 @@ export function moveSectionStep(
 export function headingAtCursor(editor: Editor): EntryRef | null {
   const { $from } = editor.state.selection;
   if ($from.depth !== 1 || $from.parent.type.name !== "heading") return null;
-  const id: unknown = $from.parent.attrs.id;
+  const id: unknown = $from.parent.attrs[BLOCK_ID_ATTRIBUTE];
   return { id: typeof id === "string" && id !== "" ? id : null, index: $from.index(0) };
 }

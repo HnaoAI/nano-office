@@ -75,25 +75,37 @@ export function useOutline(editor: Editor, open: boolean, layout: PageLayout): O
   }, [editor, open]);
 
   // Numéros de page : position de chaque ligne dans la feuille, placée sur les repères de T2.8.
+  // Remesurés après chaque modification, même quand les coupures ne changent pas : des paragraphes
+  // ajoutés au-dessus d'un titre peuvent le faire passer à la page suivante (relecture de la PR 99).
   useEffect(() => {
     if (!open) return;
-    const frame = requestAnimationFrame(() => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
       if (editor.isDestroyed) return;
       const view = editor.view;
       const offsets: number[] = [];
       view.state.doc.forEach((_node, offset) => offsets.push(offset));
       const top = view.dom.getBoundingClientRect().top;
       const next = new Map<string, number>();
-      for (const entry of entries) {
+      for (const entry of documentOutline(view.state.doc)) {
         const pos = offsets[entry.index];
         const element = pos === undefined ? null : view.nodeDOM(pos);
         if (!(element instanceof HTMLElement)) continue;
         next.set(entryKey(entry), pageAt(layout, element.getBoundingClientRect().top - top));
       }
       setPages((previous) => (samePages(previous, next) ? previous : next));
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [editor, open, entries, layout]);
+    };
+    const schedule = () => {
+      if (frame === 0) frame = requestAnimationFrame(measure);
+    };
+    schedule();
+    editor.on("update", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      editor.off("update", schedule);
+    };
+  }, [editor, open, layout]);
 
   // Alt+Shift+Flèche dans un titre du document, plan ouvert : la partie entière se déplace (critère 4).
   useEffect(() => {

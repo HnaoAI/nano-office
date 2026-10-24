@@ -15,7 +15,9 @@
     display: none !important;
   }
 
-  .nano-workspace {
+  /* Le décalage de la page à côté du plan (T2.9) ne s'imprime pas. */
+  .nano-workspace,
+  .nano-workspace.nano-outline-open {
     display: block;
     padding: 0;
   }

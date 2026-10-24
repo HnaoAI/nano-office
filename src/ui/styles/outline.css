@@ -17,7 +17,7 @@
   border-radius: var(--nano-radius-bar);
   background: var(--nano-surface);
   box-shadow: var(--nano-shadow-bar);
-  color: var(--nano-document-text);
+  color: var(--nano-ink);
 }
 
 /* Écran large : la page se décale vers la droite pour rester visible à côté du panneau.
@@ -99,8 +99,14 @@
 }
 
 .nano-outline-item button:hover,
-.nano-outline-item button[aria-current="true"] {
+.nano-outline-item button[aria-current="location"] {
   background: var(--nano-surface-muted);
+}
+
+/* Focus au clavier : anneau noir, distinct du fond gris du titre actif. */
+.nano-outline button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
 }
 
 .nano-outline-item[data-level="1"] button {

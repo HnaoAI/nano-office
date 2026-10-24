@@ -190,7 +190,7 @@ export function OutlinePanel({
                     type="button"
                     data-key={key}
                     draggable
-                    aria-current={active === key ? "true" : undefined}
+                    aria-current={active === key ? "location" : undefined}
                     title={`Faire glisser pour déplacer la partie (${alt}+Shift+↑ ou ↓ au clavier)`}
                     onClick={() => go(entry)}
                     onKeyDown={(event) => onKeyDown(event, entry)}
