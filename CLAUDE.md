@@ -130,6 +130,9 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **F. La page** | T2.5 page A4 et marges, T2.6 imprimer et PDF, T2.7 exporter en Word | #59, #60, #61 |
 | **G. Assistant** | T3.1 assistant IA facultatif (corriger, traduire), avec choix des modifications | #66 |
 | **H. Prêt pour la famille** | H3 fenêtre de mise à jour, A1 aide intégrée | #77, #78 |
+| **I. Au quotidien** | T2.10 souligné, T2.11 compteur de mots, T2.12 liens, T2.13 exposant et indice, T2.14 retrait | #84, #85, #86, #87, #88 |
+| **J. Documents complets** | T2.15 numéros de page, T2.16 en-tête et pied de page, T2.17 sommaire | #89, #90, #91 |
+| **K. Ouvrir un fichier Word** | T2.18 ouvrir un `.docx` | #92 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -225,3 +228,5 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-10-24 : Repères de page (T2.8) calculés à la largeur de la feuille imprimée, même dans une fenêtre plus étroite, pour que le nombre de pages soit toujours celui du PDF. Le pied de page reste en bas de la fenêtre pour montrer « Page 3 sur 7 ».
 - 2026-10-24 : Un saut de page est un bloc du document, jamais dans une liste ni dans un tableau, comme une image. Il s'insère comme dans Word, avec Ctrl/Cmd+Entrée.
 - 2026-10-24 : La fusion des PR est déléguée au relecteur, quand la CI est verte, la relecture sans point bloquant et aucune question en attente. Les PR qui changent le format `.nano` ou l'enregistrement attendent un « ok » du product owner. Les sessions de développement ne fusionnent jamais elles-mêmes. Le product owner vérifie ensuite sur la version publiée.
+- 2026-10-24 : Après T2.9, lots I (souligné, compteur de mots, liens, exposant et indice, retrait), J (numéros de page, en-tête et pied de page, sommaire) et K (ouvrir un fichier Word, sans jamais le modifier). Notes de bas de page plus tard (PL7). Le souligné manquait depuis le lot A.
+- 2026-10-24 : **Avant de commencer la collaboration en ligne**, le relecteur demande au product owner ses idées d'améliorations, et elles sont traitées d'abord : la collaboration ne commence pas sans cette étape.
