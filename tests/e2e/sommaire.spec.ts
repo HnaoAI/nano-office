@@ -133,8 +133,11 @@ test.describe("T2.17 : sommaire automatique", () => {
     for (const item of look) expect(item.leader).toBeGreaterThan(40);
     // Mêmes numéros que le plan, calculés par les repères de page (T2.8).
     await openPlan(page);
-    const plan = await page.locator(".nano-outline-page").allTextContents();
-    await expect.poll(() => tocNumbers(page)).toEqual(plan);
+    // Le plan calcule ses numéros après son ouverture : on attend ses quatre numéros avant de comparer.
+    const planNumbers = page.locator(".nano-outline-page");
+    await expect(planNumbers).toHaveCount(4);
+    await expect(planNumbers.last()).not.toHaveText("");
+    await expect.poll(() => tocNumbers(page)).toEqual(await planNumbers.allTextContents());
     const numbers = (await tocNumbers(page)).map(Number);
     expect(numbers[0]).toBeGreaterThanOrEqual(1);
     expect(numbers[3]).toBeGreaterThan(numbers[0] ?? 0);
