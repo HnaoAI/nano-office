@@ -17,3 +17,4 @@ Couleurs, rayons et ombres ne sont écrits que dans `tokens.css` (vérifié par 
 - `assistant.css` : assistant (T3.1) : bouton et boîte « Réglages », groupe « Assistant », panneau au style des messages, marques de suggestion (barré gris, souligné sur gris clair), boutons de la modification choisie, rien à l'impression
 - `update.css` : fenêtre « Nano Buro se met à jour » et son N qui tourne, ou qui pulse si le système demande moins d'animations (H3)
 - `help.css` : panneau d'aide à droite de la page, plein écran à petite largeur, sommaire, messages cités, raccourcis en pastilles (A1)
+- `outline.css` : panneau « Plan » à gauche de la page, sous la partie figée, page décalée sur un écran large et panneau par-dessus à petite largeur, titres en retrait, numéros de page, titre actif, trait de dépôt (T2.9)

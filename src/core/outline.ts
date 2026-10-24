@@ -28,7 +28,9 @@ function blockId(node: ProseMirrorNode): string | null {
   return typeof id === "string" && id !== "" ? id : null;
 }
 
-function isHeading(node: ProseMirrorNode | null | undefined): node is ProseMirrorNode {
+function isHeading(node: ProseMirrorNode | null | undefined): node is ProseMirrorNode & {
+  attrs: { level: number };
+} {
   return node?.type.name === "heading";
 }
 

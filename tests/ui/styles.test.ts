@@ -19,6 +19,7 @@ const STYLE_FILES = [
   "assistant",
   "update",
   "help",
+  "outline",
 ];
 const css = STYLE_FILES.map((name) =>
   readFileSync(new URL(`../../src/ui/styles/${name}.css`, import.meta.url), "utf8"),

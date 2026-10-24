@@ -1,7 +1,7 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1), panneau de
 // l'assistant (T3.1) et éditeur Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a),
 // au format et aux marges du document (T2.5), avec ses repères de page et le compteur « Page 3 sur 7 »
-// du pied de page (T2.8).
+// du pied de page (T2.8), et panneau « Plan » à gauche de la page (T2.9).
 // La barre de mise en forme, le panneau de l'assistant et la recherche s'affichent dans la partie
 // figée de App (M1).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
@@ -17,11 +17,14 @@ import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
 import { pageCounterText } from "../core/pageBreaks";
 import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
+import { loadOutlineOpen, saveOutlineOpen } from "../storage/outlinePreference";
 import { AssistantPanel } from "./AssistantPanel";
+import { OutlinePanel } from "./OutlinePanel";
 import { PageMarksLayer } from "./PageMarksLayer";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import { useAssistant } from "./useAssistant";
+import { useOutline } from "./useOutline";
 import type { AssistantConfig } from "./useAssistantSettings";
 import { usePageLayout } from "./usePageLayout";
 import { usePageSetup } from "./usePageSetup";
@@ -93,6 +96,13 @@ export function DocumentEditor({
   const pageSetup = usePageSetup(ydoc);
   const [sheet, setSheet] = useState<HTMLElement | null>(null);
   const marks = usePageLayout(editor, sheet, pageSetup);
+  // Plan (T2.9) : fermé par défaut, choix retenu sur cet ordinateur (critère 1).
+  const [outlineOpen, setOutlineOpen] = useState(loadOutlineOpen);
+  const showOutline = (open: boolean) => {
+    setOutlineOpen(open);
+    saveOutlineOpen(open);
+  };
+  const outline = useOutline(editor, outlineOpen, marks.layout);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {
     if (isUserEdit(transaction)) onEdit();
@@ -125,6 +135,7 @@ export function DocumentEditor({
         <Toolbar
           editor={editor}
           onPageSetup={onPageSetup}
+          outline={{ open: outlineOpen, onToggle: () => showOutline(!outlineOpen) }}
           assistant={
             assistant
               ? {
@@ -162,7 +173,15 @@ export function DocumentEditor({
         )}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
       <style>{printPageRule(pageSetup)}</style>
-      <main className="nano-workspace">
+      {outlineOpen && (
+        <OutlinePanel
+          editor={editor}
+          outline={outline}
+          coveredTop={coveredTop}
+          onClose={() => showOutline(false)}
+        />
+      )}
+      <main className={outlineOpen ? "nano-workspace nano-outline-open" : "nano-workspace"}>
         <article
           ref={setSheet}
           className="nano-page"

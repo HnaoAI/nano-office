@@ -43,12 +43,14 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
-- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6), repères de page et compteur « Page 3 sur 7 » (T2.8)
+- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6), repères de page et compteur « Page 3 sur 7 » (T2.8), panneau « Plan » (T2.9)
 - `usePageLayout.ts` : repères de page du document affiché (T2.8) : coupures recalculées au plus une fois par image affichée, page visible au milieu de la fenêtre
 - `PageMarksLayer.tsx` : calque des repères de page (T2.8) : trait en pointillé de bord à bord et numéro de la page suivante dans la marge de droite, hors du document
+- `OutlinePanel.tsx` : panneau « Plan » à gauche de la page (T2.9) : titres en retrait, sauts de page, numéros de page, titre actif, clic pour y aller, glisser-déposer d'une partie avec un trait de dépôt, Alt+Shift+Flèche ; par-dessus la page à petite largeur
+- `useOutline.ts` : plan du document affiché (T2.9) : lignes relues au plus une fois par image, titre actif, numéros de page d'après les repères de T2.8, Alt+Shift+Flèche dans un titre du document
 - `SearchBar.tsx` : barre « Rechercher et remplacer » sous la barre de mise en forme, à droite (T2.1)
 - `useSearchShortcuts.ts` : Ctrl/Cmd+F, Ctrl+H (Windows) et Cmd+Option+F (Mac) sur toute la page, à la touche physique (T2.1)
-- `Toolbar.tsx` : barre de mise en forme flottante, figée en haut de la fenêtre (M1) (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, tableau, image, saut de page (T2.8), mise en page (T2.5), groupe « Assistant » quand il est en marche (T3.1))
+- `Toolbar.tsx` : barre de mise en forme flottante, figée en haut de la fenêtre (M1) (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, tableau, image, saut de page (T2.8), mise en page (T2.5), plan (T2.9), groupe « Assistant » quand il est en marche (T3.1))
 - `SuggestionActions.tsx` : boutons « Accepter » et « Refuser » sous la modification choisie de l'assistant (T3.1, découpé en M1)
 - `SettingsDialog.tsx` : boîte « Réglages » : section « Assistant IA », interrupteur, fournisseur, clé masquée, modèle, texte sur les données envoyées, « Oublier la clé » (T3.1)
 - `useAssistantSettings.ts` : réglages et clés de l'assistant de cet ordinateur, configuration passée à l'éditeur, null quand il est éteint (T3.1)
