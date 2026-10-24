@@ -1,4 +1,5 @@
-/* Mise en page (U1a) : bases, en-tête, groupe Fichier, page du document, pied de page. */
+/* Mise en page (U1a) : bases, en-tête, groupe Fichier, page du document, pied de page, figé en bas de
+   la fenêtre avec le compteur de pages (T2.8). Repères de page et saut de page : pages.css. */
 *,
 *::before,
 *::after {
@@ -186,6 +187,7 @@ button:focus-visible {
 /* Mise en page (T2.5) : largeur d'une feuille A4 et marges du document, à l'échelle (1 cm du CSS).
    Les variables sont posées sur la page par DocumentEditor.tsx ; sans elles, portrait et marges Normales. */
 .nano-page {
+  position: relative;
   width: 100%;
   max-width: var(--page-width, 21cm);
   min-height: var(--page-height, 29.7cm);
@@ -265,15 +267,29 @@ button:focus-visible {
   line-height: 1.4;
 }
 
+/* Pied de page figé en bas de la fenêtre (T2.8, critère 5) : le compteur « Page 3 sur 7 » reste visible
+   pendant le défilement, au centre, entre la copie de secours et « Fonctionne hors ligne ». Le fond de
+   l'application le sépare du texte, comme la partie figée du haut (M1). */
 .nano-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 28px 22px;
+  padding: 10px 28px 12px;
+  background: var(--nano-app-bg);
   font-family: var(--nano-font-mono);
   font-size: 12px;
   color: var(--nano-text-quiet);
+}
+
+/* Fenêtre basse ou étroite : le pied de page défile avec la page, pour laisser la place au texte (M1). */
+@media (max-height: 499px), (max-width: 600px) {
+  .nano-footer {
+    position: static;
+  }
 }
 
 /* Écran étroit (moins de 600 px) : marges réduites, quelle que soit la mise en page (T2.5, critère 2). */

@@ -1,7 +1,7 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
 // style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Barré (T2.3), couleur du texte et surlignage
-// (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9)
-// | mise en page (T2.5) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
+// (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9),
+// saut de page (T2.8) | mise en page (T2.5) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
@@ -11,9 +11,10 @@ import { currentTextStyle } from "../editor/fontStyle";
 import { currentLineHeight } from "../editor/lineHeight";
 import { currentListType } from "../editor/lists";
 import { selectedImage } from "../editor/images";
+import { insertPageBreak } from "../editor/pageBreak";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
-import { PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
+import { PageBreakIcon, PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
 import { AssistantButtons } from "./AssistantButtons";
 import { CaseButton } from "./CaseButton";
@@ -153,6 +154,18 @@ export function Toolbar({
         canDelete={state.tableDeletions}
       />
       <ImageButtons editor={editor} selectedAlt={state.imageAlt} />
+      <button
+        type="button"
+        aria-label="Saut de page"
+        title={`Saut de page (${MOD}+Entrée)`}
+        onMouseDown={keepFocus}
+        onClick={() => {
+          editor.commands.focus();
+          insertPageBreak(editor);
+        }}
+      >
+        <PageBreakIcon />
+      </button>
       <div className="nano-separator" aria-hidden="true" />
       {/* Dans la barre plutôt que dans le groupe Fichier, pour que l'en-tête tienne sur une ligne
           à 1 280 px de large (T2.5, choix à confirmer). */}

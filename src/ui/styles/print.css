@@ -53,6 +53,24 @@
     break-inside: avoid;
   }
 
+  /* Repères et numéros de page ne s'impriment pas ; le saut de page manuel coupe la page sans rien
+     afficher (T2.8, critères 6 et 9). Sa coupure vient de son style `break-before: page`. */
+  .nano-page-marks {
+    display: none;
+  }
+
+  .nano-editor .nano-page-break {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    outline: none;
+  }
+
+  .nano-editor .nano-page-break::before {
+    content: none;
+  }
+
   /* Recherche, sélection, poignées et curseurs ne s'impriment pas (critère 6). */
   .nano-editor .nano-search-match {
     background: none;

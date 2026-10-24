@@ -1,8 +1,9 @@
 // Composant racine : en-tête, messages, question de la copie de secours, éditeur du document affiché,
 // boîtes « Mise en page » (T2.5) et « Réglages » (T3.1), fenêtre et message de mise à jour (H3),
-// panneau d'aide à droite (A1), et pied de page. Mise en page selon la charte docs/design/README.md (U1a).
+// panneau d'aide à droite (A1), et pied de page, figé en bas de la fenêtre avec le compteur de pages
+// (T2.8). Mise en page selon la charte docs/design/README.md (U1a).
 // L'en-tête, le message et la barre de mise en forme restent en haut de la fenêtre (M1, `useStickyTop`).
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AppHeader } from "./AppHeader";
 import { BackupChoice } from "./BackupChoice";
 import { DocumentEditor } from "./DocumentEditor";
@@ -24,6 +25,7 @@ import "./fonts";
 // Ordre des feuilles : les variables d'abord, puis la mise en page, avant les composants qui la précisent.
 import "./styles/tokens.css";
 import "./styles/layout.css";
+import "./styles/pages.css";
 import "./styles/toolbar.css";
 import "./styles/pickers.css";
 import "./styles/tables.css";
@@ -42,6 +44,15 @@ import "./styles/print.css";
  */
 function print() {
   window.print();
+}
+
+/**
+ * Hauteur cachée en bas de la fenêtre par le pied de page figé (T2.8), en pixels ; 0 quand il défile avec
+ * la page (fenêtre basse ou étroite, layout.css).
+ */
+function coveredByFooter(footer: HTMLElement | null): number {
+  if (!footer || getComputedStyle(footer).position !== "sticky") return 0;
+  return Math.max(0, window.innerHeight - footer.getBoundingClientRect().top);
 }
 
 /** Composant racine de l'application. */
@@ -80,6 +91,10 @@ export function App() {
   // `editorTools`, sous le message, pour rester en haut avec l'en-tête.
   const { topRef, toolsRef, coveredTop } = useStickyTop();
   const [editorTools, setEditorTools] = useState<HTMLDivElement | null>(null);
+  // Pied de page figé en bas de la fenêtre, avec le compteur « Page 3 sur 7 » de l'éditeur (T2.8).
+  const footerRef = useRef<HTMLElement>(null);
+  const coveredBottom = useCallback(() => coveredByFooter(footerRef.current), []);
+  const [pageCounter, setPageCounter] = useState<HTMLSpanElement | null>(null);
   const actions = {
     newDocument: file.newDocument,
     open: file.open,
@@ -138,6 +153,8 @@ export function App() {
                 assistant={assistant.config}
                 tools={editorTools}
                 coveredTop={coveredTop}
+                coveredBottom={coveredBottom}
+                counter={pageCounter}
               />
             )}
             {pageDialog.current && !pending && (
@@ -160,8 +177,9 @@ export function App() {
               />
             )}
             {help.open && <HelpPanel onClose={help.close} />}
-            <footer className="nano-footer">
+            <footer className="nano-footer" ref={footerRef}>
               <span>{backupLinked ? "Copie de secours à jour" : ""}</span>
+              <span ref={setPageCounter} />
               <span>Fonctionne hors ligne</span>
             </footer>
           </>

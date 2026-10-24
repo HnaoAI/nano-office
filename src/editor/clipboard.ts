@@ -16,6 +16,7 @@ import type { EditorView } from "@tiptap/pm/view";
 import { IMAGE_NODE } from "../core/images";
 import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
 import { CellSelection, isInTable } from "@tiptap/pm/tables";
+import { convertPageBreaks } from "./pageBreakPaste";
 import {
   addTableBordersForEmail,
   flattenNestedTables,
@@ -119,15 +120,18 @@ function convertWordLists(body: HTMLElement): void {
 
 /**
  * Prépare le HTML d'un collage venu d'une autre application, avant sa lecture par le schéma :
- * listes de Word en vraies listes, tableaux imbriqués aplatis et cellules fusionnées séparées (T1.8). Le reste (styles,
+ * listes de Word en vraies listes, tableaux imbriqués aplatis et cellules fusionnées séparées (T1.8),
+ * sauts de page reconnus (T2.8). Le reste (styles,
  * images, scripts) est trié ensuite : ce que le schéma ne connaît pas est ignoré ou gardé comme
  * simple texte (critère 4). Les tableaux restent des tableaux (T1.8).
  */
 export function prepareExternalHtml(html: string): string {
   const wordLists = /mso-list/i.test(html);
   const tables = /<table/i.test(html);
-  if (!wordLists && !tables) return html;
+  const pageBreaks = /break-before/i.test(html);
+  if (!wordLists && !tables && !pageBreaks) return html;
   const doc = new DOMParser().parseFromString(html, "text/html");
+  if (pageBreaks) convertPageBreaks(doc.body);
   if (wordLists) convertWordLists(doc.body);
   if (tables) {
     flattenNestedTables(doc.body);

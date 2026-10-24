@@ -11,6 +11,7 @@ import { CleanClipboard } from "./clipboard";
 import type { ImageRejectedHandler } from "./imageInsert";
 import { createImageExtensions } from "./images";
 import { FormatShortcuts } from "./keyboardShortcuts";
+import { PageBreaks } from "./pageBreak";
 import { createPageSetupHistory } from "./pageSetup";
 import { Search } from "./search";
 import { Suggestions } from "./suggestions";
@@ -27,7 +28,8 @@ import { TableNavigation } from "./tables";
  *   (règle produit 6, critère 8) : `# ` ne crée pas de titre (T1.1, critère 9).
  * - Les raccourcis de mise en forme sont reconnus à la touche physique (`FormatShortcuts`).
  * - Le copier-coller garde la structure et retire la mise en forme d'origine (`CleanClipboard`, T1.5).
- * - On peut toujours écrire avant ou après un tableau (`TableNavigation`, T1.8).
+ * - On peut toujours écrire avant ou après un tableau (`TableNavigation`, T1.8) et après un saut de page
+ *   (`PageBreaks`, T2.8).
  * - Les images sont affichées depuis le Y.Doc, insérées par le bouton, un dépôt ou un collage (T1.9) :
  *   le nœud image du schéma est remplacé par sa version reliée au document, à la même place.
  * - La recherche surligne ses occurrences par des décorations, hors du document (`Search`, T2.1).
@@ -52,6 +54,7 @@ export function createEditorOptions(
       FormatShortcuts,
       CleanClipboard,
       TableNavigation,
+      PageBreaks,
       Search,
       Suggestions,
       Collaboration.configure({
