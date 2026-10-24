@@ -218,6 +218,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Compteur de mots : le nombre de mots s'affiche en bas de la fenêtre, à côté du numéro de page, et celui de la sélection quand du texte est sélectionné. Cliquez dessus pour voir aussi les caractères et les paragraphes.",
+      },
+      {
+        kind: "text",
         text: "Rechercher et remplacer : la recherche s'ouvre avec le raccourci indiqué dans « Raccourcis clavier ». Tapez le mot cherché, puis passez d'un résultat à l'autre avec Entrée. « Remplacer… » permet de remplacer un mot ou tous à la fois. Un seul « Annuler » remet tout comme avant.",
       },
       {

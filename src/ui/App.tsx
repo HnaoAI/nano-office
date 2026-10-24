@@ -180,7 +180,7 @@ export function App() {
             {help.open && <HelpPanel onClose={help.close} />}
             <footer className="nano-footer" ref={footerRef}>
               <span>{backupLinked ? "Copie de secours à jour" : ""}</span>
-              <span ref={setPageCounter} />
+              <span className="nano-footer-counters" ref={setPageCounter} />
               <span>Fonctionne hors ligne</span>
             </footer>
           </>

@@ -31,4 +31,5 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `appVersion.ts` : numéro de version `v<date>·<commit court>`, ou `dev` (`formatVersion`, H1)
 - `base64.ts` : conversion octets <-> base64 pour l'état Yjs
 - `assistant.ts` : assistant facultatif (T3.1) : réglages (éteint par défaut), modèles proposés, consignes et demande envoyée (la sélection seule), lecture de la réponse, corrections au mot ou au paragraphe entier, messages d'erreur (`buildRequest`, `parseParagraphs`, `correctionChanges`, `failureMessage`)
+- `wordCount.ts` : compteur de mots (T2.11) : mots entre deux espaces comme dans Word, caractères avec et sans espaces, paragraphes, comptés bloc par bloc et gardés tant qu'un bloc ne change pas, textes « 1 234 mots » et « 45 mots sur 1 234 » (`nodeStats`, `rangeStats`, `wordCounterText`)
 - `wordDiff.ts` : comparaison au mot de deux textes et compte des mots, limite de 5 000 mots (`diffWords`, `countWords`, `MAX_ASSISTANT_WORDS`, T3.1)

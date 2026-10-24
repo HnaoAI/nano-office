@@ -13,6 +13,7 @@ Même arborescence que `src/`.
   - `outline.test.ts` : plan du document : lignes du plan, parties imbriquées, document sans titre, saut de page, titre actif, déplacement avant et après, clavier, identifiants gardés, 200 titres (T2.9)
   - `wordExportLotI.test.ts` : export en Word du lot I : souligné (T2.10), liens (T2.12), exposant et indice (T2.13), retrait (T2.14), encadré (T2.19)
   - `wordExport.test.ts` : export en Word : nom proposé, titres, mise en forme, listes, tableaux, images, page et marges, polices embarquées, surlignage, document vide, texte long, accents et emojis (T2.7)
+  - `wordCount.test.ts` : compteur de mots : mots comme dans Word, accents et emojis, titres, listes, cellules, images et sauts de page, sélection, textes à la française, 100 pages (T2.11)
   - `wordDiff.test.ts`, `assistant.test.ts` : comparaison au mot, compte des mots, demande et réponse de l'assistant, repli au paragraphe, messages d'erreur (T3.1)
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
   - `updateWindow.test.ts` : fenêtre « Nano Buro se met à jour » et son délai de 20 s, horloge simulée (H3)
@@ -51,6 +52,7 @@ Même arborescence que `src/`.
   - `souligne.spec.ts` : bouton entre Italique et Barré, Ctrl/Cmd+U Mac et Windows à la touche physique, cumul, réouverture, impression, copier-coller, annulation, aide (T2.10) ; `markHelpers.ts` : marques d'un texte relu (lot I)
   - `exposant.spec.ts` : menu « Aa », clavier, exclusion et état, Ctrl/Cmd+. et Ctrl/Cmd+, Mac et Windows, AZERTY, texte tapé ensuite, réouverture, impression, copier-coller, annulation (T2.13)
   - `retrait.spec.ts` : boutons après les listes, 1,25 cm par niveau jusqu'à 5, titre, listes, Tab inchangé, réouverture, impression, collages, annulation (T2.14)
+  - `compteur-de-mots.spec.ts` : pied de page, sélection, nombre à la française, règles de Word, fenêtre des statistiques, 100 pages, rien d'enregistré (T2.11)
   - `barre.spec.ts` : bouton, raccourci Mac et Windows à la touche physique, cumul, réouverture, copier-coller, annulation (T2.3)
   - `assistant.spec.ts` : assistant éteint sans trace ni requête, Réglages, texte sur les données envoyées, clé hors du fichier et de la copie de secours, « Oublier la clé », boutons grisés, seule la sélection envoyée, propositions, accepter, refuser, tout accepter puis une annulation, mise en forme gardée, disparition, repli au paragraphe, texte jamais interprété, traduction, erreurs, Échap, 5 000 mots (T3.1) ; `assistantHelpers.ts` : faux fournisseurs Claude et Gemini, réglages posés avant le chargement, contenu d'IndexedDB
   - `formatHelpers.ts` : démarrer l'éditeur, attendre son focus après Ouvrir, lire le Y.Doc, sélectionner un texte, coller depuis une autre application, lire le presse-papiers, enregistrer puis rouvrir (lots A et C)

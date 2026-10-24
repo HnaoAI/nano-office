@@ -44,7 +44,9 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
-- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6), repères de page et compteur « Page 3 sur 7 » (T2.8), panneau « Plan » (T2.9)
+- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6), repères de page et compteur « Page 3 sur 7 » (T2.8), compteur de mots (T2.11), panneau « Plan » (T2.9)
+- `useWordCount.ts` : statistiques du document affiché et mots sélectionnés, recalculées au plus une fois par image (T2.11)
+- `WordCounter.tsx` : compteur de mots du pied de page, à côté de « Page 3 sur 7 », et fenêtre des statistiques au clic (T2.11)
 - `usePageLayout.ts` : repères de page du document affiché (T2.8) : coupures recalculées au plus une fois par image affichée, page visible au milieu de la fenêtre
 - `PageMarksLayer.tsx` : calque des repères de page (T2.8) : trait en pointillé de bord à bord et numéro de la page suivante dans la marge de droite, hors du document
 - `OutlinePanel.tsx` : panneau « Plan » à gauche de la page (T2.9) : titres en retrait, sauts de page, numéros de page, titre actif, clic pour y aller, glisser-déposer d'une partie avec un trait de dépôt, Alt+Shift+Flèche ; par-dessus la page à petite largeur

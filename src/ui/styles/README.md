@@ -4,7 +4,7 @@ Feuilles de style de la charte `docs/design/README.md`, importées dans cet ordr
 Couleurs, rayons et ombres ne sont écrits que dans `tokens.css` (vérifié par `tests/ui/styles.test.ts`).
 
 - `tokens.css` : variables `--nano-…` (U1a)
-- `layout.css` : bases, partie figée en haut de la fenêtre (M1), en-tête, groupe Fichier, page du document, pied de page (U1a) ; page A4 et marges du document en centimètres (T2.5) ; pied de page figé en bas avec le compteur de pages (T2.8)
+- `layout.css` : bases, partie figée en haut de la fenêtre (M1), en-tête, groupe Fichier, page du document, pied de page (U1a) ; page A4 et marges du document en centimètres (T2.5) ; pied de page figé en bas avec le compteur de pages (T2.8), compteur de mots et fenêtre des statistiques (T2.11)
 - `pages.css` : saut de page manuel, repères en pointillé et numéros de page sur la feuille (T2.8)
 - `toolbar.css` : barre de mise en forme flottante (U1a), liste avec une icône (interligne, M1)
 - `pickers.css` : petites fenêtres de la barre, grilles de couleurs et trait sous le « A » (T1.7), menu « Majuscules et minuscules » (T2.4), exposant et indice (T2.13)
