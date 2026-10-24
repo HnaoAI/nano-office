@@ -85,7 +85,7 @@ une décision déjà prise.
 
 ## Fichiers faciles à parcourir
 
-- Viser moins de 300 lignes par fichier. Au-delà, proposer un découpage.
+- Un fichier traite d'un seul sujet. Au-delà d'environ 500 lignes, ou s'il mélange plusieurs sujets, le découper par sujet (jamais au hasard pour passer sous une limite).
 - Regrouper les types partagés dans un fichier dédié.
 - Des noms explicites et cohérents, faciles à retrouver par une recherche.
 
