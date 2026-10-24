@@ -1,11 +1,13 @@
 // Mesure de la page affichée pour les repères de page (T2.8) : position de chaque morceau (paragraphe,
-// titre, élément de liste, ligne de tableau, image, saut de page, encadré entier (T2.19)) et, seulement pour un paragraphe qui
+// titre, élément de liste, ligne de tableau, image, saut de page, encadré entier (T2.19), titre et lignes d'un sommaire
+// (T2.17)) et, seulement pour un paragraphe qui
 // traverse une fin de page, position de ses lignes. Le calcul des coupures est dans src/core/pageBreaks.ts.
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 import { IMAGE_NODE } from "../core/images";
 import { PAGE_BREAK_NODE } from "../core/pageBreakSchema";
 import { CALLOUT_NODE } from "../core/calloutSchema";
+import { TOC_NODE } from "../core/tocSchema";
 import type { LineBox, PageUnit, PageUnitKind } from "../core/pageBreaks";
 
 /** Lignes d'un paragraphe déjà mesurées, relatives au haut du paragraphe, pour une taille donnée. */
@@ -72,6 +74,17 @@ function pieces(view: EditorView): PieceToMeasure[] {
     }
     if (name === "bulletList" || name === "orderedList") {
       listPieces(view, node, pos, out);
+      return;
+    }
+    if (name === TOC_NODE) {
+      // Sommaire (T2.17) : son titre ne reste jamais seul en bas de page, puis une ligne à la fois, comme
+      // à l'impression (print.css).
+      const element = elementAt(view, pos);
+      const title = element?.querySelector<HTMLElement>(".nano-toc-title");
+      if (title) out.push({ kind: "heading", node, element: title });
+      for (const line of element?.querySelectorAll<HTMLElement>(".nano-toc-entry") ?? []) {
+        out.push({ kind: "keep", node, element: line });
+      }
       return;
     }
     const element = elementAt(view, pos);

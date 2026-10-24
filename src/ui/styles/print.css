@@ -81,6 +81,24 @@
     content: none;
   }
 
+  /* Sommaire (T2.17) : son titre jamais seul en bas de page, ses lignes entières ; la phrase d'un
+     sommaire vide et le cadre de sélection ne s'impriment pas. */
+  .nano-toc-title {
+    break-after: avoid;
+  }
+
+  .nano-toc-entry {
+    break-inside: avoid;
+  }
+
+  .nano-toc-empty {
+    display: none;
+  }
+
+  .nano-editor .nano-toc.ProseMirror-selectednode {
+    outline: none;
+  }
+
   /* Recherche, sélection, poignées et curseurs ne s'impriment pas (critère 6). */
   .nano-editor .nano-search-match {
     background: none;

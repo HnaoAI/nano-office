@@ -27,6 +27,7 @@ import {
   type MarginPart,
 } from "./headerFooter";
 import { pageSize, type PageSetup } from "./pageSetup";
+import { jsonHasToc, tocEntriesFromJson, wordBookmark } from "./toc";
 import { DEFAULT_FONT, DOCUMENT_FONTS } from "./textStyle";
 import type { DocumentJson } from "./types";
 import {
@@ -60,6 +61,11 @@ export interface WordExportInput {
   fonts: readonly WordFont[];
   /** Numéros de page, en-tête et pied de page (T2.15, T2.16) ; aucun par défaut. */
   headerFooter?: HeaderFooter;
+  /**
+   * Numéro de page de chaque titre, par identifiant de bloc, calculé à l'écran (T2.8), pour le sommaire
+   * (T2.17). Un titre absent est écrit sans numéro ; Word le remplit en mettant le champ à jour.
+   */
+  tocPages?: ReadonlyMap<string, number>;
 }
 
 /** Type MIME d'un fichier Word. */
@@ -187,6 +193,18 @@ function marginTextDistance(marginCm: number): number {
 }
 
 /**
+ * Styles des lignes du sommaire de Word (T2.17) : « toc 1 » à « toc 3 », comme ceux de Word, en retrait
+ * de 0,53 cm par niveau comme à l'écran, sans espace entre deux lignes.
+ */
+const TOC_STYLES = [1, 2, 3].map((level) => ({
+  id: `TOC${String(level)}`,
+  name: `toc ${String(level)}`,
+  basedOn: "Normal",
+  next: "Normal",
+  paragraph: { indent: { left: (level - 1) * 300 }, spacing: { after: 60 } },
+}));
+
+/**
  * Document Word d'un document Nano Buro.
  * @param input contenu, mise en page, images et polices
  */
@@ -194,12 +212,23 @@ export function buildWordDocument(input: WordExportInput): Document {
   const size = pageSize(input.pageSetup.orientation);
   const portrait = pageSize("portrait");
   const { top, bottom, left, right } = input.pageSetup.margins;
+  const toc = jsonHasToc(input.content)
+    ? { entries: tocEntriesFromJson(input.content), pages: input.tocPages ?? new Map() }
+    : undefined;
   const context: BlockContext = {
     images: input.images,
     textWidthPx: (size.width - left - right) * PX_PER_CM,
     nextListInstance: 1,
+    toc,
   };
-  const children = (input.content.content ?? []).flatMap((block) => convertBlock(block, context));
+  // Sommaire (T2.17) : chaque titre de premier niveau porte un signet, cible de sa ligne. L'espace
+  // après un titre vient de son style de Word : le style du bloc n'a besoin que du signet.
+  const children = (input.content.content ?? []).flatMap((block) => {
+    const id: unknown = block.attrs?.id;
+    return toc && block.type === "heading" && typeof id === "string" && id !== ""
+      ? convertBlock(block, context, { bookmark: wordBookmark(id) })
+      : convertBlock(block, context);
+  });
   const margins = wordHeadersFooters(
     input.headerFooter ?? DEFAULT_HEADER_FOOTER,
     twips(size.width - left - right),
@@ -217,6 +246,8 @@ export function buildWordDocument(input: WordExportInput): Document {
         heading2: headingStyle(15.75, 150, 1.3),
         heading3: headingStyle(13.5, 120, 1.4),
       },
+      // Lignes du sommaire (T2.17) : styles « toc 1 » à « toc 3 » de Word, en retrait selon le niveau.
+      paragraphStyles: toc ? TOC_STYLES : [],
     },
     numbering: {
       config: [

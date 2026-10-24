@@ -133,3 +133,85 @@
     bottom: 16px;
   }
 }
+
+/* Sommaire (T2.17) : titre « Sommaire » à la taille d'un Titre 2, une ligne par titre, en retrait selon le
+   niveau, reliée à son numéro de page par des points de conduite. Il se sélectionne d'un clic, comme une
+   image ; ses lignes sont des liens, dans le PDF aussi. */
+.nano-editor .nano-toc {
+  margin: 0 0 16px;
+  cursor: default;
+  user-select: none;
+}
+
+.nano-editor .nano-toc.ProseMirror-selectednode {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 4px;
+  border-radius: var(--nano-radius-button);
+}
+
+.nano-toc-title {
+  margin-bottom: 12px;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.nano-editor .nano-toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nano-editor .nano-toc-entry {
+  margin: 0;
+}
+
+.nano-toc-entry a {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nano-toc-entry[data-level="1"] {
+  font-weight: 500;
+}
+
+.nano-toc-entry[data-level="2"] {
+  padding-left: 20px;
+}
+
+.nano-toc-entry[data-level="3"] {
+  padding-left: 40px;
+}
+
+.nano-toc-entry a:hover .nano-toc-text {
+  text-decoration: underline;
+}
+
+.nano-toc-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.nano-toc-leader {
+  flex: 1;
+  min-width: 16px;
+  border-bottom: 1px dotted var(--nano-text-quiet);
+  transform: translateY(-4px);
+}
+
+.nano-toc-page {
+  min-width: 1.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nano-toc-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nano-text-quiet);
+}

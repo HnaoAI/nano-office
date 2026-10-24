@@ -28,6 +28,7 @@ import { Toolbar } from "./Toolbar";
 import type { HeaderFooterField } from "./HeaderFooterFields";
 import { useAssistant } from "./useAssistant";
 import { useOutline } from "./useOutline";
+import { useTableOfContents } from "./useTableOfContents";
 import type { AssistantConfig } from "./useAssistantSettings";
 import { usePageLayout } from "./usePageLayout";
 import { useHeaderFooter, usePageSetup } from "./usePageSetup";
@@ -119,6 +120,7 @@ export function DocumentEditor({
     saveOutlineOpen(open);
   };
   const outline = useOutline(editor, outlineOpen, marks.layout);
+  useTableOfContents(editor, ydoc, marks.layout, coveredTop);
   const words = useWordCount(editor);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {

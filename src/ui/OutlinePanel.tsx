@@ -1,6 +1,6 @@
 // Panneau « Plan » à gauche de la page (T2.9) : titres en retrait selon leur niveau, sauts de page,
 // numéros de page, titre actif, clic pour aller à un titre, glisser-déposer d'une partie avec un trait
-// de dépôt, et Alt+Shift+Flèche au clavier. Les actions sur le document sont dans src/editor/outline.ts.
+// de dépôt, Alt+Shift+Flèche au clavier, et « Insérer un sommaire » (T2.17). Les actions sur le document sont dans src/editor/outline.ts.
 // Il n'est pas dans le document : il ne s'imprime pas (print.css), n'est ni exporté ni enregistré (critère 8).
 import type { Editor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
@@ -13,7 +13,8 @@ import {
   moveSectionStep,
   type DropBefore,
 } from "../editor/outline";
-import { CloseIcon } from "./icons";
+import { insertTableOfContents } from "../editor/toc";
+import { CloseIcon, TocIcon } from "./icons";
 import { sectionMoveDirection, type OutlineState } from "./useOutline";
 
 /**
@@ -154,6 +155,19 @@ export function OutlinePanel({
     >
       <div className="nano-outline-header">
         <h2 id="nano-outline-title">Plan</h2>
+        {/* Sommaire (T2.17, critère 1) : inséré au curseur du document, comme le bouton de la barre. */}
+        <button
+          type="button"
+          className="nano-outline-close nano-outline-insert"
+          aria-label="Insérer un sommaire"
+          title="Insérer un sommaire au curseur du document"
+          onClick={() => {
+            insertTableOfContents(editor);
+            editor.view.focus();
+          }}
+        >
+          <TocIcon />
+        </button>
         <button
           type="button"
           className="nano-outline-close"

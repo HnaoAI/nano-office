@@ -24,7 +24,9 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `MessageBar.tsx` : message d'information ou d'alerte, avec puce d'icône, action éventuelle (« Enregistrer sous… », « Enregistrer », « Autoriser ») et bouton de fermeture (U1b, PL3)
 - `FileMenu.tsx` : groupe Fichier : Nouveau, Ouvrir…, Enregistrer sous…, Imprimer (T2.6), Exporter en Word… (T2.7), Enregistrer (bouton principal)
 - `usePrintShortcut.ts` : Ctrl/Cmd+P sur toute la page, à la touche physique, jamais avec AltGr (T2.6)
-- `useWordExport.ts` : « Exporter en Word… » : charge l'export à la demande, écrit le fichier par `storage/`, affiche le message (T2.7)
+- `useWordExport.ts` : « Exporter en Word… » : charge l'export à la demande, avec l'en-tête, le pied de page et les numéros du sommaire, écrit le fichier par `storage/`, affiche le message (T2.7)
+- `useTableOfContents.ts` : numéros de page des sommaires, d'après les repères de T2.8, et clic sur une ligne qui amène au titre (T2.17)
+- `tocPages.ts` : derniers numéros de page des sommaires d'un document, gardés pour l'export Word (T2.17)
 - `wordAssets.ts` : polices (fichiers WOFF intégrés, convertis) et images (WebP converti en PNG) à embarquer dans le fichier Word (`loadWordFonts`, `loadWordImages`, T2.7)
 - `PageSetupDialog.tsx` : boîte « Mise en page » : orientation, marges Normales, Étroites, Larges ou Personnalisées (T2.5), puis numéros, en-tête et pied de page
 - `HeaderFooterFields.tsx` : parties « Numéros de page » (T2.15) et « En-tête et pied de page » (T2.16) de la boîte « Mise en page »
@@ -54,7 +56,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `WordCounter.tsx` : compteur de mots du pied de page, à côté de « Page 3 sur 7 », et fenêtre des statistiques au clic (T2.11)
 - `usePageLayout.ts` : repères de page du document affiché (T2.8) : coupures recalculées au plus une fois par image affichée, page visible au milieu de la fenêtre
 - `PageMarksLayer.tsx` : calque des repères de page (T2.8) : trait en pointillé de bord à bord et numéro de la page suivante dans la marge de droite, hors du document
-- `OutlinePanel.tsx` : panneau « Plan » à gauche de la page (T2.9) : titres en retrait, sauts de page, numéros de page, titre actif, clic pour y aller, glisser-déposer d'une partie avec un trait de dépôt, Alt+Shift+Flèche ; par-dessus la page à petite largeur
+- `OutlinePanel.tsx` : panneau « Plan » à gauche de la page (T2.9) : titres en retrait, sauts de page, numéros de page, titre actif, clic pour y aller, glisser-déposer d'une partie avec un trait de dépôt, Alt+Shift+Flèche, « Insérer un sommaire » (T2.17) ; par-dessus la page à petite largeur
 - `useOutline.ts` : plan du document affiché (T2.9) : lignes relues au plus une fois par image, titre actif, numéros de page d'après les repères de T2.8, Alt+Shift+Flèche dans un titre du document
 - `SearchBar.tsx` : barre « Rechercher et remplacer » sous la barre de mise en forme, à droite (T2.1)
 - `useSearchShortcuts.ts` : Ctrl/Cmd+F, Ctrl+H (Windows) et Cmd+Option+F (Mac) sur toute la page, à la touche physique (T2.1)

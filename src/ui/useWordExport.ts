@@ -7,6 +7,7 @@ import { readHeaderFooter } from "../core/headerFooter";
 import { readPageSetup } from "../core/pageSetup";
 import type { OpenDocument } from "../core/types";
 import { exportFile } from "../storage/exportStore";
+import { tocPagesOf } from "./tocPages";
 import { wordExportMessage, type FileMessage } from "./fileMessages";
 
 /**
@@ -45,6 +46,7 @@ export function useWordExport(
           content,
           pageSetup: readPageSetup(ydoc),
           headerFooter: readHeaderFooter(ydoc),
+          tocPages: tocPagesOf(ydoc),
           images,
           fonts,
         });
