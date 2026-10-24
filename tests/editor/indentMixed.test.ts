@@ -176,6 +176,24 @@ describe("B2 : retrait sur une sélection mixte", () => {
     ]);
   });
 
+  it("critère 2 : « Diminuer » d'un sous-point jusqu'au premier niveau ne sort jamais les éléments de la liste", () => {
+    const target = start(
+      list(item("Pommes", list(item("Poireaux"))), item("Fromage")),
+      para(BAKERY, 1),
+    );
+    select(target, "Poireaux", BAKERY);
+    expect(changeIndent(target, -1)).toBe(true);
+    expect(lines(target)).toEqual(["• Pommes", "• Poireaux", "• Fromage", BAKERY]);
+  });
+
+  it("critère 2 : un élément au niveau 3 n'empêche pas ses voisins de devenir des sous-points", () => {
+    const deep = item("C", list(item("C2", list(item("C3")))));
+    const target = start(para("P"), list(item("A"), item("B"), deep, item("D")));
+    select(target, "P", "D");
+    expect(changeIndent(target, 1)).toBe(true);
+    expect(lines(target)).toEqual(["→1 P", "• A", "•• B", "• C", "•• C2", "••• C3", "•• D"]);
+  });
+
   it("critère 4 : boutons grisés quand aucune ligne ne peut bouger", () => {
     const target = start(list(item("Pommes")), para(BAKERY));
     select(target, "Pommes", BAKERY);

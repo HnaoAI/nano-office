@@ -81,44 +81,61 @@ function shiftWholeSegment(
   if (delta > 0) {
     if (selectionListDepth(state) < MAX_LIST_DEPTH) sinkListItem(item)(state, capture);
   } else {
-    const { $from } = state.selection;
-    let depth = 0;
-    for (let d = $from.depth; d > 0; d--) if ($from.node(d).type.name === "listItem") depth++;
-    if (depth > 1) liftListItem(item)(state, capture);
+    // Seulement vers la liste parente : jamais hors de la liste, même quand la sélection remonte jusqu'à un
+    // élément de premier niveau (`liftListItem` en ferait alors des paragraphes).
+    const { $from, $to } = state.selection;
+    const range = $from.blockRange($to, (node) => node.firstChild?.type === item);
+    if (range && range.depth >= 2 && $from.node(range.depth - 1).type === item) {
+      liftListItem(item)(state, capture);
+    }
   }
   return result;
 }
 
-/** Début de la première ligne qui suit l'élément de liste de `pos`, dans le morceau, ou null. */
-function nextItemStart(tr: Transaction, pos: number, to: number): number | null {
-  const $pos = tr.doc.resolve(pos);
-  let after = -1;
-  for (let depth = $pos.depth; depth > 0 && after < 0; depth--) {
-    if ($pos.node(depth).type.name === "listItem") after = $pos.after(depth);
-  }
-  if (after < 0 || after >= to) return null;
-  let next: number | null = null;
-  tr.doc.nodesBetween(after, to, (node, nodePos) => {
-    if (next !== null) return false;
-    if (!node.isTextblock) return true;
-    next = nodePos + 1;
-    return false;
+/** Élément de liste du morceau : début de sa première ligne, et indices des éléments du morceau qui le contiennent. */
+interface SegmentItem {
+  text: number;
+  ancestors: number[];
+}
+
+/** Éléments de liste dont la première ligne est dans le morceau, dans l'ordre du document. */
+function segmentItems(tr: Transaction, segment: ListSegment): SegmentItem[] {
+  const items: (SegmentItem & { end: number })[] = [];
+  tr.doc.nodesBetween(segment.from, segment.to, (node, pos) => {
+    if (node.type.name !== "listItem") return true;
+    const first = node.firstChild;
+    const text = pos + 2;
+    if (first?.isTextblock && text + first.content.size >= segment.from && text <= segment.to) {
+      const ancestors = items.flatMap((other, index) => (other.end > pos ? [index] : []));
+      items.push({ text, ancestors, end: pos + node.nodeSize });
+    }
+    return true;
   });
-  return next;
+  return items;
 }
 
 /**
- * Comme `shiftWholeSegment`, mais un premier élément qui ne peut pas bouger (premier de sa liste, par exemple)
- * reste en place sans empêcher les suivants (B2, critère 2) : on réessaie à partir de l'élément suivant.
+ * Décale un morceau de liste dans `tr` comme Tab ou Shift+Tab. S'il ne peut pas bouger d'un bloc, chaque élément
+ * est essayé seul, dans l'ordre : un élément qui ne peut pas bouger (premier de sa liste, niveau 3, premier niveau)
+ * reste en place sans empêcher les autres (B2, critère 2). Les sous-points d'un élément décalé le suivent déjà :
+ * ils ne sont pas décalés une seconde fois.
  */
-function shiftSegment(tr: Transaction, segment: ListSegment, delta: 1 | -1): Transaction | null {
-  let from: number | null = segment.from;
-  while (from !== null && from <= segment.to) {
-    const shifted = shiftWholeSegment(tr, { from, to: segment.to }, delta);
-    if (shifted) return shifted;
-    from = nextItemStart(tr, from, segment.to);
+function shiftSegment(tr: Transaction, segment: ListSegment, delta: 1 | -1): void {
+  const whole = shiftWholeSegment(tr, segment, delta);
+  if (whole) {
+    for (const step of whole.steps) tr.step(step);
+    return;
   }
-  return null;
+  const start = tr.steps.length;
+  const moved = new Set<number>();
+  segmentItems(tr, segment).forEach((entry, index) => {
+    if (entry.ancestors.some((ancestor) => moved.has(ancestor))) return;
+    const text = tr.mapping.slice(start).map(entry.text);
+    const shifted = shiftWholeSegment(tr, { from: text, to: text }, delta);
+    if (!shifted) return;
+    moved.add(index);
+    for (const step of shifted.steps) tr.step(step);
+  });
 }
 
 /**
@@ -129,10 +146,7 @@ function shiftSegment(tr: Transaction, segment: ListSegment, delta: 1 | -1): Tra
  */
 function mixedIndentTransaction(state: EditorState, delta: 1 | -1): Transaction | null {
   const tr = indentTransaction(state, delta) ?? state.tr;
-  for (const segment of listSegments(state).reverse()) {
-    const shifted = shiftSegment(tr, segment, delta);
-    for (const step of shifted?.steps ?? []) tr.step(step);
-  }
+  for (const segment of listSegments(state).reverse()) shiftSegment(tr, segment, delta);
   return tr.docChanged ? tr : null;
 }
 
