@@ -37,7 +37,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `AlignmentButtons.tsx` : boutons d'alignement : gauche, centré, droite, justifié (T1.3)
 - `FontSelects.tsx` : listes déroulantes « Police » et « Taille » (T1.4)
 - `LineHeightSelect.tsx` : liste déroulante « Interligne » : Interligne normal (M1), 1, 1,15, 1,5, 2 (T2.2), avec son icône (M1)
-- `CaseButton.tsx` : bouton « Majuscules et minuscules » (« Aa ») et son menu de quatre choix (T2.4)
+- `CaseButton.tsx` : bouton « Majuscules et minuscules » (« Aa ») et son menu de quatre choix (T2.4), suivis d'« Exposant » et « Indice » (T2.13)
 - `ColorButtons.tsx` : boutons « Couleur du texte » et « Surlignage » et leurs grilles de pastilles (T1.7)
 - `usePopover.ts` : petite fenêtre d'un bouton de la barre, fermée par Échap ou un clic à côté, déplacement aux flèches dans une grille (T1.7)
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)

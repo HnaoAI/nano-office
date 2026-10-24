@@ -181,7 +181,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
-        text: "Gras, italique, souligné et barré : sélectionnez le texte, puis cliquez sur « Gras », « Italique », « Souligné » ou « Barré ». « Aa » passe la sélection en MAJUSCULES, en minuscules ou avec une majuscule au début de chaque phrase.",
+        text: "Gras, italique, souligné et barré : sélectionnez le texte, puis cliquez sur « Gras », « Italique », « Souligné » ou « Barré ». « Aa » passe la sélection en MAJUSCULES, en minuscules ou avec une majuscule au début de chaque phrase. Le même menu met le texte en exposant (1er, m²) ou en indice (H₂O).",
       },
       {
         kind: "text",

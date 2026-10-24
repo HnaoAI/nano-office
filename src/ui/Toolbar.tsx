@@ -72,6 +72,11 @@ export function Toolbar({
       italic: current.isActive("italic"),
       underline: current.isActive("underline"),
       strike: current.isActive("strike"),
+      script: current.isActive("superscript")
+        ? ("superscript" as const)
+        : current.isActive("subscript")
+          ? ("subscript" as const)
+          : null,
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
       blockStyle: currentBlockStyle(current.state),
@@ -162,7 +167,7 @@ export function Toolbar({
         <StrikeIcon />
       </button>
       <ColorButtons editor={editor} textColor={state.textColor} highlight={state.highlight} />
-      <CaseButton editor={editor} hasSelection={state.hasSelection} />
+      <CaseButton editor={editor} hasSelection={state.hasSelection} script={state.script} />
       <div className="nano-separator" aria-hidden="true" />
       <AlignmentButtons editor={editor} active={state.alignment} />
       <LineHeightSelect editor={editor} value={state.lineHeight} />

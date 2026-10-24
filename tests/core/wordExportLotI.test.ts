@@ -39,3 +39,23 @@ describe("T2.10 : souligné dans l'export Word", () => {
     expect(body).toContain("<w:b/>");
   });
 });
+
+describe("T2.13 : exposant et indice dans l'export Word", () => {
+  it("critère 4 : un exposant et un indice gardent leur position dans Word", async () => {
+    const body = await exported(
+      doc({
+        type: "paragraph",
+        attrs: { id: null },
+        content: [
+          textNode("m"),
+          textNode("2", [{ type: "superscript" }]),
+          textNode(" H"),
+          textNode("2", [{ type: "subscript" }]),
+          textNode("O"),
+        ],
+      }),
+    );
+    expect(body).toContain('<w:vertAlign w:val="superscript"/>');
+    expect(body).toContain('<w:vertAlign w:val="subscript"/>');
+  });
+});

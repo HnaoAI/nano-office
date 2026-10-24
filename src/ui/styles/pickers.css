@@ -117,3 +117,20 @@
   outline: none;
   background: var(--nano-surface-muted);
 }
+
+/* Exposant et indice sous les quatre choix de casse (T2.13) : séparateur fin, choix actif sur fond gris clair,
+   comme l'alignement activé. */
+.nano-menu-separator {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--nano-group-bg);
+}
+
+.nano-menu .nano-menu {
+  padding: 0;
+}
+
+.nano-format-bar .nano-menu-item[aria-checked="true"] {
+  background: var(--nano-group-bg);
+  font-weight: 500;
+}

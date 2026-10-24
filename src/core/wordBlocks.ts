@@ -87,6 +87,8 @@ function runOptions(node: DocumentJson, style: BlockStyle): IRunOptions {
     if (mark.type === "italic") options.italics = true;
     if (mark.type === "underline") options.underline = {};
     if (mark.type === "strike") options.strike = true;
+    if (mark.type === "superscript") options.superScript = true;
+    if (mark.type === "subscript") options.subScript = true;
     if (mark.type === "highlight") options.highlight = nearestHighlight(attrs.color);
     if (mark.type === "textStyle") {
       const font = DOCUMENT_FONTS.find(({ name }) => name === attrs.fontFamily);
