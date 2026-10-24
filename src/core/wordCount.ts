@@ -27,9 +27,7 @@ const graphemes = new Intl.Segmenter("fr", { granularity: "grapheme" });
 
 /** Nombre de caractères tels qu'on les voit : « é » décomposé, 🇫🇷 ou 👍🏽 comptent pour un. */
 function graphemeCount(text: string): number {
-  let count = 0;
-  for (const _ of graphemes.segment(text)) count += 1;
-  return count;
+  return Array.from(graphemes.segment(text)).length;
 }
 
 /**
