@@ -4,7 +4,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@tiptap/core";
 import { documentSchema } from "../../src/core/schema";
-import { FormatShortcuts, formatShortcuts, matchesShortcut } from "../../src/editor/keyboardShortcuts";
+import {
+  FormatShortcuts,
+  formatShortcuts,
+  matchesShortcut,
+} from "../../src/editor/keyboardShortcuts";
 import { copyAll, createTestEditor, docOf, pasteHtml, textNode } from "./editorHelpers";
 import { marksOf } from "./markHelpers";
 

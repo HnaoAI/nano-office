@@ -187,7 +187,8 @@ export function formatShortcuts(mac: boolean): Shortcut[] {
 export function matchesShortcut(event: KeyboardEvent, shortcut: Shortcut, mac: boolean): boolean {
   const mod = mac ? event.metaKey : event.ctrlKey;
   const other = mac ? event.ctrlKey : event.metaKey;
-  const modifiers = mod === Boolean(shortcut.mod) && !other && event.altKey === Boolean(shortcut.alt);
+  const modifiers =
+    mod === Boolean(shortcut.mod) && !other && event.altKey === Boolean(shortcut.alt);
   if (!modifiers) return false;
   if (shortcut.key !== undefined && event.key === shortcut.key) return true;
   return event.code === shortcut.code && event.shiftKey === Boolean(shortcut.shift);
