@@ -29,7 +29,7 @@ function marksIn(json: unknown, text: string): string[] {
   return found[0] ?? [];
 }
 
-test("critère 1 : le bouton Barré suit Gras, Italique et Souligné, au trait, sur fond noir quand il est actif", async ({
+test("critère 1 : le bouton Barré suit Gras et Italique, au trait, sur fond noir quand il est actif", async ({
   page,
 }) => {
   await start(page);
