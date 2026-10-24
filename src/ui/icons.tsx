@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -211,6 +211,26 @@ export function UnderlineIcon() {
     <Icon>
       <path d="M7 4.5v6a5 5 0 0 0 10 0v-6" />
       <path d="M5 20h14" />
+    </Icon>
+  );
+}
+
+/** « Diminuer le retrait » : des lignes et une flèche vers la gauche (T2.14). */
+export function IndentDecreaseIcon() {
+  return (
+    <Icon>
+      <path d="M11 6h9M11 10h9M11 14h9M4 18h16" />
+      <path d="m7 9-3 3 3 3" />
+    </Icon>
+  );
+}
+
+/** « Augmenter le retrait » : des lignes et une flèche vers la droite (T2.14). */
+export function IndentIncreaseIcon() {
+  return (
+    <Icon>
+      <path d="M11 6h9M11 10h9M11 14h9M4 18h16" />
+      <path d="m4 9 3 3-3 3" />
     </Icon>
   );
 }

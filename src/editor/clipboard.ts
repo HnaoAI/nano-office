@@ -198,7 +198,7 @@ export interface PasteCleaning {
  *   nouveaux, sans doublon (critère 8).
  * - Collage extérieur : retire polices, tailles, couleurs (marque `textStyle`) et surlignages
  *   (marque `highlight`, T1.7 critère 7), leur substitue la police et la taille du curseur, et retire
- *   l'alignement (critère 2) et l'interligne (T2.2), et la fusion, la largeur et l'alignement des cellules (T1.8). Les fonds
+ *   l'alignement (critère 2), l'interligne (T2.2) et le retrait (T2.14), et la fusion, la largeur et l'alignement des cellules (T1.8). Les fonds
  *   n'existent pas dans le schéma : ils sont déjà ignorés.
  */
 export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
@@ -216,6 +216,8 @@ export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
     if (!internal && "textAlign" in attrs) attrs.textAlign = null;
     // Interligne retiré d'un collage extérieur, comme les autres mises en forme (T2.2, critère 6).
     if (!internal && "lineHeight" in attrs) attrs.lineHeight = null;
+    // Retrait retiré d'un collage extérieur, comme l'interligne (T2.14, critère 3).
+    if (!internal && "indent" in attrs) attrs.indent = null;
     // Cellule venue d'ailleurs : ni largeur de colonne ni alignement de cellule (T1.8, critère 5 et 7).
     if (!internal && "colwidth" in attrs) Object.assign(attrs, EXTERNAL_CELL_ATTRS);
     return node.type.create(attrs, node.content, node.marks);

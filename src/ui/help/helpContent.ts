@@ -181,6 +181,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Retrait : « Augmenter le retrait » décale le paragraphe vers la droite, de 1,25 cm à chaque clic, et « Diminuer le retrait » le ramène vers la gauche. Dans une liste, ces boutons décalent l'élément, comme Tab et Shift+Tab.",
+      },
+      {
+        kind: "text",
         text: "Gras, italique, souligné et barré : sélectionnez le texte, puis cliquez sur « Gras », « Italique », « Souligné » ou « Barré ». « Aa » passe la sélection en MAJUSCULES, en minuscules ou avec une majuscule au début de chaque phrase. Le même menu met le texte en exposant (1er, m²) ou en indice (H₂O).",
       },
       {

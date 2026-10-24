@@ -59,3 +59,11 @@ describe("T2.13 : exposant et indice dans l'export Word", () => {
     expect(body).toContain('<w:vertAlign w:val="subscript"/>');
   });
 });
+
+describe("T2.14 : retrait dans l'export Word", () => {
+  it("critère 3 : un paragraphe en retrait de 2 niveaux est décalé de 2,5 cm dans Word", async () => {
+    const body = await exported(doc(para("Citation", { indent: 2 }), para("Normal")));
+    expect(body).toContain('<w:ind w:left="1418"/>');
+    expect(body.match(/<w:ind /g)).toHaveLength(1);
+  });
+});

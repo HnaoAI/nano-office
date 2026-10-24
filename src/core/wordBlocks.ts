@@ -20,6 +20,7 @@ import {
   type IRunOptions,
 } from "docx";
 import { cssLineHeight } from "./lineHeight";
+import { indentLevel, INDENT_STEP_CM } from "./indent";
 import { nearestHighlight, wordColor } from "./wordColors";
 import { DOCUMENT_FONTS, fontSizePoints } from "./textStyle";
 import type { DocumentJson } from "./types";
@@ -136,6 +137,10 @@ function textBlock(node: DocumentJson, style: BlockStyle): Paragraph {
   if (style.list) {
     options.numbering = style.list;
   }
+  // Retrait (T2.14) : 1,25 cm par niveau, en vingtièmes de point (567 par centimètre).
+  const indent = indentLevel(node.attrs?.indent);
+  if (indent > 0 && !style.list)
+    options.indent = { left: Math.round(indent * INDENT_STEP_CM * 567) };
   return new Paragraph(options);
 }
 

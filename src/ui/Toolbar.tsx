@@ -1,7 +1,7 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
 // style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Souligné (T2.10), Barré (T2.3), couleur du texte et surlignage
 // (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9),
-// saut de page (T2.8) | mise en page (T2.5), plan (T2.9) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
+// saut de page (T2.8), retrait après les listes (T2.14) | mise en page (T2.5), plan (T2.9) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
@@ -10,6 +10,7 @@ import { currentBlockStyle } from "../editor/blockStyle";
 import { currentTextStyle } from "../editor/fontStyle";
 import { currentLineHeight } from "../editor/lineHeight";
 import { currentListType } from "../editor/lists";
+import { indentAvailability } from "../editor/indent";
 import { selectedImage } from "../editor/images";
 import { insertPageBreak } from "../editor/pageBreak";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
@@ -31,6 +32,7 @@ import { FontSelects } from "./FontSelects";
 import { ImageButtons } from "./ImageButtons";
 import { LineHeightSelect } from "./LineHeightSelect";
 import { ListButtons } from "./ListButtons";
+import { IndentButtons } from "./IndentButtons";
 import { ParagraphStyleSelect } from "./ParagraphStyleSelect";
 import { TableButtons } from "./TableButtons";
 import { MOD } from "./shortcuts";
@@ -81,6 +83,7 @@ export function Toolbar({
       canRedo: current.can().redo(),
       blockStyle: currentBlockStyle(current.state),
       listType: currentListType(current.state),
+      indent: indentAvailability(current.state),
       alignment: currentAlignment(current.state),
       lineHeight: currentLineHeight(current.state),
       textStyle: currentTextStyle(current.state),
@@ -173,6 +176,7 @@ export function Toolbar({
       <LineHeightSelect editor={editor} value={state.lineHeight} />
       <div className="nano-separator" aria-hidden="true" />
       <ListButtons editor={editor} active={state.listType} />
+      <IndentButtons editor={editor} available={state.indent} />
       <div className="nano-separator" aria-hidden="true" />
       <TableButtons
         editor={editor}
