@@ -32,6 +32,18 @@ const EMPTY_HEADING = "Titre sans texte";
 export const NO_HEADING_TEXT =
   "Aucun titre pour l'instant : choisissez « Titre 1 », « Titre 2 » ou « Titre 3 » dans la liste « Texte normal » de la barre pour en créer un.";
 
+/**
+ * Annuler (Ctrl/Cmd+Z) ou rétablir (Ctrl/Cmd+Shift+Z, Ctrl+Y) tapé dans le plan, à la touche physique
+ * comme les autres raccourcis, jamais avec AltGr (Ctrl+Alt).
+ */
+function historyKey(event: KeyboardEvent, mac: boolean): "undo" | "redo" | null {
+  const mod = mac ? event.metaKey : event.ctrlKey;
+  if (!mod || event.altKey || (mac ? event.ctrlKey : event.metaKey)) return null;
+  if (event.code === "KeyZ") return event.shiftKey ? "redo" : "undo";
+  if (event.code === "KeyY" && !mac && !event.shiftKey) return "redo";
+  return null;
+}
+
 /** Où le trait de dépôt est affiché : avant la ligne de cette clé, ou à la fin (`end`). */
 type DropMark = string | "end" | null;
 
@@ -59,7 +71,8 @@ export function OutlinePanel({
   const [drop, setDrop] = useState<DropMark>(null);
   // Ligne à garder sous le focus après un déplacement au clavier : React la recrée ailleurs dans la liste.
   const [focusKey, setFocusKey] = useState<string | null>(null);
-  const alt = isMacPlatform() ? "Option" : "Alt";
+  const mac = isMacPlatform();
+  const alt = mac ? "Option" : "Alt";
 
   useEffect(() => {
     if (focusKey === null) return;
@@ -96,7 +109,8 @@ export function OutlinePanel({
     event.preventDefault();
     const box = event.currentTarget.getBoundingClientRect();
     const before = dropBefore(index, event.clientY > box.top + box.height / 2);
-    moveSectionBefore(editor, dragged, before);
+    // Le curseur est au début du titre déplacé : on continue d'écrire, et Ctrl/Cmd+Z annule (critère 5).
+    if (moveSectionBefore(editor, dragged, before)) editor.commands.focus();
     setDragged(null);
     setDrop(null);
   }
@@ -123,7 +137,16 @@ export function OutlinePanel({
       className="nano-outline"
       aria-labelledby="nano-outline-title"
       onKeyDown={(event) => {
-        if (event.key !== "Escape" || event.defaultPrevented) return;
+        if (event.defaultPrevented) return;
+        const history = historyKey(event.nativeEvent, mac);
+        if (history) {
+          // Ctrl/Cmd+Z annule aussi depuis le plan, après un déplacement au clavier (critère 5).
+          event.preventDefault();
+          if (history === "undo") editor.commands.undo();
+          else editor.commands.redo();
+          return;
+        }
+        if (event.key !== "Escape") return;
         event.preventDefault();
         onClose();
         editor.commands.focus();
