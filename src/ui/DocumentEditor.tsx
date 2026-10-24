@@ -11,6 +11,7 @@ import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from
 import { createPortal } from "react-dom";
 import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
+import { focusEditor } from "../editor/focus";
 import { createEditorOptions } from "../editor/editorOptions";
 import { scrollBelowStickyTop } from "../editor/stickyScroll";
 import type { ImageRejection } from "../editor/imageImport";
@@ -95,7 +96,14 @@ export function DocumentEditor({
       editorProps: { ...base.editorProps, ...scrollBelowStickyTop(coveredTop, coveredBottom) },
     };
   }, [ydoc, onImageRejected, coveredTop, coveredBottom]);
-  const editor = useEditor({ ...options, autofocus: true }, [ydoc]);
+  // Focus au démarrage, curseur au début du document (sélection initiale de Tiptap). Pas `autofocus` :
+  // Tiptap y remet la sélection au début une image plus tard (requestAnimationFrame), même si
+  // l'utilisateur a déjà cliqué ou appuyé sur Fin entre-temps : sa frappe partait alors au début
+  // (test instable H2, critère 2, Issue #102). Ici, rien ne bouge si l'éditeur a déjà le focus.
+  const editor = useEditor(
+    { ...options, onCreate: ({ editor: created }) => focusEditor(created) },
+    [ydoc],
+  );
   const pageSetup = usePageSetup(ydoc);
   const [sheet, setSheet] = useState<HTMLElement | null>(null);
   const marks = usePageLayout(editor, sheet, pageSetup);
