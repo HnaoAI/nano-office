@@ -1,0 +1,174 @@
+/* Panneau « Plan » à gauche de la page (T2.9) : surface blanche et ombre de la barre de mise en forme,
+   titres en 14 px, retrait de 12 px par niveau, numéros de page en IBM Plex Mono 12 px, couleur du texte
+   discret, titre actif sur fond #F3F3F1 et trait de dépôt noir (charte du ticket).
+   Il commence sous la partie figée (M1) et finit au-dessus du pied de page figé (T2.8). Il reste sous la
+   partie figée (z-index 5) et le panneau d'aide (z-index 8). Il ne s'imprime pas : print.css n'imprime
+   que la page du document. */
+.nano-outline {
+  position: fixed;
+  top: calc(var(--sticky-top-height, 0px) + 12px);
+  bottom: 52px;
+  left: 12px;
+  z-index: 4;
+  width: 280px;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--nano-radius-bar);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-bar);
+  color: var(--nano-ink);
+}
+
+/* Écran large : la page se décale vers la droite pour rester visible à côté du panneau.
+   INVARIANT : même largeur que OVERLAY_QUERY dans OutlinePanel.tsx. */
+@media (min-width: 1140px) {
+  .nano-workspace.nano-outline-open {
+    padding-left: 304px;
+  }
+}
+
+.nano-outline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 8px 18px;
+  border-bottom: 1px solid var(--nano-group-bg);
+}
+
+.nano-outline-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nano-outline-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  color: var(--nano-text-quiet);
+  cursor: pointer;
+}
+
+.nano-outline-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+
+.nano-outline-item {
+  position: relative;
+}
+
+/* Retrait de 12 px par niveau, à partir du Titre 1. */
+.nano-outline-item[data-level="2"] {
+  padding-left: 12px;
+}
+
+.nano-outline-item[data-level="3"] {
+  padding-left: 24px;
+}
+
+.nano-outline-item button,
+.nano-outline-break {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  font-size: 14px;
+  text-align: left;
+}
+
+.nano-outline-item button {
+  color: var(--nano-ink);
+  cursor: pointer;
+}
+
+.nano-outline-item button:hover,
+.nano-outline-item button[aria-current="location"] {
+  background: var(--nano-surface-muted);
+}
+
+/* Focus au clavier : anneau noir, distinct du fond gris du titre actif. */
+.nano-outline button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-outline-item[data-level="1"] button {
+  font-weight: 500;
+}
+
+.nano-outline-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nano-outline-empty,
+.nano-outline-break {
+  color: var(--nano-text-quiet);
+}
+
+.nano-outline-empty {
+  font-style: italic;
+}
+
+.nano-outline-page {
+  flex: none;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+/* Fin de la liste : de quoi poser une partie tout en bas du document. */
+.nano-outline-end {
+  min-height: 24px;
+}
+
+/* Trait de dépôt, noir, au-dessus de la ligne avant laquelle la partie sera posée (critère 4). */
+.nano-outline-drop::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-ink);
+}
+
+.nano-outline-end.nano-outline-drop {
+  position: relative;
+}
+
+.nano-outline-none {
+  margin: 0;
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nano-text-secondary);
+}
+
+/* Fenêtre basse ou étroite : le pied de page défile avec la page (layout.css), le panneau va jusqu'en bas. */
+@media (max-height: 499px), (max-width: 600px) {
+  .nano-outline {
+    bottom: 12px;
+  }
+}

@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T3.1 assistant, M1 interligne), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -258,6 +258,16 @@ export function PageSetupIcon({ size = 18 }: { size?: number }) {
     <Icon size={size}>
       <rect x="5" y="3" width="14" height="18" rx="1.5" />
       <path d="M8 7h8M8 11h8M8 15h5" />
+    </Icon>
+  );
+}
+
+/** Plan du document (T2.9, critère 1) : des lignes de titres en retrait, comme un volet de navigation. */
+export function OutlineIcon() {
+  return (
+    <Icon>
+      <path d="M4 6h10M8 12h12M8 18h9" />
+      <path d="M4 12h.01M4 18h.01" />
     </Icon>
   );
 }

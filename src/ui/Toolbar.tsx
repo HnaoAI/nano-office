@@ -1,7 +1,7 @@
 // Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
 // style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Barré (T2.3), couleur du texte et surlignage
 // (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | tableau (T1.8), image (T1.9),
-// saut de page (T2.8) | mise en page (T2.5) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
+// saut de page (T2.8) | mise en page (T2.5), plan (T2.9) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
 // Lit l'état de l'éditeur avec useEditorState pour mettre à jour les contrôles à chaque modification.
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
@@ -14,7 +14,7 @@ import { selectedImage } from "../editor/images";
 import { insertPageBreak } from "../editor/pageBreak";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
-import { PageBreakIcon, PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
+import { OutlineIcon, PageBreakIcon, PageSetupIcon, RedoIcon, StrikeIcon, UndoIcon } from "./icons";
 import { AlignmentButtons } from "./AlignmentButtons";
 import { AssistantButtons } from "./AssistantButtons";
 import { CaseButton } from "./CaseButton";
@@ -44,15 +44,18 @@ export interface ToolbarAssistant {
  * @param editor éditeur Tiptap à piloter
  * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
  * @param assistant groupe « Assistant » (T3.1), null quand l'assistant est éteint
+ * @param outline bouton « Plan » (T2.9) : panneau ouvert ou fermé, et action qui l'ouvre ou le ferme
  */
 export function Toolbar({
   editor,
   onPageSetup,
   assistant,
+  outline,
 }: {
   editor: Editor;
   onPageSetup: () => void;
   assistant: ToolbarAssistant | null;
+  outline: { open: boolean; onToggle: () => void };
 }) {
   const state = useEditorState({
     editor,
@@ -177,6 +180,18 @@ export function Toolbar({
         onClick={onPageSetup}
       >
         <PageSetupIcon />
+      </button>
+      {/* Activé comme l'alignement (fond gris clair) : c'est un affichage, pas une mise en forme (T2.9). */}
+      <button
+        type="button"
+        className="nano-block-button"
+        aria-label="Plan"
+        aria-pressed={outline.open}
+        title="Plan du document : aller à un titre, déplacer une partie"
+        onMouseDown={keepFocus}
+        onClick={outline.onToggle}
+      >
+        <OutlineIcon />
       </button>
       {assistant && (
         <>
