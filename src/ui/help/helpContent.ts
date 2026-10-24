@@ -194,6 +194,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Liens : sélectionnez le texte, puis « Lien » (ou le raccourci indiqué dans « Raccourcis clavier »), et tapez l'adresse d'une page web ou une adresse e-mail. Un clic sur un lien place le curseur, comme ailleurs ; pour l'ouvrir, cliquez en tenant Ctrl (Cmd sur Mac), ou utilisez « Ouvrir » dans la petite bulle qui apparaît sur le lien.",
+      },
+      {
+        kind: "text",
         icon: "table",
         text: "Tableaux : « Insérer un tableau », puis choisissez sa taille dans la grille. Quand le curseur est dans un tableau, des boutons apparaissent dans la barre pour ajouter ou retirer des lignes et des colonnes.",
       },

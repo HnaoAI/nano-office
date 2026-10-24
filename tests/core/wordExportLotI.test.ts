@@ -67,3 +67,38 @@ describe("T2.14 : retrait dans l'export Word", () => {
     expect(body.match(/<w:ind /g)).toHaveLength(1);
   });
 });
+
+describe("T2.12 : liens dans l'export Word", () => {
+  it("critère 5 : un lien devient un lien de Word, souligné en bleu, vers la même adresse", async () => {
+    const link = [{ type: "link", attrs: { href: "https://exemple.fr/école" } }];
+    const content = doc({
+      type: "paragraph",
+      attrs: { id: null },
+      content: [
+        textNode("Voir "),
+        textNode("le site", link),
+        textNode(" ou "),
+        textNode("écrire", [{ type: "link", attrs: { href: "mailto:mamie@exemple.fr" } }]),
+      ],
+    });
+    const body = await exported(content);
+    const rels = await exported(content, "word/_rels/document.xml.rels");
+    expect(body.match(/<w:hyperlink /g)).toHaveLength(2);
+    expect(body).toContain('<w:color w:val="1565C0"/>');
+    expect(body).toContain('<w:u w:val="single"/>');
+    expect(rels).toContain('Target="https://exemple.fr/école"');
+    expect(rels).toContain('Target="mailto:mamie@exemple.fr"');
+    expect(rels).toContain('TargetMode="External"');
+  });
+
+  it("critère 2 : une adresse refusée (fichier modifié à la main) reste du texte, sans lien", async () => {
+    const content = doc(
+      para("piège", {}, [{ type: "link", attrs: { href: "javascript:alert(1)" } }]),
+    );
+    const body = await exported(content);
+    const rels = await exported(content, "word/_rels/document.xml.rels");
+    expect(body).not.toContain("<w:hyperlink");
+    expect(body).toContain("piège");
+    expect(rels).not.toContain("javascript");
+  });
+});

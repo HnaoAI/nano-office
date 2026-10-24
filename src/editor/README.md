@@ -10,6 +10,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `alignment.ts` : alignement à gauche, centré, à droite ou justifié des paragraphes et titres (`setAlignment`, `currentAlignment`, T1.3)
 - `lineHeight.ts` : interligne des blocs sélectionnés et lecture au curseur (`setLineHeight`, `currentLineHeight`, T2.2)
 - `indent.ts` : retrait (T2.14) : boutons qui décalent l'élément dans une liste, sinon les paragraphes et titres sélectionnés, en une transaction ; état des boutons (`changeIndent`, `indentAvailability`)
+- `links.ts` : liens (T2.12) : poser, modifier, retirer en une étape d'annulation, lien au curseur, Ctrl/Cmd+clic qui ouvre un nouvel onglet (`noopener`), Ctrl/Cmd+K qui demande la fenêtre « Lien » (`applyLink`, `removeLink`, `currentLink`, `openLink`, `LinkClick`)
 - `search.ts` : rechercher et remplacer (T2.1) : plugin qui surligne les occurrences par des décorations, jamais dans le document ; suivante, précédente, remplacer, tout remplacer en une transaction (`Search`, `setSearch`, `goToMatch`, `replaceCurrent`, `replaceAll`)
 - `blockText.ts` : texte d'un bloc aligné sur ses positions, pour la recherche et les majuscules (T2.1, T2.4)
 - `textCase.ts` : majuscules et minuscules de la sélection, marques et sélection gardées, en une transaction (`changeCase`, T2.4)
@@ -31,7 +32,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `outline.ts` : plan du document (T2.9) : aller à un titre sous la barre figée, déplacer une partie à la souris ou au clavier en une étape d'annulation, titre au curseur (`goToHeading`, `moveSectionBefore`, `moveSectionStep`, `canDropSection`, `headingAtCursor`)
 - `stickyScroll.ts` : défilement de l'éditeur sous la partie figée de l'interface : le curseur n'est jamais caché par la barre (`scrollBelowStickyTop`, M1), ni par le pied de page figé (T2.8)
 - `focus.ts` : redonne le focus à l'éditeur tout de suite après un clic sur la barre (`focusEditor`, lot A)
-- `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1), barré Ctrl/Cmd+Shift+X (T2.3), souligné Ctrl/Cmd+U (T2.10), exposant et indice Ctrl/Cmd+. et Ctrl/Cmd+, aussi au caractère produit (AZERTY, T2.13), saut de page Ctrl/Cmd+Entrée (T2.8), avec leur nom affiché dans l'aide (A1)
+- `keyboardShortcuts.ts` : raccourcis de mise en forme reconnus à la touche physique, jamais avec AltGr (`FormatShortcuts`, T1.1), barré Ctrl/Cmd+Shift+X (T2.3), souligné Ctrl/Cmd+U (T2.10), exposant et indice Ctrl/Cmd+. et Ctrl/Cmd+, aussi au caractère produit (AZERTY, T2.13), lien Ctrl/Cmd+K (T2.12), saut de page Ctrl/Cmd+Entrée (T2.8), avec leur nom affiché dans l'aide (A1)
 - `userEdits.ts` : reconnaît une modification faite par l'utilisateur, pour la mise à jour au démarrage (`isUserEdit`, H1)
 - `devTestHook.ts` : expose le contenu du Y.Doc aux tests Playwright, en développement seulement
 - `assistantEdits.ts` : assistant (T3.1) : texte sélectionné paragraphe par paragraphe, plages suivies pendant une demande, une étape d'annulation, traduction qui remplace la sélection ou s'insère après (`selectedParagraphs`, `watchRanges`, `replaceWithParagraphs`, `insertParagraphsAfter`)

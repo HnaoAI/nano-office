@@ -1,7 +1,7 @@
 // Raccourcis de mise en forme de Nano Buro, reconnus à la touche physique (`event.code`) et non au
 // caractère produit (`event.key`), pour fonctionner sur un clavier AZERTY (décision du 2026-10-18).
 // Les raccourcis équivalents de Tiptap sont retirés dans src/core/schema.ts. Saut de page : Ctrl/Cmd+Entrée (T2.8).
-// Souligné : Ctrl/Cmd+U (T2.10). Exposant et indice : Ctrl/Cmd+. et Ctrl/Cmd+, (T2.13), aussi au caractère produit.
+// Souligné : Ctrl/Cmd+U (T2.10). Lien : Ctrl/Cmd+K (T2.12). Exposant et indice : Ctrl/Cmd+. et Ctrl/Cmd+, (T2.13), aussi au caractère produit.
 import { Extension, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { BlockStyleLevel, TextAlignment } from "../core/schema";
@@ -9,6 +9,7 @@ import { setAlignment } from "./alignment";
 import { setBlockStyle } from "./blockStyle";
 import { indentListItem, outdentListItem, toggleList } from "./lists";
 import { insertPageBreak } from "./pageBreak";
+import { requestLinkEditing } from "./links";
 import { isMacPlatform } from "./platform";
 
 /** Touches modificatrices d'un raccourci. `mod` est Cmd sur Mac, Ctrl ailleurs. */
@@ -157,6 +158,20 @@ const SCRIPT_SHORTCUTS: Shortcut[] = [
   },
 ];
 
+/**
+ * Lien (T2.12, critère 1) : Ctrl/Cmd+K, comme Word et Google Docs. Toujours consommé dans l'éditeur, pour ne
+ * pas placer le curseur dans la barre de recherche du navigateur.
+ */
+const LINK_SHORTCUT: Shortcut = {
+  code: "KeyK",
+  label: "Lien",
+  mod: true,
+  run: (editor) => {
+    requestLinkEditing(editor);
+    return true;
+  },
+};
+
 /** Saut de page (T2.8, critère 6) : Ctrl/Cmd+Entrée, comme Word et Google Docs. */
 const PAGE_BREAK_SHORTCUT: Shortcut = {
   code: "Enter",
@@ -174,6 +189,7 @@ export function formatShortcuts(mac: boolean): Shortcut[] {
     UNDERLINE_SHORTCUT,
     STRIKE_SHORTCUT,
     ...SCRIPT_SHORTCUTS,
+    LINK_SHORTCUT,
     PAGE_BREAK_SHORTCUT,
   ];
 }

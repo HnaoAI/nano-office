@@ -31,6 +31,7 @@ import { usePageSetup } from "./usePageSetup";
 import { useSearchShortcuts } from "./useSearchShortcuts";
 import { useWordCount } from "./useWordCount";
 import { WordCounter } from "./WordCounter";
+import { LinkBubble } from "./LinkBubble";
 
 /** Variables CSS de la page (layout.css) : feuille A4 et marges du document, en centimètres (T2.5). */
 function pageStyle(setup: PageSetup): CSSProperties {
@@ -195,6 +196,7 @@ export function DocumentEditor({
           style={pageStyle(pageSetup)}
         >
           <EditorContent editor={editor} />
+          <LinkBubble editor={editor} />
           <PageMarksLayer starts={marks.layout.starts} offset={marks.offset} />
         </article>
       </main>

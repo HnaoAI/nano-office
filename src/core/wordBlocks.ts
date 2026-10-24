@@ -6,6 +6,7 @@
 import {
   AlignmentType,
   BorderStyle,
+  ExternalHyperlink,
   HeadingLevel,
   ImageRun,
   LineRuleType,
@@ -18,7 +19,9 @@ import {
   WidthType,
   type IParagraphOptions,
   type IRunOptions,
+  type ParagraphChild,
 } from "docx";
+import { isAllowedLinkUrl, LINK_COLOR } from "./links";
 import { cssLineHeight } from "./lineHeight";
 import { indentLevel, INDENT_STEP_CM } from "./indent";
 import { nearestHighlight, wordColor } from "./wordColors";
@@ -103,6 +106,47 @@ function runOptions(node: DocumentJson, style: BlockStyle): IRunOptions {
   return options;
 }
 
+/** Adresse du lien d'un morceau de texte (T2.12), ou null. Une adresse refusée n'est jamais écrite dans Word. */
+function linkOf(node: DocumentJson): string | null {
+  const href = node.marks?.find((mark) => mark.type === "link")?.attrs?.href;
+  return isAllowedLinkUrl(href) ? href : null;
+}
+
+/**
+ * Morceaux de texte d'un paragraphe pour Word. Les morceaux qui se suivent avec le même lien forment un seul lien
+ * de Word (T2.12, critère 5), souligné en bleu, sauf si le texte a sa propre couleur.
+ */
+function inlineChildren(nodes: readonly DocumentJson[], style: BlockStyle): ParagraphChild[] {
+  const children: ParagraphChild[] = [];
+  let index = 0;
+  while (index < nodes.length) {
+    const node = nodes[index];
+    if (!node) break;
+    const href = linkOf(node);
+    if (href === null) {
+      children.push(new TextRun(runOptions(node, style)));
+      index++;
+      continue;
+    }
+    const runs: TextRun[] = [];
+    while (index < nodes.length) {
+      const current = nodes[index];
+      if (!current || linkOf(current) !== href) break;
+      const options = runOptions(current, style);
+      runs.push(
+        new TextRun({
+          ...options,
+          color: options.color ?? LINK_COLOR.slice(1),
+          underline: options.underline ?? {},
+        }),
+      );
+      index++;
+    }
+    children.push(new ExternalHyperlink({ link: href, children: runs }));
+  }
+  return children;
+}
+
 /** Interligne d'un bloc (T2.2), en 240e de ligne, comme Word ; « Par défaut » vaut celui de l'éditeur. */
 function lineSpacing(node: DocumentJson): number | undefined {
   if (node.type === "heading" && node.attrs?.lineHeight == null) return undefined;
@@ -116,7 +160,7 @@ function textBlock(node: DocumentJson, style: BlockStyle): Paragraph {
   const align = node.attrs?.textAlign as keyof typeof ALIGNMENTS | undefined;
   const line = lineSpacing(node);
   const options: { -readonly [K in keyof IParagraphOptions]: IParagraphOptions[K] } = {
-    children: (node.content ?? []).map((child) => new TextRun(runOptions(child, style))),
+    children: inlineChildren(node.content ?? [], style),
   };
   if (align && align in ALIGNMENTS) options.alignment = ALIGNMENTS[align];
   if (node.type === "heading") {
@@ -210,7 +254,7 @@ function listBlocks(
 /** Paragraphe d'un élément de liste, sans puce, aligné sur le texte de l'élément. */
 function withIndent(node: DocumentJson, style: BlockStyle, level: number): Paragraph {
   return new Paragraph({
-    children: (node.content ?? []).map((child) => new TextRun(runOptions(child, style))),
+    children: inlineChildren(node.content ?? [], style),
     indent: { left: LIST_INDENT * (level + 1) },
     spacing: { after: SMALL_AFTER },
   });

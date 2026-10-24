@@ -7,6 +7,7 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `lineHeight.ts` : interligne (T2.2) : valeurs proposées, hauteur de ligne CSS équivalente à Word (`cssLineHeight`), attribut de bloc `lineHeight`
 - `indent.ts` : retrait de paragraphe (T2.14) : 5 niveaux de 1,25 cm, attribut de bloc `indent` des paragraphes et titres, valeur venue d'un fichier ramenée dans les bornes (`indentLevel`, `IndentAttribute`)
+- `links.ts` : liens (T2.12) : adresses acceptées (http, https, mailto), adresse tapée complétée par `https://` ou `mailto:`, texte affiché, marque `link` sans mise en forme à la frappe (`isAllowedLinkUrl`, `normalizeLinkInput`, `linkLabel`, `DocumentLink`)
 - `search.ts` : recherche d'un texte dans un paragraphe, majuscules ignorées ou non, textes « 3 sur 12 » et « 12 remplacements » (`findInText`, `searchStatus`, T2.1)
 - `textCase.ts` : majuscules et minuscules selon les règles du français, phrase et mot pris dans leur paragraphe (`convertCase`, `CASE_MODES`, T2.4)
 - `tableSchema.ts` : tableaux : document qui accepte les tableaux, tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
@@ -15,7 +16,7 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `pageBreakSchema.ts` : nœud « saut de page » du schéma, dans son propre groupe : jamais dans une liste ni un tableau ; rendu `break-before: page`, lu depuis `page-break-before: always` (`PageBreakNode`, T2.8)
 - `outline.ts` : plan du document (T2.9) : titres et sauts de page de premier niveau, parties (un titre jusqu'au suivant de même niveau ou de niveau supérieur), titre actif, déplacement d'une partie entière avec ses identifiants, voisine de même niveau pour le clavier (`documentOutline`, `sectionRange`, `moveSection`, `neighbourTarget`)
 - `wordExport.ts` : export en fichier Word `.docx` avec `docx` (T2.7) : styles des titres de Word, listes, page A4 avec orientation et marges, polices embarquées, nom proposé (`buildWordDocument`, `exportWord`, `wordFileName`, `usedFonts`)
-- `wordBlocks.ts` : conversion des blocs pour Word (T2.7) : paragraphes, titres, listes, tableaux, images, souligné (T2.10), exposant et indice (T2.13), retrait (T2.14) (`convertBlock`)
+- `wordBlocks.ts` : conversion des blocs pour Word (T2.7) : paragraphes, titres, listes, tableaux, images, souligné (T2.10), exposant et indice (T2.13), retrait (T2.14), liens de Word (T2.12) (`convertBlock`)
 - `wordColors.ts` : couleur du texte pour Word et surlignage ramené aux couleurs de Word (`wordColor`, `nearestHighlight`, T2.7)
 - `woff.ts` : police WOFF convertie en TrueType, pour l'embarquer dans un fichier Word (`woffToSfnt`, T2.7)
 - `imageSize.ts` : largeur et hauteur d'une image PNG, GIF, JPEG ou WebP, lues dans son en-tête (`imageSize`, T2.7)
