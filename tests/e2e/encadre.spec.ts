@@ -148,7 +148,8 @@ test("critère 4 : un bloc avec son identifiant, gardé à l'enregistrement et �
 test("critère 4 : le texte de l'encadré se cherche et se compte", async ({ page }) => {
   await twoParagraphs(page);
   await chooseCallout(page, "Cadre fin");
-  await page.keyboard.press("ControlOrMeta+End");
+  // Un clic dans le texte retire la sélection : le compteur montre alors tout le document.
+  await editor(page).getByText("Consigne").click();
   await settleSelection(page);
   await expect(
     page.locator(".nano-footer").getByRole("button", { name: /mots?( sur|$)/ }),

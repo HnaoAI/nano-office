@@ -76,6 +76,8 @@ interface BlockStyle {
   list?: { reference: string; level: number; instance?: number };
   /** Style de l'encadré qui contient le bloc (T2.19). */
   callout?: CalloutStyle;
+  /** Vrai pour les blocs d'un encadré sauf le dernier : Word les garde sur la page du suivant (T2.19, critère 5). */
+  calloutKeepNext?: boolean;
 }
 
 /** Trait de l'encadré : 1 px (0,75 pt) de la couleur du texte secondaire de la charte (T2.19, critère 2). */
@@ -88,13 +90,15 @@ const CALLOUT_LINE = { style: BorderStyle.SINGLE, size: 6, color: "3A3A38" };
  */
 function calloutOptions(
   style: CalloutStyle,
-): Pick<IParagraphOptions, "border" | "shading" | "keepLines"> {
+  keepNext = false,
+): Pick<IParagraphOptions, "border" | "shading" | "keepLines" | "keepNext"> {
   const line =
     style === "shaded" ? { style: BorderStyle.SINGLE, size: 6, color: "F3F3F1" } : CALLOUT_LINE;
   const side = { ...line, space: 9 };
   return {
     border: { top: side, bottom: side, left: side, right: side },
     keepLines: true,
+    ...(keepNext ? { keepNext: true } : {}),
     ...(style === "border"
       ? {}
       : { shading: { type: ShadingType.CLEAR, color: "auto", fill: "F3F3F1" } }),
@@ -208,7 +212,7 @@ function textBlock(node: DocumentJson, style: BlockStyle): Paragraph {
   if (style.list) {
     options.numbering = style.list;
   }
-  if (style.callout) Object.assign(options, calloutOptions(style.callout));
+  if (style.callout) Object.assign(options, calloutOptions(style.callout, style.calloutKeepNext));
   // Retrait (T2.14) : 1,25 cm par niveau, en vingtièmes de point (567 par centimètre).
   const indent = indentLevel(node.attrs?.indent);
   if (indent > 0 && !style.list)
@@ -225,7 +229,7 @@ function imageBlock(node: DocumentJson, context: BlockContext, style: BlockStyle
     return new Paragraph({
       alignment,
       spacing: { after: PARAGRAPH_AFTER },
-      ...(style.callout ? calloutOptions(style.callout) : {}),
+      ...(style.callout ? calloutOptions(style.callout, style.calloutKeepNext) : {}),
       children: [new TextRun({ text: "Image manquante", italics: true, color: "5F5F5C" })],
     });
   }
@@ -239,7 +243,7 @@ function imageBlock(node: DocumentJson, context: BlockContext, style: BlockStyle
   return new Paragraph({
     alignment,
     spacing: { after: PARAGRAPH_AFTER },
-    ...(style.callout ? calloutOptions(style.callout) : {}),
+    ...(style.callout ? calloutOptions(style.callout, style.calloutKeepNext) : {}),
     children: [
       new ImageRun({
         type: image.type,
@@ -287,7 +291,7 @@ function withIndent(node: DocumentJson, style: BlockStyle, level: number): Parag
     children: inlineChildren(node.content ?? [], style),
     indent: { left: LIST_INDENT * (level + 1) },
     spacing: { after: SMALL_AFTER },
-    ...(style.callout ? calloutOptions(style.callout) : {}),
+    ...(style.callout ? calloutOptions(style.callout, style.calloutKeepNext) : {}),
   });
 }
 
@@ -366,6 +370,7 @@ export function convertBlock(
       return blocks.flatMap((block, index) =>
         convertBlock(block, context, {
           callout,
+          calloutKeepNext: index < blocks.length - 1,
           after: index < blocks.length - 1 ? SMALL_AFTER : PARAGRAPH_AFTER,
         }),
       );

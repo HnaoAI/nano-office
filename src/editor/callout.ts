@@ -3,8 +3,9 @@
 // ligne vide en fin d'encadré, comme dans une liste. Le nœud est dans src/core/calloutSchema.ts.
 import { Extension, type Editor } from "@tiptap/core";
 import { NodeRange, type Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { splitBlock } from "@tiptap/pm/commands";
+import { splitBlockAs } from "@tiptap/pm/commands";
 import { TextSelection, type EditorState, type Transaction } from "@tiptap/pm/state";
+import { BLOCK_ID_ATTRIBUTE } from "../core/schema";
 import { CALLOUT_NODE, calloutStyle, type CalloutStyle } from "../core/calloutSchema";
 
 /** L'encadré qui contient le curseur : sa position et son nœud. */
@@ -105,8 +106,12 @@ export function exitCalloutOnEnter(
     return false;
   }
   // Ligne vide au début ou au milieu : une ligne de plus, dans l'encadré. Sans cela, l'Entrée par défaut de
-  // ProseMirror (`liftEmptyBlock`) sortirait la ligne et couperait l'encadré en deux.
-  if ($from.index(-1) !== callout.childCount - 1) return splitBlock(state, dispatch);
+  // ProseMirror (`liftEmptyBlock`) sortirait la ligne et couperait l'encadré en deux. La nouvelle ligne garde le
+  // retrait, l'interligne et l'alignement, comme Entrée ailleurs (T2.14), avec un nouvel identifiant.
+  if ($from.index(-1) !== callout.childCount - 1) {
+    const attrs = { ...paragraph.attrs, [BLOCK_ID_ATTRIBUTE]: null };
+    return splitBlockAs(() => ({ type: paragraph.type, attrs }))(state, dispatch);
+  }
   if (!dispatch) return true;
   const calloutPos = $from.before(-1);
   if (callout.childCount === 1) {

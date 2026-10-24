@@ -312,4 +312,32 @@ describe("T2.19 : encadré", () => {
       withImage.state.doc.resolve(imageInsertPoint(withImage.state).pos).parent.type.name,
     ).toBe("callout");
   });
+
+  it("critère 3 : une ligne ajoutée au milieu de l'encadré garde le retrait de la ligne, avec un nouvel identifiant", () => {
+    const empty = { ...para("p-1", ""), attrs: { id: "p-1", indent: 2 } };
+    const target = start(callout("border", empty, para("p-2", "Fin")));
+    target.commands.setTextSelection(2);
+    pressEnter(target);
+    const inner = (target.getJSON() as DocumentJson).content?.[0]?.content ?? [];
+    expect(inner.map((block) => block.attrs?.indent ?? null)).toEqual([2, 2, null]);
+    expect(inner[0]?.attrs?.id).not.toBe(inner[1]?.attrs?.id);
+  });
+
+  it("critère 3 : une image insérée depuis une liste de l'encadré va après la liste, dans l'encadré", () => {
+    const target = start(
+      callout(
+        "border",
+        {
+          type: "bulletList",
+          content: [{ type: "listItem", attrs: { id: "l-1" }, content: [para("p-1", "Point")] }],
+        },
+        para("p-2", "Fin"),
+      ),
+      para("p-3", "Après"),
+    );
+    cursorAfter(target, "Point");
+    const $pos = target.state.doc.resolve(imageInsertPoint(target.state).pos);
+    expect($pos.parent.type.name).toBe("callout");
+    expect($pos.index()).toBe(1);
+  });
 });

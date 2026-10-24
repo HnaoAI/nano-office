@@ -93,4 +93,17 @@ describe("T2.19 : encadré dans l'export Word", () => {
     expect(shaded).toContain('w:fill="F3F3F1"');
     expect(shaded).not.toContain('w:color="3A3A38"');
   });
+
+  it("critère 5 : dans Word, chaque paragraphe de l'encadré reste sur la page du suivant, sauf le dernier", async () => {
+    const body = await documentXml({
+      type: "doc",
+      content: [
+        callout("c-1", "border", para("p-1", "Un"), para("p-2", "Deux"), para("p-3", "Trois")),
+      ],
+    });
+    const paragraphs = body.split("<w:p>").slice(1);
+    const keep = (text: string) =>
+      paragraphs.find((xml) => xml.includes(`>${text}<`))?.includes("<w:keepNext/>");
+    expect([keep("Un"), keep("Deux"), keep("Trois")]).toEqual([true, true, false]);
+  });
 });
