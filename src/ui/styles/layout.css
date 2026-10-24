@@ -307,8 +307,17 @@ button:focus-visible {
     padding: 32px 20px;
   }
 
+  /* Une ligne par indication, de hauteur fixe : « Copie de secours à jour », qui arrive un peu après, et le
+     compteur de mots (T2.11) ne changent jamais la hauteur de la page. */
   .nano-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     padding: 0 16px 16px;
+  }
+
+  .nano-footer > * {
+    min-height: 20px;
   }
 }
 
@@ -369,4 +378,27 @@ button:focus-visible {
   font-variant-numeric: tabular-nums;
   text-align: right;
   color: var(--nano-ink);
+}
+
+/* Encadré (T2.19, critère 2) : bloc du document qui contient des paragraphes ; cadre fin, cadre fin avec fond gris
+   clair, ou fond gris clair sans cadre ; bords arrondis à 6 px et marge intérieure de 12 px. Le dernier bloc de
+   l'encadré n'ajoute pas d'espace avant le cadre. */
+.nano-editor .nano-callout {
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid var(--nano-text-secondary);
+  border-radius: var(--nano-radius-page);
+}
+
+.nano-editor .nano-callout[data-callout="border-shaded"] {
+  background: var(--nano-surface-muted);
+}
+
+.nano-editor .nano-callout[data-callout="shaded"] {
+  border-color: transparent;
+  background: var(--nano-surface-muted);
+}
+
+.nano-editor .nano-callout > :last-child {
+  margin-bottom: 0;
 }

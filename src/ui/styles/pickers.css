@@ -211,3 +211,22 @@
     display: none;
   }
 }
+
+/* Menu « Encadré » (T2.19) : un petit aperçu de chaque style devant son nom. */
+.nano-callout-swatch {
+  flex: none;
+  width: 18px;
+  height: 14px;
+  margin-right: 10px;
+  border: 1px solid var(--nano-text-secondary);
+  border-radius: var(--nano-radius-page);
+}
+
+.nano-callout-swatch-border-shaded {
+  background: var(--nano-surface-muted);
+}
+
+.nano-callout-swatch-shaded {
+  border-color: transparent;
+  background: var(--nano-group-bg);
+}

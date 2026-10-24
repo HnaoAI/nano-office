@@ -11,6 +11,7 @@ import { isSafeCssValue, TextStyleAttributes } from "./textStyle";
 import { DocumentWithTables, tableExtensions } from "./tableSchema";
 import { ImageNode } from "./imageSchema";
 import { PageBreakNode } from "./pageBreakSchema";
+import { CalloutNode } from "./calloutSchema";
 import { LineHeightAttribute } from "./lineHeight";
 import { IndentAttribute } from "./indent";
 import { DocumentLink } from "./links";
@@ -34,8 +35,8 @@ export const YJS_FRAGMENT_NAME = "default";
 export const BLOCK_ID_ATTRIBUTE = "id";
 
 /**
- * Types de nœuds qui portent un identifiant de bloc (règle produit 5), cellules (T1.8), images (T1.9) et
- * sauts de page (T2.8) compris.
+ * Types de nœuds qui portent un identifiant de bloc (règle produit 5), cellules (T1.8), images (T1.9),
+ * sauts de page (T2.8) et encadrés (T2.19) compris.
  */
 export const BLOCK_TYPES_WITH_ID = [
   "paragraph",
@@ -45,6 +46,7 @@ export const BLOCK_TYPES_WITH_ID = [
   "tableHeader",
   "image",
   "pageBreak",
+  "callout",
 ];
 
 /** Niveaux de titre proposés (T1.1). Les titres 4 à 6 sont hors périmètre. */
@@ -196,7 +198,7 @@ const DocumentSubscript = Subscript.extend({
  * Extensions Tiptap qui définissent le contenu d'un document : paragraphes, titres (T1.1), listes à
  * puces et numérotées (T1.2), alignement (T1.3), gras, italique, souligné (T2.10), barré (T2.3), exposant et indice (T2.13), liens (T2.12), police et taille (T1.4),
  * couleur du texte et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), sauts de page (T2.8),
- * retrait (T2.14), identifiant de bloc. T0b les
+ * retrait (T2.14), encadrés (T2.19), identifiant de bloc. T0b les
  * réutilise telles quelles, sans redéfinir le schéma (l'éditeur configure seulement `ImageNode`).
  */
 export const documentExtensions = [
@@ -209,6 +211,7 @@ export const documentExtensions = [
   ...tableExtensions,
   ImageNode,
   PageBreakNode,
+  CalloutNode,
   Text,
   Bold,
   Italic,

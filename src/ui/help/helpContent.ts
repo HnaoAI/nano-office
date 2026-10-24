@@ -198,6 +198,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Encadré : sélectionnez un ou plusieurs paragraphes, cliquez sur « Encadré » et choisissez un style : cadre fin, cadre avec fond gris, ou fond gris. Pour sortir de l'encadré, appuyez deux fois sur Entrée à la fin. Pour le retirer, placez le curseur dedans, puis « Encadré » et « Retirer l'encadré ».",
+      },
+      {
+        kind: "text",
         icon: "table",
         text: "Tableaux : « Insérer un tableau », puis choisissez sa taille dans la grille. Quand le curseur est dans un tableau, des boutons apparaissent dans la barre pour ajouter ou retirer des lignes et des colonnes.",
       },

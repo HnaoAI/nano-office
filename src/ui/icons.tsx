@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T2.19 encadré, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -241,6 +241,16 @@ export function LinkIcon() {
     <Icon>
       <path d="M10 13.5a4 4 0 0 0 6 .4l2.6-2.6a4 4 0 0 0-5.7-5.7L11.5 7" />
       <path d="M14 10.5a4 4 0 0 0-6-.4l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.4-1.4" />
+    </Icon>
+  );
+}
+
+/** « Encadré » : un carré au trait, avec deux lignes de texte (T2.19). */
+export function CalloutIcon() {
+  return (
+    <Icon>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+      <path d="M7.5 10h9M7.5 14h6" />
     </Icon>
   );
 }
