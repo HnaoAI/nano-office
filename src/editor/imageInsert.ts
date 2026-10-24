@@ -5,6 +5,7 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { NodeSelection, TextSelection, type EditorState } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { defaultAltText, IMAGE_NODE } from "../core/images";
+import { CALLOUT_NODE } from "../core/calloutSchema";
 import { prepareImage, type ImageRejection } from "./imageImport";
 import type { ImageLibrary } from "./imageLibrary";
 
@@ -34,25 +35,33 @@ interface ImageToInsert {
  * - curseur au début d'un paragraphe ou d'un titre : avant lui ; à la fin, ou dans un paragraphe vide : après lui,
  *   sauf le paragraphe vide, devant lequel l'image se place (le curseur reste sur la ligne vide) ;
  * - au milieu : le paragraphe est coupé en deux, l'image va entre les deux ;
+ * - dans un paragraphe d'un encadré : de même, à l'intérieur de l'encadré (T2.19) ;
  * - dans une liste ou un tableau : après la liste ou le tableau (pas d'image dans un tableau, hors périmètre) ;
  * - image sélectionnée : après elle.
  * @returns la position, et vrai s'il faut d'abord couper le bloc à cette position
  */
 export function imageInsertPoint(state: EditorState): { pos: number; split: boolean } {
   const { selection } = state;
-  if (selection instanceof NodeSelection && selection.$from.depth === 0) {
+  if (
+    selection instanceof NodeSelection &&
+    (selection.$from.depth === 0 || selection.$from.parent.type.name === CALLOUT_NODE)
+  ) {
     return { pos: selection.to, split: false };
   }
   const $from = selection.$from;
   if ($from.depth === 0) return { pos: $from.pos, split: false };
-  const top = $from.node(1);
-  if ($from.depth === 1 && top.isTextblock) {
-    if (top.content.size === 0 || $from.parentOffset === 0)
-      return { pos: $from.before(1), split: false };
-    if ($from.parentOffset === top.content.size) return { pos: $from.after(1), split: false };
+  // Dans un encadré (T2.19), l'image se place entre deux blocs de l'encadré, comme dans le document ; depuis une
+  // liste de l'encadré, après cette liste, toujours dans l'encadré.
+  const inCallout = $from.depth >= 2 && $from.node(1).type.name === CALLOUT_NODE;
+  const depth = inCallout ? 2 : 1;
+  const block = $from.node(depth);
+  if ($from.depth === depth && block.isTextblock) {
+    if (block.content.size === 0 || $from.parentOffset === 0)
+      return { pos: $from.before(depth), split: false };
+    if ($from.parentOffset === block.content.size) return { pos: $from.after(depth), split: false };
     return { pos: $from.pos, split: true };
   }
-  return { pos: $from.after(1), split: false };
+  return { pos: $from.after(depth), split: false };
 }
 
 /**

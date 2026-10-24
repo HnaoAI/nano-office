@@ -6,6 +6,7 @@
 import {
   AlignmentType,
   BorderStyle,
+  ExternalHyperlink,
   HeadingLevel,
   ImageRun,
   LineRuleType,
@@ -16,10 +17,15 @@ import {
   TableRow,
   TextRun,
   WidthType,
+  ShadingType,
   type IParagraphOptions,
   type IRunOptions,
+  type ParagraphChild,
 } from "docx";
+import { isAllowedLinkUrl, LINK_COLOR } from "./links";
+import { calloutStyle, type CalloutStyle } from "./calloutSchema";
 import { cssLineHeight } from "./lineHeight";
+import { indentLevel, INDENT_STEP_CM } from "./indent";
 import { nearestHighlight, wordColor } from "./wordColors";
 import { DOCUMENT_FONTS, fontSizePoints } from "./textStyle";
 import type { DocumentJson } from "./types";
@@ -63,11 +69,40 @@ export interface BlockContext {
 /** Ce qu'une conversion ajoute au corps du document ou d'une cellule. */
 export type WordBlock = Paragraph | Table;
 
-/** Mise en forme héritée par les blocs d'une cellule d'en-tête. */
+/** Mise en forme héritée par les blocs d'une cellule d'en-tête ou d'un encadré. */
 interface BlockStyle {
   bold?: boolean;
   after?: number;
   list?: { reference: string; level: number; instance?: number };
+  /** Style de l'encadré qui contient le bloc (T2.19). */
+  callout?: CalloutStyle;
+  /** Vrai pour les blocs d'un encadré sauf le dernier : Word les garde sur la page du suivant (T2.19, critère 5). */
+  calloutKeepNext?: boolean;
+}
+
+/** Trait de l'encadré : 1 px (0,75 pt) de la couleur du texte secondaire de la charte (T2.19, critère 2). */
+const CALLOUT_LINE = { style: BorderStyle.SINGLE, size: 6, color: "3A3A38" };
+
+/**
+ * Bordure et trame d'un paragraphe d'encadré (T2.19, critère 5). Word réunit en un seul cadre les paragraphes qui se
+ * suivent avec la même bordure ; `space` est la marge intérieure (12 px, 9 pt). Un fond sans cadre garde des
+ * bordures blanches invisibles, pour avoir la même marge intérieure. Les bords arrondis n'existent pas dans Word.
+ */
+function calloutOptions(
+  style: CalloutStyle,
+  keepNext = false,
+): Pick<IParagraphOptions, "border" | "shading" | "keepLines" | "keepNext"> {
+  const line =
+    style === "shaded" ? { style: BorderStyle.SINGLE, size: 6, color: "F3F3F1" } : CALLOUT_LINE;
+  const side = { ...line, space: 9 };
+  return {
+    border: { top: side, bottom: side, left: side, right: side },
+    keepLines: true,
+    ...(keepNext ? { keepNext: true } : {}),
+    ...(style === "border"
+      ? {}
+      : { shading: { type: ShadingType.CLEAR, color: "auto", fill: "F3F3F1" } }),
+  };
 }
 
 const ALIGNMENTS = {
@@ -85,7 +120,10 @@ function runOptions(node: DocumentJson, style: BlockStyle): IRunOptions {
     const attrs = mark.attrs ?? {};
     if (mark.type === "bold") options.bold = true;
     if (mark.type === "italic") options.italics = true;
+    if (mark.type === "underline") options.underline = {};
     if (mark.type === "strike") options.strike = true;
+    if (mark.type === "superscript") options.superScript = true;
+    if (mark.type === "subscript") options.subScript = true;
     if (mark.type === "highlight") options.highlight = nearestHighlight(attrs.color);
     if (mark.type === "textStyle") {
       const font = DOCUMENT_FONTS.find(({ name }) => name === attrs.fontFamily);
@@ -97,6 +135,47 @@ function runOptions(node: DocumentJson, style: BlockStyle): IRunOptions {
     }
   }
   return options;
+}
+
+/** Adresse du lien d'un morceau de texte (T2.12), ou null. Une adresse refusée n'est jamais écrite dans Word. */
+function linkOf(node: DocumentJson): string | null {
+  const href = node.marks?.find((mark) => mark.type === "link")?.attrs?.href;
+  return isAllowedLinkUrl(href) ? href : null;
+}
+
+/**
+ * Morceaux de texte d'un paragraphe pour Word. Les morceaux qui se suivent avec le même lien forment un seul lien
+ * de Word (T2.12, critère 5), souligné en bleu, sauf si le texte a sa propre couleur.
+ */
+function inlineChildren(nodes: readonly DocumentJson[], style: BlockStyle): ParagraphChild[] {
+  const children: ParagraphChild[] = [];
+  let index = 0;
+  while (index < nodes.length) {
+    const node = nodes[index];
+    if (!node) break;
+    const href = linkOf(node);
+    if (href === null) {
+      children.push(new TextRun(runOptions(node, style)));
+      index++;
+      continue;
+    }
+    const runs: TextRun[] = [];
+    while (index < nodes.length) {
+      const current = nodes[index];
+      if (!current || linkOf(current) !== href) break;
+      const options = runOptions(current, style);
+      runs.push(
+        new TextRun({
+          ...options,
+          color: options.color ?? LINK_COLOR.slice(1),
+          underline: options.underline ?? {},
+        }),
+      );
+      index++;
+    }
+    children.push(new ExternalHyperlink({ link: href, children: runs }));
+  }
+  return children;
 }
 
 /** Interligne d'un bloc (T2.2), en 240e de ligne, comme Word ; « Par défaut » vaut celui de l'éditeur. */
@@ -112,7 +191,7 @@ function textBlock(node: DocumentJson, style: BlockStyle): Paragraph {
   const align = node.attrs?.textAlign as keyof typeof ALIGNMENTS | undefined;
   const line = lineSpacing(node);
   const options: { -readonly [K in keyof IParagraphOptions]: IParagraphOptions[K] } = {
-    children: (node.content ?? []).map((child) => new TextRun(runOptions(child, style))),
+    children: inlineChildren(node.content ?? [], style),
   };
   if (align && align in ALIGNMENTS) options.alignment = ALIGNMENTS[align];
   if (node.type === "heading") {
@@ -133,11 +212,16 @@ function textBlock(node: DocumentJson, style: BlockStyle): Paragraph {
   if (style.list) {
     options.numbering = style.list;
   }
+  if (style.callout) Object.assign(options, calloutOptions(style.callout, style.calloutKeepNext));
+  // Retrait (T2.14) : 1,25 cm par niveau, en vingtièmes de point (567 par centimètre).
+  const indent = indentLevel(node.attrs?.indent);
+  if (indent > 0 && !style.list)
+    options.indent = { left: Math.round(indent * INDENT_STEP_CM * 567) };
   return new Paragraph(options);
 }
 
 /** Image : sa taille choisie, ou sa taille réelle, au plus la largeur du texte ; « Image manquante » sinon. */
-function imageBlock(node: DocumentJson, context: BlockContext): Paragraph {
+function imageBlock(node: DocumentJson, context: BlockContext, style: BlockStyle = {}): Paragraph {
   const align = node.attrs?.textAlign as keyof typeof ALIGNMENTS | undefined;
   const alignment = align && align in ALIGNMENTS ? ALIGNMENTS[align] : undefined;
   const image = context.images.get(String(node.attrs?.hash));
@@ -145,6 +229,7 @@ function imageBlock(node: DocumentJson, context: BlockContext): Paragraph {
     return new Paragraph({
       alignment,
       spacing: { after: PARAGRAPH_AFTER },
+      ...(style.callout ? calloutOptions(style.callout, style.calloutKeepNext) : {}),
       children: [new TextRun({ text: "Image manquante", italics: true, color: "5F5F5C" })],
     });
   }
@@ -158,6 +243,7 @@ function imageBlock(node: DocumentJson, context: BlockContext): Paragraph {
   return new Paragraph({
     alignment,
     spacing: { after: PARAGRAPH_AFTER },
+    ...(style.callout ? calloutOptions(style.callout, style.calloutKeepNext) : {}),
     children: [
       new ImageRun({
         type: image.type,
@@ -202,9 +288,10 @@ function listBlocks(
 /** Paragraphe d'un élément de liste, sans puce, aligné sur le texte de l'élément. */
 function withIndent(node: DocumentJson, style: BlockStyle, level: number): Paragraph {
   return new Paragraph({
-    children: (node.content ?? []).map((child) => new TextRun(runOptions(child, style))),
+    children: inlineChildren(node.content ?? [], style),
     indent: { left: LIST_INDENT * (level + 1) },
     spacing: { after: SMALL_AFTER },
+    ...(style.callout ? calloutOptions(style.callout, style.calloutKeepNext) : {}),
   });
 }
 
@@ -274,7 +361,20 @@ export function convertBlock(
     case "table":
       return [tableBlock(node, context)];
     case "image":
-      return [imageBlock(node, context)];
+      return [imageBlock(node, context, style)];
+    case "callout": {
+      // Encadré (T2.19) : ses blocs, chacun avec la bordure et la trame de l'encadré. Pas d'espace entre deux
+      // paragraphes d'un même cadre, la marge intérieure suffit ; l'espace habituel après le dernier.
+      const blocks = node.content ?? [];
+      const callout = calloutStyle(node.attrs?.calloutStyle);
+      return blocks.flatMap((block, index) =>
+        convertBlock(block, context, {
+          callout,
+          calloutKeepNext: index < blocks.length - 1,
+          after: index < blocks.length - 1 ? SMALL_AFTER : PARAGRAPH_AFTER,
+        }),
+      );
+    }
     case "pageBreak":
       // Saut de page de Word (T2.8, critère 6), dans son propre paragraphe, comme Ctrl+Entrée dans Word.
       return [new Paragraph({ children: [new PageBreak()] })];

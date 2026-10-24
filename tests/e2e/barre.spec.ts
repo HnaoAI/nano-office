@@ -38,7 +38,8 @@ test("critère 1 : le bouton Barré suit Gras et Italique, au trait, sur fond no
     .getByRole("button")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
   const italic = names.indexOf("Italique");
-  expect(names.slice(italic - 1, italic + 2)).toEqual(["Gras", "Italique", "Barré"]);
+  // Souligné (T2.10) entre Italique et Barré : test adapté avec l'accord du PO (PR n° 100).
+  expect(names.slice(italic - 1, italic + 3)).toEqual(["Gras", "Italique", "Souligné", "Barré"]);
   const strike = button(page, "Barré");
   await expect(strike.locator("svg")).toBeVisible();
 

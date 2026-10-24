@@ -181,12 +181,24 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
-        text: "Gras, italique et barré : sélectionnez le texte, puis cliquez sur « Gras », « Italique » ou « Barré ». « Aa » passe la sélection en MAJUSCULES, en minuscules ou avec une majuscule au début de chaque phrase.",
+        text: "Retrait : « Augmenter le retrait » décale le paragraphe vers la droite, de 1,25 cm à chaque clic, et « Diminuer le retrait » le ramène vers la gauche. Dans une liste, ces boutons décalent l'élément, comme Tab et Shift+Tab.",
+      },
+      {
+        kind: "text",
+        text: "Gras, italique, souligné et barré : sélectionnez le texte, puis cliquez sur « Gras », « Italique », « Souligné » ou « Barré ». « Aa » passe la sélection en MAJUSCULES, en minuscules ou avec une majuscule au début de chaque phrase. Le même menu met le texte en exposant (1er, m²) ou en indice (H₂O).",
       },
       {
         kind: "text",
         icon: "color",
         text: "Couleurs : sélectionnez le texte, puis « Couleur du texte » ou « Surlignage », et choisissez une pastille.",
+      },
+      {
+        kind: "text",
+        text: "Liens : sélectionnez le texte, puis « Lien » (ou le raccourci indiqué dans « Raccourcis clavier »), et tapez l'adresse d'une page web ou une adresse e-mail. Un clic sur un lien place le curseur, comme ailleurs ; pour l'ouvrir, cliquez en tenant Ctrl (Cmd sur Mac), ou utilisez « Ouvrir » dans la petite bulle qui apparaît sur le lien.",
+      },
+      {
+        kind: "text",
+        text: "Encadré : sélectionnez un ou plusieurs paragraphes, cliquez sur « Encadré » et choisissez un style : cadre fin, cadre avec fond gris, ou fond gris. Pour sortir de l'encadré, appuyez deux fois sur Entrée à la fin. Pour le retirer, placez le curseur dedans, puis « Encadré » et « Retirer l'encadré ».",
       },
       {
         kind: "text",
@@ -211,6 +223,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         kind: "text",
         text: "Plan : le bouton « Plan », au bout de la barre, liste les titres du document avec leur page. Cliquez sur un titre pour y aller. Faites-le glisser pour déplacer toute sa partie. Au clavier : cliquez sur le titre dans le plan, puis Alt+Shift et une flèche (Option+Shift sur Mac) le font monter ou descendre d'une place. Une partie déjà en tête ne monte pas, et une sous-partie reste dans sa partie.",
+      },
+      {
+        kind: "text",
+        text: "Compteur de mots : le nombre de mots s'affiche en bas de la fenêtre, à côté du numéro de page, et celui de la sélection quand du texte est sélectionné. Cliquez dessus pour voir aussi les caractères et les paragraphes.",
       },
       {
         kind: "text",

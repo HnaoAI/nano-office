@@ -1,7 +1,7 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1), panneau de
 // l'assistant (T3.1) et éditeur Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a),
 // au format et aux marges du document (T2.5), avec ses repères de page et le compteur « Page 3 sur 7 »
-// du pied de page (T2.8), et panneau « Plan » à gauche de la page (T2.9).
+// du pied de page (T2.8), à côté du compteur de mots (T2.11), et panneau « Plan » à gauche de la page (T2.9).
 // La barre de mise en forme, le panneau de l'assistant et la recherche s'affichent dans la partie
 // figée de App (M1).
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
@@ -29,6 +29,9 @@ import type { AssistantConfig } from "./useAssistantSettings";
 import { usePageLayout } from "./usePageLayout";
 import { usePageSetup } from "./usePageSetup";
 import { useSearchShortcuts } from "./useSearchShortcuts";
+import { useWordCount } from "./useWordCount";
+import { WordCounter } from "./WordCounter";
+import { LinkBubble } from "./LinkBubble";
 
 /** Variables CSS de la page (layout.css) : feuille A4 et marges du document, en centimètres (T2.5). */
 function pageStyle(setup: PageSetup): CSSProperties {
@@ -103,6 +106,7 @@ export function DocumentEditor({
     saveOutlineOpen(open);
   };
   const outline = useOutline(editor, outlineOpen, marks.layout);
+  const words = useWordCount(editor);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {
     if (isUserEdit(transaction)) onEdit();
@@ -166,9 +170,12 @@ export function DocumentEditor({
       {tools && createPortal(toolbar, tools)}
       {counter &&
         createPortal(
-          <span className="nano-page-counter">
-            {pageCounterText(marks.current, marks.layout.pageCount)}
-          </span>,
+          <>
+            <span className="nano-page-counter">
+              {pageCounterText(marks.current, marks.layout.pageCount)}
+            </span>
+            <WordCounter count={words} pages={marks.layout.pageCount} />
+          </>,
           counter,
         )}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
@@ -189,6 +196,7 @@ export function DocumentEditor({
           style={pageStyle(pageSetup)}
         >
           <EditorContent editor={editor} />
+          <LinkBubble editor={editor} />
           <PageMarksLayer starts={marks.layout.starts} offset={marks.offset} />
         </article>
       </main>

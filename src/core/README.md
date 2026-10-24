@@ -3,18 +3,21 @@
 Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèques.
 
 - `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `NanoFileV2`, `ParseResult`) et constantes du format
-- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), barré (T2.3), sauts de page (T2.8)
+- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), barré (T2.3), sauts de page (T2.8), souligné (T2.10), exposant et indice qui s'excluent (T2.13)
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `lineHeight.ts` : interligne (T2.2) : valeurs proposées, hauteur de ligne CSS équivalente à Word (`cssLineHeight`), attribut de bloc `lineHeight`
+- `indent.ts` : retrait de paragraphe (T2.14) : 5 niveaux de 1,25 cm, attribut de bloc `indent` des paragraphes et titres, valeur venue d'un fichier ramenée dans les bornes (`indentLevel`, `IndentAttribute`)
+- `links.ts` : liens (T2.12) : adresses acceptées (http, https, mailto), adresse tapée complétée par `https://` ou `mailto:`, texte affiché, marque `link` sans mise en forme à la frappe (`isAllowedLinkUrl`, `normalizeLinkInput`, `linkLabel`, `DocumentLink`)
 - `search.ts` : recherche d'un texte dans un paragraphe, majuscules ignorées ou non, textes « 3 sur 12 » et « 12 remplacements » (`findInText`, `searchStatus`, T2.1)
 - `textCase.ts` : majuscules et minuscules selon les règles du français, phrase et mot pris dans leur paragraphe (`convertCase`, `CASE_MODES`, T2.4)
-- `tableSchema.ts` : tableaux : document qui accepte les tableaux, tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
+- `tableSchema.ts` : tableaux : document qui accepte les tableaux (et les encadrés, T2.19), tableau sans tableau imbriqué, taille de la grille d'insertion (T1.8)
 - `pageSetup.ts` : mise en page (T2.5) : orientation et marges d'une page A4, `Y.Map` « page » du Y.Doc, attributs du nœud `doc` de `content`, marges écrites et lues à la française (`readPageSetup`, `writePageSetup`, `withPageSetupAttrs`), règle `@page` de l'impression (`printPageRule`, T2.6)
 - `pageBreaks.ts` : coupures de page (T2.8) : calcul pur à partir des hauteurs mesurées, avec les règles de l'impression (deux lignes de chaque côté d'une coupure, titre jamais seul en bas de page, ligne de tableau et image entières, saut de page manuel), page d'une hauteur donnée, texte « Page 3 sur 7 », coupures de l'impression placées dans une feuille affichée plus étroite (`computePageBreaks`, `placeOnScreen`, `pageAt`, `pageCounterText`, `textAreaHeight`, `textAreaWidth`)
+- `calloutSchema.ts` : nœud « encadré » du schéma (T2.19), dans son propre groupe : paragraphes, titres, listes et images, jamais de tableau, d'encadré ni de saut de page ; trois styles (`CalloutNode`, `CALLOUT_STYLES`, `calloutStyle`)
 - `pageBreakSchema.ts` : nœud « saut de page » du schéma, dans son propre groupe : jamais dans une liste ni un tableau ; rendu `break-before: page`, lu depuis `page-break-before: always` (`PageBreakNode`, T2.8)
 - `outline.ts` : plan du document (T2.9) : titres et sauts de page de premier niveau, parties (un titre jusqu'au suivant de même niveau ou de niveau supérieur), titre actif, déplacement d'une partie entière avec ses identifiants, voisine de même niveau pour le clavier (`documentOutline`, `sectionRange`, `moveSection`, `neighbourTarget`)
 - `wordExport.ts` : export en fichier Word `.docx` avec `docx` (T2.7) : styles des titres de Word, listes, page A4 avec orientation et marges, polices embarquées, nom proposé (`buildWordDocument`, `exportWord`, `wordFileName`, `usedFonts`)
-- `wordBlocks.ts` : conversion des blocs pour Word (T2.7) : paragraphes, titres, listes, tableaux, images (`convertBlock`)
+- `wordBlocks.ts` : conversion des blocs pour Word (T2.7) : paragraphes, titres, listes, tableaux, images, souligné (T2.10), exposant et indice (T2.13), retrait (T2.14), liens de Word (T2.12), encadrés en bordure et trame de paragraphe (T2.19) (`convertBlock`)
 - `wordColors.ts` : couleur du texte pour Word et surlignage ramené aux couleurs de Word (`wordColor`, `nearestHighlight`, T2.7)
 - `woff.ts` : police WOFF convertie en TrueType, pour l'embarquer dans un fichier Word (`woffToSfnt`, T2.7)
 - `imageSize.ts` : largeur et hauteur d'une image PNG, GIF, JPEG ou WebP, lues dans son en-tête (`imageSize`, T2.7)
@@ -30,4 +33,5 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `appVersion.ts` : numéro de version `v<date>·<commit court>`, ou `dev` (`formatVersion`, H1)
 - `base64.ts` : conversion octets <-> base64 pour l'état Yjs
 - `assistant.ts` : assistant facultatif (T3.1) : réglages (éteint par défaut), modèles proposés, consignes et demande envoyée (la sélection seule), lecture de la réponse, corrections au mot ou au paragraphe entier, messages d'erreur (`buildRequest`, `parseParagraphs`, `correctionChanges`, `failureMessage`)
+- `wordCount.ts` : compteur de mots (T2.11) : mots entre deux espaces comme dans Word, caractères avec et sans espaces, paragraphes, comptés bloc par bloc et gardés tant qu'un bloc ne change pas, textes « 1 234 mots » et « 45 mots sur 1 234 » (`nodeStats`, `rangeStats`, `wordCounterText`)
 - `wordDiff.ts` : comparaison au mot de deux textes et compte des mots, limite de 5 000 mots (`diffWords`, `countWords`, `MAX_ASSISTANT_WORDS`, T3.1)

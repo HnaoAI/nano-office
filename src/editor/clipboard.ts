@@ -14,6 +14,7 @@ import {
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { IMAGE_NODE } from "../core/images";
+import { CALLOUT_NODE } from "../core/calloutSchema";
 import { BLOCK_ID_ATTRIBUTE, BLOCK_TYPES_WITH_ID } from "../core/schema";
 import { CellSelection, isInTable } from "@tiptap/pm/tables";
 import { convertPageBreaks } from "./pageBreakPaste";
@@ -176,6 +177,52 @@ export function withoutImages(slice: Slice): Slice {
   return found ? new Slice(removeImages(slice.content), slice.openStart, slice.openEnd) : slice;
 }
 
+/** Remplace chaque encadré d'un fragment par ses blocs, à toute profondeur. */
+function unwrapCalloutNodes(fragment: Fragment): Fragment {
+  const nodes: ProseMirrorNode[] = [];
+  fragment.forEach((child) => {
+    if (child.type.name === CALLOUT_NODE) {
+      unwrapCalloutNodes(child.content).forEach((inner) => nodes.push(inner));
+      return;
+    }
+    nodes.push(child.isLeaf ? child : child.copy(unwrapCalloutNodes(child.content)));
+  });
+  return Fragment.from(nodes);
+}
+
+/**
+ * Encadrés retirés d'un collage (T2.19) : le texte reste, sans le cadre. Pour un collage extérieur (critère 5), et
+ * pour un collage dans un encadré, une liste ou une cellule, qui n'acceptent pas d'encadré : sans cela, ProseMirror
+ * couperait l'encadré, la liste ou le tableau pour le placer.
+ */
+export function withoutCallouts(slice: Slice): Slice {
+  let found = false;
+  slice.content.descendants((node) => {
+    if (node.type.name === CALLOUT_NODE) found = true;
+    return !found;
+  });
+  if (!found) return slice;
+  const content = unwrapCalloutNodes(slice.content);
+  // Un encadré ouvert d'un côté devient ses blocs : la profondeur ouverte perd un niveau par encadré.
+  const unwrapped = (
+    open: number,
+    edge: (node: Fragment | ProseMirrorNode) => ProseMirrorNode | null,
+  ) => {
+    let node = edge(slice.content);
+    let count = 0;
+    for (let level = 0; node && level < open; level++) {
+      if (node.type.name === CALLOUT_NODE) count++;
+      node = edge(node);
+    }
+    return count;
+  };
+  return new Slice(
+    content,
+    slice.openStart - unwrapped(slice.openStart, (node) => node.firstChild),
+    slice.openEnd - unwrapped(slice.openEnd, (node) => node.lastChild),
+  );
+}
+
 /** Marques retirées d'un collage extérieur : police, taille et couleur ; surlignage (T1.7). */
 const EXTERNAL_MARKS_REMOVED = ["textStyle", "highlight"];
 
@@ -198,17 +245,24 @@ export interface PasteCleaning {
  *   nouveaux, sans doublon (critère 8).
  * - Collage extérieur : retire polices, tailles, couleurs (marque `textStyle`) et surlignages
  *   (marque `highlight`, T1.7 critère 7), leur substitue la police et la taille du curseur, et retire
- *   l'alignement (critère 2) et l'interligne (T2.2), et la fusion, la largeur et l'alignement des cellules (T1.8). Les fonds
+ *   l'alignement (critère 2), l'interligne (T2.2) et le retrait (T2.14), et la fusion, la largeur et l'alignement des cellules (T1.8). Les fonds
  *   n'existent pas dans le schéma : ils sont déjà ignorés.
  */
 export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
   const { internal, contextTextStyle, newBlockIds } = options;
-  const content = mapFragment(slice.content, (node) => {
-    if (node.isText) {
+  const content = mapFragment(slice.content, (pasted) => {
+    if (pasted.isText) {
+      // Le soulignement d'un lien est en style (src/core/links.ts) : la règle de lecture du souligné (T2.10)
+      // le relirait comme une marque à part, qui resterait après « Retirer le lien » (T2.12, critère 5).
+      const linked = pasted.marks.some((mark) => mark.type.name === "link");
+      const node = linked
+        ? pasted.mark(pasted.marks.filter((mark) => mark.type.name !== "underline"))
+        : pasted;
       if (internal) return node;
       const marks = node.marks.filter((mark) => !EXTERNAL_MARKS_REMOVED.includes(mark.type.name));
       return node.mark(contextTextStyle ? contextTextStyle.addToSet(marks) : marks);
     }
+    const node = pasted;
     const attrs = { ...node.attrs };
     if (newBlockIds && BLOCK_TYPES_WITH_ID.includes(node.type.name)) {
       attrs[BLOCK_ID_ATTRIBUTE] = null;
@@ -216,6 +270,8 @@ export function cleanPastedSlice(slice: Slice, options: PasteCleaning): Slice {
     if (!internal && "textAlign" in attrs) attrs.textAlign = null;
     // Interligne retiré d'un collage extérieur, comme les autres mises en forme (T2.2, critère 6).
     if (!internal && "lineHeight" in attrs) attrs.lineHeight = null;
+    // Retrait retiré d'un collage extérieur, comme l'interligne (T2.14, critère 3).
+    if (!internal && "indent" in attrs) attrs.indent = null;
     // Cellule venue d'ailleurs : ni largeur de colonne ni alignement de cellule (T1.8, critère 5 et 7).
     if (!internal && "colwidth" in attrs) Object.assign(attrs, EXTERNAL_CELL_ATTRS);
     return node.type.create(attrs, node.content, node.marks);
@@ -260,7 +316,10 @@ export function createClipboardPlugin(schema: Schema): Plugin {
         pastedFromNanoBuro = false;
         const { selection } = view.state;
         const inCell = !(selection instanceof CellSelection) && isInTable(view.state);
-        return cleanPastedSlice(inCell ? withoutImages(flattenTablesForCell(slice)) : slice, {
+        // Hors du premier niveau (encadré, liste, cellule), un encadré collé perd son cadre (T2.19).
+        const nested = selection.$from.depth > 1;
+        const base = inCell ? withoutImages(flattenTablesForCell(slice)) : slice;
+        return cleanPastedSlice(!internal || nested ? withoutCallouts(base) : base, {
           internal,
           contextTextStyle: contextTextStyleOf(view),
           newBlockIds: !dragging,

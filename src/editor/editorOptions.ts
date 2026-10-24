@@ -11,6 +11,8 @@ import { CleanClipboard } from "./clipboard";
 import type { ImageRejectedHandler } from "./imageInsert";
 import { createImageExtensions } from "./images";
 import { FormatShortcuts } from "./keyboardShortcuts";
+import { LinkClick } from "./links";
+import { CalloutKeys } from "./callout";
 import { PageBreaks } from "./pageBreak";
 import { createPageSetupHistory } from "./pageSetup";
 import { Search } from "./search";
@@ -35,6 +37,8 @@ import { TableNavigation } from "./tables";
  * - La recherche surligne ses occurrences par des décorations, hors du document (`Search`, T2.1).
  * - Les corrections de l'assistant s'affichent par des décorations, hors du document (`Suggestions`, T3.1).
  * - Un changement de mise en page s'annule avec Ctrl/Cmd+Z, comme une modification du texte (T2.5).
+ * - Entrée sur une ligne vide en fin d'encadré en sort (`CalloutKeys`, T2.19).
+ * - Un lien s'ouvre par Ctrl/Cmd+clic ; un clic simple place le curseur (`LinkClick`, T2.12).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
@@ -52,6 +56,8 @@ export function createEditorOptions(
       images.plugin,
       BlockIdGenerator,
       FormatShortcuts,
+      LinkClick,
+      CalloutKeys,
       CleanClipboard,
       TableNavigation,
       PageBreaks,

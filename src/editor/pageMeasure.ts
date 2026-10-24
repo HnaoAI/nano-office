@@ -1,10 +1,11 @@
 // Mesure de la page affichée pour les repères de page (T2.8) : position de chaque morceau (paragraphe,
-// titre, élément de liste, ligne de tableau, image, saut de page) et, seulement pour un paragraphe qui
+// titre, élément de liste, ligne de tableau, image, saut de page, encadré entier (T2.19)) et, seulement pour un paragraphe qui
 // traverse une fin de page, position de ses lignes. Le calcul des coupures est dans src/core/pageBreaks.ts.
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 import { IMAGE_NODE } from "../core/images";
 import { PAGE_BREAK_NODE } from "../core/pageBreakSchema";
+import { CALLOUT_NODE } from "../core/calloutSchema";
 import type { LineBox, PageUnit, PageUnitKind } from "../core/pageBreaks";
 
 /** Lignes d'un paragraphe déjà mesurées, relatives au haut du paragraphe, pour une taille donnée. */
@@ -80,6 +81,8 @@ function pieces(view: EditorView): PieceToMeasure[] {
     else if (name === PAGE_BREAK_NODE) kind = "break";
     else if (node.isTextblock) kind = "text";
     else if (name === IMAGE_NODE) kind = "keep";
+    // Encadré (T2.19, critère 5) : jamais coupé s'il tient sur une page, comme à l'impression (`break-inside: avoid`).
+    else if (name === CALLOUT_NODE) kind = "keep";
     out.push({ kind, node, element });
   });
   return out;

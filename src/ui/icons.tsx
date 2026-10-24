@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T2.19 encadré, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -201,6 +201,56 @@ export function AlignJustifyIcon() {
   return (
     <Icon>
       <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </Icon>
+  );
+}
+
+/** « Souligné » : un U posé sur un trait (T2.10). */
+export function UnderlineIcon() {
+  return (
+    <Icon>
+      <path d="M7 4.5v6a5 5 0 0 0 10 0v-6" />
+      <path d="M5 20h14" />
+    </Icon>
+  );
+}
+
+/** « Diminuer le retrait » : des lignes et une flèche vers la gauche (T2.14). */
+export function IndentDecreaseIcon() {
+  return (
+    <Icon>
+      <path d="M11 6h9M11 10h9M11 14h9M4 18h16" />
+      <path d="m7 9-3 3 3 3" />
+    </Icon>
+  );
+}
+
+/** « Augmenter le retrait » : des lignes et une flèche vers la droite (T2.14). */
+export function IndentIncreaseIcon() {
+  return (
+    <Icon>
+      <path d="M11 6h9M11 10h9M11 14h9M4 18h16" />
+      <path d="m4 9 3 3-3 3" />
+    </Icon>
+  );
+}
+
+/** « Lien » : deux maillons de chaîne (T2.12). */
+export function LinkIcon() {
+  return (
+    <Icon>
+      <path d="M10 13.5a4 4 0 0 0 6 .4l2.6-2.6a4 4 0 0 0-5.7-5.7L11.5 7" />
+      <path d="M14 10.5a4 4 0 0 0-6-.4l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.4-1.4" />
+    </Icon>
+  );
+}
+
+/** « Encadré » : un carré au trait, avec deux lignes de texte (T2.19). */
+export function CalloutIcon() {
+  return (
+    <Icon>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+      <path d="M7.5 10h9M7.5 14h6" />
     </Icon>
   );
 }
