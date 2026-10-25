@@ -10,6 +10,7 @@ import type { DocumentJson } from "../../src/core/types";
 import { paragraph, ydocFromJson } from "../core/helpers";
 import { flushBackups } from "./backupHelpers";
 import { fakeFiles, installFakeFileStore, setFakeFiles } from "./fakeFileStore";
+import { waitEditorFocus } from "./formatHelpers";
 import { changeOnOtherComputer, relaunchWithUnsavedChanges } from "./relaunchHelpers";
 
 const QUIET_TEXT = "rgb(95, 95, 92)";
@@ -242,6 +243,8 @@ test("H2, critère 2 : une frappe dans le document restauré reporte toujours la
   page,
 }) => {
   await relaunchWithDraft(page, "Brouillon");
+  // « Fin » seulement une fois l'éditeur restauré en possession du focus (Issue #106).
+  await waitEditorFocus(page);
   await editor(page).press("End");
   await page.keyboard.type(" suite");
   await expect.poll(() => activity(page)).toEqual({ ...NOTHING, edited: true });
