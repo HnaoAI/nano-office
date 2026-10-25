@@ -253,7 +253,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
-        text: "Dans « Plus de paramètres », décochez la case « En-têtes et pieds de page » : sinon le navigateur ajoute la date, le nom et l'adresse en haut et en bas de chaque page.",
+        text: "Dans « Plus de paramètres », décochez la case « En-têtes et pieds de page » : sinon le navigateur ajoute la date, le nom et l'adresse en haut et en bas de chaque page, et les numéros de page de Nano Buro peuvent ne pas s'imprimer.",
       },
       {
         kind: "text",

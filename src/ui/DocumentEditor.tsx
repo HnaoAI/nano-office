@@ -211,7 +211,7 @@ export function DocumentEditor({
           data-orientation={pageSetup.orientation}
           style={pageStyle(pageSetup)}
         >
-          <EditorContent editor={editor} />
+          <EditorContent editor={editor} className="nano-editor-host" />
           <LinkBubble editor={editor} />
           <PageMarksLayer starts={marks.layout.starts} offset={marks.offset} />
           <HeaderFooterLayer
