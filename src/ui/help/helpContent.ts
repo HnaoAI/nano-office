@@ -252,8 +252,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         text: "Pour créer un PDF, choisissez « Enregistrer au format PDF » à la place de l'imprimante.",
       },
       {
-        kind: "text",
-        text: "Dans « Plus de paramètres », décochez la case « En-têtes et pieds de page » : sinon le navigateur ajoute la date, le nom et l'adresse en haut et en bas de chaque page.",
+        kind: "steps",
+        title: "Important : retirer l'adresse et la date ajoutées par le navigateur",
+        items: [
+          "Dans la fenêtre d'impression, ouvrez « Plus de paramètres » (Chrome) ou « Autres paramètres » (Edge).",
+          "Puis décochez la case « En-têtes et pieds de page ».",
+          "Le navigateur n'ajoute plus l'adresse de Nano Buro, la date ni son propre numéro de page. L'en-tête, le pied de page et les numéros que vous avez choisis dans « Mise en page… » restent imprimés.",
+        ],
       },
       {
         kind: "text",
