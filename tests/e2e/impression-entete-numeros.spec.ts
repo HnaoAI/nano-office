@@ -58,8 +58,12 @@ test.describe("B3 : impression de l'en-tête, du pied de page et des numéros", 
       expect(footers).toHaveLength(1);
       expect(footers[0]?.y).toBeLessThan(MARGIN);
     }
-    // Le titre n'est suivi d'aucune copie de l'en-tête dans le texte.
-    expect(linesWith(printed[0]?.lines ?? [], "Partie 1")).toHaveLength(1);
+    // Aucune copie dans la zone du texte, comme celle vue sous « Partie 1 » dans le constat.
+    for (const { lines, height } of printed) {
+      const inText = lines.filter((line) => line.y > MARGIN && line.y < height - MARGIN);
+      expect(linesWith(inText, HEADER)).toEqual([]);
+      expect(linesWith(inText, FOOTER)).toEqual([]);
+    }
   });
 
   test("critère 2 : « Numéroter les pages » en bas à droite, sans numéro sur la première page : chaque autre page porte le sien", async ({

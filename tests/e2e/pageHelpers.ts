@@ -181,41 +181,51 @@ export interface PdfPageLines {
 export async function pdfLines(pdf: Buffer): Promise<PdfPageLines[]> {
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const task = getDocument({ data: new Uint8Array(pdf), useSystemFonts: false });
-  const document = await task.promise;
-  const result: PdfPageLines[] = [];
-  for (let number = 1; number <= document.numPages; number += 1) {
-    const pdfPage = await document.getPage(number);
-    const [, , width = 0, height = 0] = pdfPage.view;
-    const rows = new Map<number, { x: number; y: number; end: number; text: string }[]>();
-    for (const item of (await pdfPage.getTextContent()).items) {
-      if (!("str" in item) || item.str.trim() === "") continue;
-      const [, , , , x = 0, y = 0] = item.transform as number[];
-      const key = Math.round(y);
-      rows.set(key, [...(rows.get(key) ?? []), { x, y, end: x + item.width, text: item.str }]);
-    }
-    // Deux zones de marge à la même hauteur (pied de page à gauche, numéro au centre) font deux lignes.
-    const lines: PdfLine[] = [];
-    for (const row of rows.values()) {
-      let line: (PdfLine & { end: number }) | null = null;
-      for (const part of row.sort((a, b) => a.x - b.x)) {
-        if (line && part.x - line.end < 12) {
-          line.text += part.text;
-          line.end = part.end;
-        } else {
-          line = { text: part.text, x: part.x, y: part.y, end: part.end };
-          lines.push(line);
+  try {
+    const document = await task.promise;
+    const result: PdfPageLines[] = [];
+    for (let number = 1; number <= document.numPages; number += 1) {
+      const pdfPage = await document.getPage(number);
+      const [, , width = 0, height = 0] = pdfPage.view;
+      // Morceaux regroupés par hauteur, à 2 points près (lignes de base arrondies différemment).
+      const rows: { y: number; parts: { x: number; end: number; text: string }[] }[] = [];
+      for (const item of (await pdfPage.getTextContent()).items) {
+        if (!("str" in item) || item.str === "") continue;
+        const [, , , , x = 0, y = 0] = item.transform as number[];
+        let row = rows.find((candidate) => Math.abs(candidate.y - y) < 2);
+        if (!row) {
+          row = { y, parts: [] };
+          rows.push(row);
+        }
+        row.parts.push({ x, end: x + item.width, text: item.str });
+      }
+      // Deux zones de marge à la même hauteur (pied de page à gauche, numéro au centre) font deux lignes.
+      const lines: (PdfLine & { end: number })[] = [];
+      for (const row of rows) {
+        let line: (PdfLine & { end: number }) | null = null;
+        for (const part of row.parts.sort((a, b) => a.x - b.x)) {
+          if (line && part.x - line.end < 12) {
+            line.text += part.text;
+            line.end = part.end;
+          } else {
+            line = { text: part.text, x: part.x, y: row.y, end: part.end };
+            lines.push(line);
+          }
         }
       }
+      result.push({
+        width,
+        height,
+        lines: lines
+          .map(({ text, x, y }) => ({ text: text.replace(/\s+/g, " ").trim(), x, y }))
+          .filter((line) => line.text !== "")
+          .sort((a, b) => b.y - a.y),
+      });
     }
-    for (const line of lines) line.text = line.text.replace(/\s+/g, " ").trim();
-    result.push({
-      width,
-      height,
-      lines: lines.map(({ text, x, y }) => ({ text, x, y })).sort((a, b) => b.y - a.y),
-    });
+    return result;
+  } finally {
+    await task.destroy();
   }
-  await task.destroy();
-  return result;
 }
 
 /** PDF de la page, au format de sa règle `@page`. */
