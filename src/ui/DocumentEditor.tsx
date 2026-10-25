@@ -11,23 +11,28 @@ import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from
 import { createPortal } from "react-dom";
 import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
+import { focusEditor } from "../editor/focus";
 import { createEditorOptions } from "../editor/editorOptions";
 import { scrollBelowStickyTop } from "../editor/stickyScroll";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
 import { pageCounterText } from "../core/pageBreaks";
 import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
+import { printMarginRules } from "../core/headerFooter";
 import { loadOutlineOpen, saveOutlineOpen } from "../storage/outlinePreference";
 import { AssistantPanel } from "./AssistantPanel";
 import { OutlinePanel } from "./OutlinePanel";
 import { PageMarksLayer } from "./PageMarksLayer";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
+import type { HeaderFooterField } from "./HeaderFooterFields";
 import { useAssistant } from "./useAssistant";
 import { useOutline } from "./useOutline";
+import { useTableOfContents } from "./useTableOfContents";
 import type { AssistantConfig } from "./useAssistantSettings";
 import { usePageLayout } from "./usePageLayout";
-import { usePageSetup } from "./usePageSetup";
+import { useHeaderFooter, usePageSetup } from "./usePageSetup";
+import { HeaderFooterLayer } from "./HeaderFooterLayer";
 import { useSearchShortcuts } from "./useSearchShortcuts";
 import { useWordCount } from "./useWordCount";
 import { WordCounter } from "./WordCounter";
@@ -54,7 +59,8 @@ function pageStyle(setup: PageSetup): CSSProperties {
  * @param ydoc document Yjs neuf ou lu depuis un fichier, jamais réutilisé pour un autre document
  * @param onEdit appelé à chaque caractère tapé ou mise en forme appliquée (H1, critère 6)
  * @param onImageRejected affiche le message d'une image refusée (T1.9, critère 2) ; fonction stable
- * @param onPageSetup ouvre la boîte « Mise en page » (T2.5)
+ * @param onPageSetup ouvre la boîte « Mise en page » (T2.5), avec le focus sur l'en-tête ou le pied de
+ *   page après un double clic sur l'un d'eux (T2.16, critère 3)
  * @param assistant fournisseur, modèle et clé de l'assistant (T3.1) ; null quand il est éteint : ni
  *   bouton, ni panneau, ni requête (critère 4)
  * @param tools emplacement de la barre de mise en forme, du panneau de l'assistant et de la recherche, dans la partie figée en
@@ -79,7 +85,7 @@ export function DocumentEditor({
   ydoc: Y.Doc;
   onEdit: () => void;
   onImageRejected: (reasons: ImageRejection[]) => void;
-  onPageSetup: () => void;
+  onPageSetup: (field?: HeaderFooterField) => void;
   assistant: AssistantConfig | null;
   tools: HTMLElement | null;
   coveredTop: () => number;
@@ -95,8 +101,16 @@ export function DocumentEditor({
       editorProps: { ...base.editorProps, ...scrollBelowStickyTop(coveredTop, coveredBottom) },
     };
   }, [ydoc, onImageRejected, coveredTop, coveredBottom]);
-  const editor = useEditor({ ...options, autofocus: true }, [ydoc]);
+  // Focus au démarrage, curseur au début du document (sélection initiale de Tiptap). Pas `autofocus` :
+  // Tiptap y remet la sélection au début une image plus tard (requestAnimationFrame), même si
+  // l'utilisateur a déjà cliqué ou appuyé sur Fin entre-temps : sa frappe partait alors au début
+  // (test instable H2, critère 2, Issue #102). Ici, rien ne bouge si l'éditeur a déjà le focus.
+  const editor = useEditor(
+    { ...options, onCreate: ({ editor: created }) => focusEditor(created) },
+    [ydoc],
+  );
   const pageSetup = usePageSetup(ydoc);
+  const headerFooter = useHeaderFooter(ydoc);
   const [sheet, setSheet] = useState<HTMLElement | null>(null);
   const marks = usePageLayout(editor, sheet, pageSetup);
   // Plan (T2.9) : fermé par défaut, choix retenu sur cet ordinateur (critère 1).
@@ -106,6 +120,7 @@ export function DocumentEditor({
     saveOutlineOpen(open);
   };
   const outline = useOutline(editor, outlineOpen, marks.layout);
+  useTableOfContents(editor, ydoc, marks.layout, coveredTop);
   const words = useWordCount(editor);
 
   const onTransaction = useEffectEvent(({ transaction }: EditorEvents["transaction"]) => {
@@ -138,7 +153,7 @@ export function DocumentEditor({
       <div className="nano-format-row">
         <Toolbar
           editor={editor}
-          onPageSetup={onPageSetup}
+          onPageSetup={() => onPageSetup()}
           outline={{ open: outlineOpen, onToggle: () => showOutline(!outlineOpen) }}
           assistant={
             assistant
@@ -179,7 +194,8 @@ export function DocumentEditor({
           counter,
         )}
       {/* Format de la feuille imprimée : A4, orientation et marges du document (T2.6, critère 3). */}
-      <style>{printPageRule(pageSetup)}</style>
+      {/* Numéros de page (T2.15), en-tête et pied de page (T2.16) : zones de marge de `@page`. */}
+      <style>{`${printPageRule(pageSetup)}\n${printMarginRules(headerFooter)}`}</style>
       {outlineOpen && (
         <OutlinePanel
           editor={editor}
@@ -198,6 +214,12 @@ export function DocumentEditor({
           <EditorContent editor={editor} />
           <LinkBubble editor={editor} />
           <PageMarksLayer starts={marks.layout.starts} offset={marks.offset} />
+          <HeaderFooterLayer
+            settings={headerFooter}
+            starts={marks.layout.starts}
+            offset={marks.offset}
+            onEdit={onPageSetup}
+          />
         </article>
       </main>
     </>

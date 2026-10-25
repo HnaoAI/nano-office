@@ -1,5 +1,6 @@
 // Boîte de dialogue « Mise en page » (T2.5, critère 1) : orientation et marges d'une page A4, au style
-// de la question de la copie de secours (dialog.css). Ne modifie le document qu'avec « Appliquer ».
+// de la question de la copie de secours (dialog.css), puis numéros de page (T2.15), en-tête et pied de
+// page (T2.16, dans HeaderFooterFields.tsx). Ne modifie le document qu'avec « Appliquer ».
 import { useEffect, useId, useState } from "react";
 import {
   MARGIN_PRESETS,
@@ -14,6 +15,8 @@ import {
   type PageOrientation,
   type PageSetup,
 } from "../core/pageSetup";
+import type { HeaderFooter } from "../core/headerFooter";
+import { HeaderFooterFields, type HeaderFooterField } from "./HeaderFooterFields";
 import { PageSetupIcon } from "./icons";
 
 const SIDES: { key: keyof PageMargins; label: string }[] = [
@@ -26,19 +29,28 @@ const SIDES: { key: keyof PageMargins; label: string }[] = [
 /**
  * Boîte « Mise en page ».
  * @param current mise en page actuelle du document
- * @param onApply appelé avec la nouvelle mise en page, une seule fois
+ * @param currentHeaderFooter numéros, en-tête et pied de page actuels du document (T2.15, T2.16)
+ * @param focus champ à qui donner le focus à l'ouverture (double clic sur l'en-tête ou le pied de page),
+ *   ou null pour l'orientation
+ * @param onApply appelé avec la nouvelle mise en page et les nouveaux numéros, en-tête et pied de page,
+ *   une seule fois
  * @param onCancel ferme la boîte sans rien changer (Annuler, Échap, clic à côté)
  */
 export function PageSetupDialog({
   current,
+  currentHeaderFooter,
+  focus = null,
   onApply,
   onCancel,
 }: {
   current: PageSetup;
-  onApply: (setup: PageSetup) => void;
+  currentHeaderFooter: HeaderFooter;
+  focus?: HeaderFooterField | null;
+  onApply: (setup: PageSetup, headerFooter: HeaderFooter) => void;
   onCancel: () => void;
 }) {
   const id = useId();
+  const [headerFooter, setHeaderFooter] = useState<HeaderFooter>(currentHeaderFooter);
   const [orientation, setOrientation] = useState<PageOrientation>(current.orientation);
   const [choice, setChoice] = useState<MarginChoice>(marginChoice(current.margins));
   const [fields, setFields] = useState<Record<keyof PageMargins, string>>(() => ({
@@ -88,7 +100,7 @@ export function PageSetupDialog({
         aria-labelledby={`${id}-title`}
         onSubmit={(event) => {
           event.preventDefault();
-          if (margins) onApply({ orientation, margins });
+          if (margins) onApply({ orientation, margins }, headerFooter);
         }}
       >
         <span className="nano-dialog-icon" aria-hidden="true">
@@ -114,7 +126,7 @@ export function PageSetupDialog({
                   value={value}
                   checked={orientation === value}
                   onChange={() => setOrientation(value)}
-                  autoFocus={current.orientation === value}
+                  autoFocus={focus === null && current.orientation === value}
                 />
                 <span>{label}</span>
               </label>
@@ -177,6 +189,7 @@ export function PageSetupDialog({
             </div>
           )}
         </fieldset>
+        <HeaderFooterFields value={headerFooter} onChange={setHeaderFooter} focus={focus} />
         <div className="nano-dialog-buttons">
           <button type="submit" className="nano-dialog-primary" disabled={margins === null}>
             Appliquer

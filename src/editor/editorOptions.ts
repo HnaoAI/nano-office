@@ -6,6 +6,7 @@ import type * as Y from "yjs";
 import { ImageNode } from "../core/imageSchema";
 import { PAGE_SETUP_ORIGIN } from "../core/pageSetup";
 import { documentExtensions, YJS_FRAGMENT_NAME } from "../core/schema";
+import { TableOfContentsNode } from "../core/tocSchema";
 import { BlockIdGenerator } from "./blockIds";
 import { CleanClipboard } from "./clipboard";
 import type { ImageRejectedHandler } from "./imageInsert";
@@ -18,6 +19,7 @@ import { createPageSetupHistory } from "./pageSetup";
 import { Search } from "./search";
 import { Suggestions } from "./suggestions";
 import { TableNavigation } from "./tables";
+import { TableOfContentsEditorNode } from "./toc";
 
 /**
  * Options de l'éditeur pour un document donné.
@@ -38,6 +40,8 @@ import { TableNavigation } from "./tables";
  * - Les corrections de l'assistant s'affichent par des décorations, hors du document (`Suggestions`, T3.1).
  * - Un changement de mise en page s'annule avec Ctrl/Cmd+Z, comme une modification du texte (T2.5).
  * - Entrée sur une ligne vide en fin d'encadré en sort (`CalloutKeys`, T2.19).
+ * - Le sommaire affiche ses lignes, mises à jour avec les titres (`TableOfContentsEditorNode`, T2.17) :
+ *   le nœud du schéma est remplacé par sa version avec sa vue, à la même place.
  * - Un lien s'ouvre par Ctrl/Cmd+clic ; un clic simple place le curseur (`LinkClick`, T2.12).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
@@ -52,7 +56,13 @@ export function createEditorOptions(
   const images = createImageExtensions(ydoc, onImageRejected);
   return {
     extensions: [
-      ...documentExtensions.map((extension) => (extension === ImageNode ? images.node : extension)),
+      ...documentExtensions.map((extension) =>
+        extension === ImageNode
+          ? images.node
+          : extension === TableOfContentsNode
+            ? TableOfContentsEditorNode
+            : extension,
+      ),
       images.plugin,
       BlockIdGenerator,
       FormatShortcuts,

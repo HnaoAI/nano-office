@@ -3,9 +3,11 @@
 // Le document et son fichier `.nano` ne sont jamais modifiés (critère 1).
 import { useCallback, useRef, type Dispatch, type SetStateAction } from "react";
 import { contentOf } from "../core/fileFormat";
+import { readHeaderFooter } from "../core/headerFooter";
 import { readPageSetup } from "../core/pageSetup";
 import type { OpenDocument } from "../core/types";
 import { exportFile } from "../storage/exportStore";
+import { tocPagesOf } from "./tocPages";
 import { wordExportMessage, type FileMessage } from "./fileMessages";
 
 /**
@@ -40,7 +42,14 @@ export function useWordExport(
           loadWordImages(ydoc, content),
           loadWordFonts(usedFonts(content)),
         ]);
-        const data = await exportWord({ content, pageSetup: readPageSetup(ydoc), images, fonts });
+        const data = await exportWord({
+          content,
+          pageSetup: readPageSetup(ydoc),
+          headerFooter: readHeaderFooter(ydoc),
+          tocPages: tocPagesOf(ydoc),
+          images,
+          fonts,
+        });
         const result = await exportFile({
           suggestedName: wordFileName(fileName),
           data,

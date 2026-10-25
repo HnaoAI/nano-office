@@ -332,6 +332,17 @@ export function PageBreakIcon() {
   );
 }
 
+/** Sommaire (T2.17, critère 1) : des lignes de titres reliées à leur numéro de page par des points. */
+export function TocIcon() {
+  return (
+    <Icon>
+      <path d="M4 6h8M6 12h7M6 18h6" />
+      <path d="M15 6h.01M17.5 6h.01M15 12h.01M17.5 12h.01M15 18h.01M17.5 18h.01" />
+      <path d="M20 6h.01M20 12h.01M20 18h.01" />
+    </Icon>
+  );
+}
+
 /** Engrenage du bouton « Réglages » (T3.1, critère 1). */
 export function GearIcon({ size = 18 }: { size?: number }) {
   return (

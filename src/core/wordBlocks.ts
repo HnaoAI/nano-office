@@ -5,6 +5,7 @@
 // couleurs sont converties par wordColors.ts (découpage M1).
 import {
   AlignmentType,
+  Bookmark,
   BorderStyle,
   ExternalHyperlink,
   HeadingLevel,
@@ -29,6 +30,8 @@ import { indentLevel, INDENT_STEP_CM } from "./indent";
 import { nearestHighlight, wordColor } from "./wordColors";
 import { DOCUMENT_FONTS, fontSizePoints } from "./textStyle";
 import type { DocumentJson } from "./types";
+import { TOC_NODE } from "./tocSchema";
+import { wordTocBlocks, type WordToc } from "./wordToc";
 
 /** Image prête pour Word : PNG, JPEG ou GIF (un WebP est converti avant), avec ses dimensions en pixels. */
 export interface WordImage {
@@ -64,14 +67,18 @@ export interface BlockContext {
   textWidthPx: number;
   /** Numéro de la prochaine liste : chaque liste repart de 1. */
   nextListInstance: number;
+  /** Lignes et numéros de page du sommaire (T2.17), quand le document en contient un. */
+  toc?: WordToc;
 }
 
 /** Ce qu'une conversion ajoute au corps du document ou d'une cellule. */
-export type WordBlock = Paragraph | Table;
+export type WordBlock = Paragraph | Table | ReturnType<typeof wordTocBlocks>[number];
 
 /** Mise en forme héritée par les blocs d'une cellule d'en-tête ou d'un encadré. */
-interface BlockStyle {
+export interface BlockStyle {
   bold?: boolean;
+  /** Signet de Word posé sur le texte d'un titre, cible d'une ligne du sommaire (T2.17). */
+  bookmark?: string;
   after?: number;
   list?: { reference: string; level: number; instance?: number };
   /** Style de l'encadré qui contient le bloc (T2.19). */
@@ -190,8 +197,9 @@ function lineSpacing(node: DocumentJson): number | undefined {
 function textBlock(node: DocumentJson, style: BlockStyle): Paragraph {
   const align = node.attrs?.textAlign as keyof typeof ALIGNMENTS | undefined;
   const line = lineSpacing(node);
+  const children = inlineChildren(node.content ?? [], style);
   const options: { -readonly [K in keyof IParagraphOptions]: IParagraphOptions[K] } = {
-    children: inlineChildren(node.content ?? [], style),
+    children: style.bookmark ? [new Bookmark({ id: style.bookmark, children })] : children,
   };
   if (align && align in ALIGNMENTS) options.alignment = ALIGNMENTS[align];
   if (node.type === "heading") {
@@ -322,13 +330,16 @@ function tableBlock(node: DocumentJson, context: BlockContext): Table {
         children: cells.map((cell) => {
           const bold = cell.type === "tableHeader";
           const blocks = cell.content ?? [];
-          // Pas d'espace sous le dernier bloc d'une cellule, comme à l'écran.
-          const children = blocks.flatMap((block, index) =>
-            convertBlock(block, context, {
-              bold,
-              after: index < blocks.length - 1 ? SMALL_AFTER : 0,
-            }),
-          );
+          // Pas d'espace sous le dernier bloc d'une cellule, comme à l'écran. Une cellule ne contient
+          // jamais de sommaire (schéma) : seuls des paragraphes et des tableaux en sortent.
+          const children = blocks
+            .flatMap((block, index) =>
+              convertBlock(block, context, {
+                bold,
+                after: index < blocks.length - 1 ? SMALL_AFTER : 0,
+              }),
+            )
+            .filter((block) => block instanceof Paragraph || block instanceof Table);
           return new TableCell({
             width: { size: cellWidth, type: WidthType.DXA },
             margins: { top: 90, bottom: 90, left: 150, right: 150 },
@@ -378,6 +389,9 @@ export function convertBlock(
     case "pageBreak":
       // Saut de page de Word (T2.8, critère 6), dans son propre paragraphe, comme Ctrl+Entrée dans Word.
       return [new Paragraph({ children: [new PageBreak()] })];
+    case TOC_NODE:
+      // Sommaire (T2.17, critère 5) : champ de table des matières de Word, avec ses lignes et ses numéros.
+      return context.toc ? wordTocBlocks(context.toc) : [];
     default:
       return [new Paragraph({ children: [new TextRun({ text: plainText(node) })] })];
   }

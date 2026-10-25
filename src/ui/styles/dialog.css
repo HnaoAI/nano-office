@@ -255,6 +255,83 @@
   font-weight: 500;
 }
 
+/* Cases à cocher des numéros de page (T2.15) et de la page de garde (T2.16), au style des options de la
+   recherche (search.css). */
+.nano-page-setup-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--nano-text-secondary);
+  cursor: pointer;
+}
+
+.nano-page-setup-check input {
+  margin: 0;
+  accent-color: var(--nano-ink);
+}
+
+/* En-tête et pied de page (T2.16) : libellé, champ d'une ligne et trois alignements, au style des marges
+   personnalisées. */
+.nano-page-setup-text {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.nano-page-setup-text > label {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--nano-text-secondary);
+}
+
+.nano-page-setup-text > input {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  font: inherit;
+  font-size: 15px;
+  color: var(--nano-ink);
+}
+
+.nano-page-setup-text > input:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-page-setup-aligns {
+  display: flex;
+  gap: 4px;
+}
+
+.nano-page-setup-aligns button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+  color: var(--nano-text-secondary);
+  cursor: pointer;
+}
+
+.nano-page-setup-aligns button[aria-pressed="true"] {
+  background: var(--nano-group-bg);
+  color: var(--nano-ink);
+}
+
+.nano-page-setup-aligns button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
 .nano-page-setup .nano-dialog-buttons button:disabled {
   color: var(--nano-text-disabled);
   cursor: default;

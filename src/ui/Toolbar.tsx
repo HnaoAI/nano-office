@@ -16,6 +16,7 @@ import { canWrapInCallout, currentCallout } from "../editor/callout";
 import { calloutStyle } from "../core/calloutSchema";
 import { selectedImage } from "../editor/images";
 import { insertPageBreak } from "../editor/pageBreak";
+import { insertTableOfContents } from "../editor/toc";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
 import {
@@ -24,6 +25,7 @@ import {
   PageSetupIcon,
   RedoIcon,
   StrikeIcon,
+  TocIcon,
   UnderlineIcon,
   UndoIcon,
 } from "./icons";
@@ -209,6 +211,18 @@ export function Toolbar({
         }}
       >
         <PageBreakIcon />
+      </button>
+      <button
+        type="button"
+        aria-label="Insérer un sommaire"
+        title="Insérer un sommaire : les Titre 1 à 3 et leurs numéros de page"
+        onMouseDown={keepFocus}
+        onClick={() => {
+          editor.commands.focus();
+          insertTableOfContents(editor);
+        }}
+      >
+        <TocIcon />
       </button>
       <div className="nano-separator" aria-hidden="true" />
       {/* Dans la barre plutôt que dans le groupe Fichier, pour que l'en-tête tienne sur une ligne

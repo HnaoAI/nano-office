@@ -5,6 +5,7 @@ import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table
 import { IMAGE_GROUP } from "./imageSchema";
 import { PAGE_BREAK_GROUP } from "./pageBreakSchema";
 import { CALLOUT_GROUP } from "./calloutSchema";
+import { TOC_GROUP } from "./tocSchema";
 
 /**
  * Groupe propre aux tableaux, à la place du groupe « block » de Tiptap.
@@ -15,11 +16,11 @@ import { CALLOUT_GROUP } from "./calloutSchema";
 export const TABLE_GROUP = "documentTable";
 
 /**
- * Document : des blocs, des tableaux (T1.8), des images (T1.9), des sauts de page (T2.8) et des encadrés (T2.19). Un document du
- * lot A reste valide.
+ * Document : des blocs, des tableaux (T1.8), des images (T1.9), des sauts de page (T2.8), des encadrés (T2.19) et des
+ * sommaires (T2.17). Un document du lot A reste valide.
  */
 export const DocumentWithTables = Document.extend({
-  content: `(block | ${TABLE_GROUP} | ${IMAGE_GROUP} | ${PAGE_BREAK_GROUP} | ${CALLOUT_GROUP})+`,
+  content: `(block | ${TABLE_GROUP} | ${IMAGE_GROUP} | ${PAGE_BREAK_GROUP} | ${CALLOUT_GROUP} | ${TOC_GROUP})+`,
 });
 
 /**

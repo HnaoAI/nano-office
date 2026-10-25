@@ -4,6 +4,7 @@
 import * as Y from "yjs";
 import { contentOf, createDocumentId, parseDocument } from "./fileFormat";
 import { IMAGE_NODE, imageRefs, readImage } from "./images";
+import { TOC_NODE } from "./tocSchema";
 import { DEFAULT_FILE_NAME, type DocumentJson, type OpenDocument, type ParseError } from "./types";
 
 export { DEFAULT_FILE_NAME };
@@ -113,5 +114,11 @@ export function documentTitle(fileName: string | null): string {
 function hasContent(node: DocumentJson): boolean {
   // Une mise en page réglée (attributs du nœud `doc`) compte aussi (T2.5, critère 5).
   if (node.type === "doc" && node.attrs && Object.keys(node.attrs).length > 0) return true;
-  return Boolean(node.text) || node.type === IMAGE_NODE || (node.content ?? []).some(hasContent);
+  // Un sommaire seul compte aussi (T2.17) : il a été inséré, comme une image.
+  return (
+    Boolean(node.text) ||
+    node.type === IMAGE_NODE ||
+    node.type === TOC_NODE ||
+    (node.content ?? []).some(hasContent)
+  );
 }

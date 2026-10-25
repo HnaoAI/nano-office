@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px;
   padding: 12px 12px 8px 18px;
   border-bottom: 1px solid var(--nano-group-bg);
 }
@@ -41,6 +41,11 @@
   margin: 0;
   font-size: 15px;
   font-weight: 600;
+}
+
+/* « Insérer un sommaire » (T2.17) : à droite, à côté du bouton de fermeture. */
+.nano-outline-insert {
+  margin-left: auto;
 }
 
 .nano-outline-close {
