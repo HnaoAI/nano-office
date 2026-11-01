@@ -147,7 +147,7 @@ Il s'arrête et demande seulement si la question :
 
 ### Vérification et publication
 
-Tant que la famille n'a pas l'adresse de l'application, la PR est fusionnée dès que la CI est verte (voir « Fusion des PR »),
+La PR est fusionnée dès que la CI est verte (voir « Fusion des PR »), même depuis que la famille a l'adresse (2026-11-01),
 et le product owner vérifie sur la version publiée (GitHub Pages), sur le Mac et le PC, sans Terminal. Un défaut se corrige
 dans une PR suivante, ou par « Revert ». La PR donne une liste de vérification courte : 10 points au plus par lot.
 
@@ -240,3 +240,5 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-11-01 : Le lot L (schémas) passe avant le lot K (ouvrir un fichier Word), à la demande du PO, pour avoir au plus tôt une version utilisable avec les schémas. Il n'en dépendait pas : seule l'ouverture d'un `.docx` doit plus tard signaler que les formes de Word ne sont pas reprises. Ordre : PR #110 (tests fiables et B3), lot L, puis lot K.
 - 2026-11-01 : Lot K. Un fichier Word est lu, jamais modifié, et devient un nouveau document sans fichier courant (l'ancien fichier courant est oublié). Polices, couleurs, interligne et retrait sont ramenés aux valeurs les plus proches de Nano Buro, et ce qui n'est pas repris est signalé. JSZip est utilisé sous sa licence MIT. Le test du filtre de « Ouvrir… » est adapté (.nano et .docx), avec l'accord du PO.
 - 2026-11-01 : Lot L. Le schéma est un nouveau bloc du document, dont les formes et les flèches sont des données du bloc, avec l'« ok » du PO sur le format : un ordinateur pas encore mis à jour refuse un fichier avec schéma sans le modifier. React Flow (MIT) n'est chargé qu'au premier schéma ouvert. Les textes du schéma sont échappés et les couleurs limitées à la palette, pour qu'un fichier ne puisse rien injecter dans le dessin.
+- 2026-11-01 : L'adresse de Nano Buro est donnée à la famille, pour le pilote sur PC. Les PR continuent d'être fusionnées par le relecteur dès que la CI est verte : une mise à jour ne s'installe qu'à l'ouverture, jamais en plein travail, et un changement du format `.nano` attend toujours l'« ok » du PO. Les retours de la famille alimentent les idées d'améliorations, avant la collaboration. L'aide a été complétée avant le partage (PR #115).
+- 2026-11-01 : La fenêtre « Nano Buro se met à jour » reste au moins 5 secondes en tout (H3, critère 1), pour qu'on ait le temps de la lire ; le déblocage au bout de 20 s est inchangé.
