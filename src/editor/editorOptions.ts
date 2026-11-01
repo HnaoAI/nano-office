@@ -7,6 +7,8 @@ import { ImageNode } from "../core/imageSchema";
 import { PAGE_SETUP_ORIGIN } from "../core/pageSetup";
 import { documentExtensions, YJS_FRAGMENT_NAME } from "../core/schema";
 import { TableOfContentsNode } from "../core/tocSchema";
+import { DiagramNode } from "../core/diagramSchema";
+import { createDiagramNode, type DiagramEditorMount } from "./diagram";
 import { BlockIdGenerator } from "./blockIds";
 import { CleanClipboard } from "./clipboard";
 import type { ImageRejectedHandler } from "./imageInsert";
@@ -42,18 +44,23 @@ import { TableOfContentsEditorNode } from "./toc";
  * - Entrée sur une ligne vide en fin d'encadré en sort (`CalloutKeys`, T2.19).
  * - Le sommaire affiche ses lignes, mises à jour avec les titres (`TableOfContentsEditorNode`, T2.17) :
  *   le nœud du schéma est remplacé par sa version avec sa vue, à la même place.
+ * - Un schéma s'affiche en dessin SVG et s'ouvre en modification au double clic, avec l'éditeur de formes
+ *   fourni par l'interface (`createDiagramNode`, T2.20).
  * - Un lien s'ouvre par Ctrl/Cmd+clic ; un clic simple place le curseur (`LinkClick`, T2.12).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
  *   jamais complété par `setContent` (voir l'INVARIANT de CLAUDE.md)
  * @param onImageRejected affiche le message d'une image refusée (T1.9, critère 2)
+ * @param diagramMount éditeur de formes des schémas (T2.20), chargé à la demande par l'interface
  */
 export function createEditorOptions(
   ydoc: Y.Doc,
   onImageRejected: ImageRejectedHandler = () => undefined,
+  diagramMount: DiagramEditorMount | null = null,
 ): Partial<EditorOptions> {
   const images = createImageExtensions(ydoc, onImageRejected);
+  const diagram = createDiagramNode(diagramMount);
   return {
     extensions: [
       ...documentExtensions.map((extension) =>
@@ -61,7 +68,9 @@ export function createEditorOptions(
           ? images.node
           : extension === TableOfContentsNode
             ? TableOfContentsEditorNode
-            : extension,
+            : extension === DiagramNode
+              ? diagram
+              : extension,
       ),
       images.plugin,
       BlockIdGenerator,

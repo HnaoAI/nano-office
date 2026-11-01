@@ -1,0 +1,226 @@
+/* Schémas (T2.20) : bloc du document, dessin hors modification, éditeur de formes (React Flow) avec sa
+   petite barre, ses points d'accroche, ses poignées et sa poignée du bas. Les seules couleurs des formes
+   sont celles du document (fond de surlignage), posées par le dessin : jamais écrites ici. */
+.nano-editor .nano-diagram {
+  position: relative;
+  margin: 0 0 16px;
+  border-radius: var(--nano-radius-button);
+  cursor: default;
+  user-select: none;
+}
+
+.nano-diagram-drawing svg {
+  display: block;
+  overflow: hidden;
+}
+
+.nano-editor .nano-diagram.ProseMirror-selectednode {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 4px;
+}
+
+/* Schéma vide : un cadre en pointillé et une phrase d'aide, ni dans le document ni à l'impression. */
+.nano-editor .nano-diagram-is-empty .nano-diagram-drawing {
+  border: 1px dashed var(--nano-separator-strong);
+  border-radius: var(--nano-radius-button);
+}
+
+.nano-diagram-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nano-text-quiet);
+  font-family: var(--nano-font-sans);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.nano-diagram-empty[hidden] {
+  display: none;
+}
+
+.nano-diagram-loading {
+  margin: 0;
+  padding: 24px;
+  color: var(--nano-text-quiet);
+  font-family: var(--nano-font-sans);
+  font-size: 14px;
+}
+
+/* En modification : la petite barre au-dessus, la grille dans le cadre du schéma. */
+.nano-editor .nano-diagram-editing {
+  margin-top: 64px;
+  outline: 1px solid var(--nano-separator-strong);
+  outline-offset: 4px;
+}
+
+.nano-format-bar.nano-diagram-bar {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  z-index: 15;
+  transform: translateX(-50%);
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  font-family: var(--nano-font-sans);
+}
+
+.nano-format-bar .nano-diagram-done {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+  background: var(--nano-ink);
+  color: var(--nano-on-ink);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--nano-shadow-primary);
+}
+
+/* Fond blanc choisi : la pastille barrée reste blanche (pas le fond noir d'un bouton activé). */
+.nano-format-bar .nano-swatch-none[aria-pressed="true"] {
+  background:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      var(--nano-text-quiet) calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    var(--nano-surface);
+}
+
+.nano-format-bar .nano-swatch:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.nano-diagram-area {
+  position: relative;
+  width: 100%;
+  font-family: var(--nano-font-sans);
+}
+
+.nano-diagram-area .react-flow__pane:focus-visible,
+.nano-diagram-area .react-flow__node:focus-visible,
+.nano-diagram-area .react-flow__edge:focus-visible {
+  outline: none;
+}
+
+.nano-diagram-area .react-flow__background {
+  color: var(--nano-separator-strong);
+}
+
+.nano-diagram-shape,
+.nano-diagram-shape-drawing {
+  width: 100%;
+  height: 100%;
+}
+
+.nano-diagram-shape-drawing {
+  display: block;
+  overflow: visible;
+}
+
+/* Forme choisie, ou atteinte au clavier (critère 13). */
+.nano-diagram-area .react-flow__node.selected .nano-diagram-shape,
+.nano-diagram-area .react-flow__node:focus-visible .nano-diagram-shape {
+  outline: 2px solid var(--nano-ink);
+  outline-offset: 3px;
+}
+
+/* Points d'accroche : visibles au survol d'une forme ou sur la forme choisie, et pendant un tracé. */
+.nano-diagram-area .nano-diagram-handle {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--nano-ink);
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-surface);
+  opacity: 0;
+}
+
+.nano-diagram-area .react-flow__node:hover .nano-diagram-handle,
+.nano-diagram-area .react-flow__node.selected .nano-diagram-handle,
+.nano-diagram-area .connectingto .nano-diagram-handle,
+.nano-diagram-area .react-flow__handle.connecting {
+  opacity: 1;
+}
+
+.nano-diagram-area .nano-diagram-resize-handle {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--nano-ink);
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-surface);
+}
+
+.nano-diagram-area .react-flow__resize-control.line {
+  border-color: transparent;
+}
+
+.nano-diagram-area .react-flow__resize-control.handle {
+  border: 1.5px solid var(--nano-ink);
+  background: var(--nano-surface);
+}
+
+.nano-diagram-area .nano-diagram-arrow {
+  stroke: var(--nano-ink);
+  stroke-width: 1.5;
+}
+
+.nano-diagram-area .nano-diagram-arrow-selected {
+  stroke-width: 3;
+}
+
+.nano-diagram-arrow-label {
+  position: absolute;
+  padding: 1px 5px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface);
+  color: var(--nano-document-text);
+  font-family: var(--nano-font-sans);
+  font-size: 14px;
+  line-height: 18px;
+  pointer-events: all;
+  white-space: nowrap;
+}
+
+.nano-diagram-text-field {
+  position: absolute;
+  inset: 4px;
+  box-sizing: border-box;
+  border: 1px solid var(--nano-ink);
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface);
+  color: var(--nano-document-text);
+  font-family: var(--nano-font-sans);
+  font-size: 14px;
+  line-height: 18px;
+  text-align: center;
+  resize: none;
+}
+
+.nano-diagram-arrow-label .nano-diagram-text-field {
+  position: static;
+  width: 120px;
+}
+
+.nano-diagram-marker-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Poignée du bas : agrandir le schéma (critère 6). */
+.nano-diagram-resize {
+  height: 10px;
+  margin-top: 2px;
+  border-radius: var(--nano-radius-pill);
+  background: var(--nano-group-bg);
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.nano-diagram-resize:hover {
+  background: var(--nano-separator-strong);
+}

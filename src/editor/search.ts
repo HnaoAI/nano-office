@@ -4,22 +4,40 @@
 // document, ni dans `content`, ni dans `ydoc`, et l'état « Enregistré » ne change pas (critère 7).
 import { Extension, type Editor } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { Plugin, PluginKey, TextSelection, type Transaction } from "@tiptap/pm/state";
+import {
+  NodeSelection,
+  Plugin,
+  PluginKey,
+  TextSelection,
+  type Transaction,
+} from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { findInText, type TextMatch } from "../core/search";
 import { blockText } from "./blockText";
+import { diagramAttrs, readDiagram } from "../core/diagram";
+import { setText } from "../core/diagramEdits";
+import { DIAGRAM_NODE } from "../core/diagramSchema";
+import type { DiagramSearchSpec } from "./diagram";
 
 /** État de la recherche. */
 export interface SearchState {
   query: string;
   caseSensitive: boolean;
   /** Occurrences, en positions du document, dans l'ordre. */
-  matches: TextMatch[];
+  matches: SearchMatch[];
   /** Indice de l'occurrence active, ou -1 sans occurrence. */
   active: number;
   decorations: DecorationSet;
   /** Augmente à chaque demande de défilement vers l'occurrence active. */
   scrollRequest: number;
+}
+
+/**
+ * Une occurrence : sa place dans le document, et pour un schéma (T2.20), la forme ou la flèche et la
+ * place du texte trouvé dans son texte.
+ */
+export interface SearchMatch extends TextMatch {
+  diagram?: { itemId: string; from: number; to: number };
 }
 
 /** Changement demandé au plugin, porté par une transaction. */
@@ -50,10 +68,14 @@ export function findInDocument(
   doc: ProseMirrorNode,
   query: string,
   caseSensitive: boolean,
-): TextMatch[] {
+): SearchMatch[] {
   if (query === "") return [];
-  const matches: TextMatch[] = [];
+  const matches: SearchMatch[] = [];
   doc.descendants((node, pos) => {
+    if (node.type.name === DIAGRAM_NODE) {
+      matches.push(...findInDiagram(node, pos, query, caseSensitive));
+      return false;
+    }
     if (!node.isTextblock) return true;
     for (const match of findInText(blockText(node), query, caseSensitive)) {
       matches.push({ from: pos + 1 + match.from, to: pos + 1 + match.to });
@@ -63,22 +85,67 @@ export function findInDocument(
   return matches;
 }
 
+/**
+ * Occurrences dans les textes des formes et des flèches d'un schéma (T2.20, critère 10). Chacune couvre
+ * le schéma entier dans le document, et garde la forme et la place du texte trouvé.
+ */
+function findInDiagram(
+  node: ProseMirrorNode,
+  pos: number,
+  query: string,
+  caseSensitive: boolean,
+): SearchMatch[] {
+  const data = readDiagram(node.attrs);
+  const matches: SearchMatch[] = [];
+  for (const item of [...data.shapes, ...data.arrows]) {
+    for (const match of findInText(item.text, query, caseSensitive)) {
+      matches.push({
+        from: pos,
+        to: pos + node.nodeSize,
+        diagram: { itemId: item.id, from: match.from, to: match.to },
+      });
+    }
+  }
+  return matches;
+}
+
 function firstFrom(matches: TextMatch[], position: number, wrap = true): number {
   if (matches.length === 0) return -1;
   const index = matches.findIndex((match) => match.from >= position);
   return index >= 0 ? index : wrap ? 0 : -1;
 }
 
-function decorate(doc: ProseMirrorNode, matches: TextMatch[], active: number): DecorationSet {
+function decorate(doc: ProseMirrorNode, matches: SearchMatch[], active: number): DecorationSet {
   if (matches.length === 0) return DecorationSet.empty;
-  return DecorationSet.create(
-    doc,
-    matches.map((match, index) =>
+  const decorations: Decoration[] = [];
+  // Un schéma reçoit une seule décoration, qui nomme ses formes trouvées : son dessin les surligne.
+  const diagrams = new Map<number, { to: number; ids: string[]; active: boolean }>();
+  matches.forEach((match, index) => {
+    if (match.diagram) {
+      const entry = diagrams.get(match.from) ?? { to: match.to, ids: [], active: false };
+      entry.ids.push(match.diagram.itemId);
+      entry.active ||= index === active;
+      diagrams.set(match.from, entry);
+      return;
+    }
+    decorations.push(
       Decoration.inline(match.from, match.to, {
         class: index === active ? `${MATCH_CLASS} ${ACTIVE_CLASS}` : MATCH_CLASS,
       }),
-    ),
-  );
+    );
+  });
+  for (const [from, entry] of diagrams) {
+    const spec: DiagramSearchSpec = { diagramMatches: entry.ids };
+    decorations.push(
+      Decoration.node(
+        from,
+        entry.to,
+        { class: entry.active ? `${MATCH_CLASS} ${ACTIVE_CLASS}` : MATCH_CLASS },
+        spec,
+      ),
+    );
+  }
+  return DecorationSet.create(doc, decorations);
 }
 
 const EMPTY: SearchState = {
@@ -132,8 +199,12 @@ function selectActive(editor: Editor): void {
   const { matches, active } = searchState(editor);
   const match = matches[active];
   if (!match) return;
+  // Un schéma trouvé est sélectionné en entier (T2.20) : son dessin surligne la forme.
+  const selection = match.diagram
+    ? NodeSelection.create(editor.state.doc, match.from)
+    : TextSelection.create(editor.state.doc, match.from, match.to);
   const tr = editor.state.tr
-    .setSelection(TextSelection.create(editor.state.doc, match.from, match.to))
+    .setSelection(selection)
     .setMeta(searchPluginKey, { scroll: true } satisfies SearchMeta);
   editor.view.dispatch(tr);
 }
@@ -166,13 +237,36 @@ export function goToMatch(editor: Editor, direction: 1 | -1): void {
 }
 
 /** Remplace l'occurrence `match` dans `tr`, avec les marques de son premier caractère (critère 5). */
-function replaceMatch(tr: Transaction, match: TextMatch, replacement: string): void {
+function replaceMatch(tr: Transaction, match: SearchMatch, replacement: string): void {
+  if (match.diagram) {
+    replaceInDiagram(tr, match, match.diagram, replacement);
+    return;
+  }
   if (replacement === "") {
     tr.delete(match.from, match.to);
     return;
   }
   const marks = tr.doc.nodeAt(match.from)?.marks ?? [];
   tr.replaceWith(match.from, match.to, tr.doc.type.schema.text(replacement, marks));
+}
+
+/** Remplace une occurrence dans le texte d'une forme ou d'une flèche d'un schéma (T2.20). */
+function replaceInDiagram(
+  tr: Transaction,
+  match: SearchMatch,
+  place: NonNullable<SearchMatch["diagram"]>,
+  replacement: string,
+): void {
+  const node = tr.doc.nodeAt(match.from);
+  if (node?.type.name !== DIAGRAM_NODE) return;
+  const data = readDiagram(node.attrs);
+  const item = [...data.shapes, ...data.arrows].find((entry) => entry.id === place.itemId);
+  if (!item) return;
+  const text = item.text.slice(0, place.from) + replacement + item.text.slice(place.to);
+  tr.setNodeMarkup(match.from, undefined, {
+    ...node.attrs,
+    ...diagramAttrs(setText(data, item.id, text)),
+  });
 }
 
 /**
@@ -183,13 +277,19 @@ function replaceMatch(tr: Transaction, match: TextMatch, replacement: string): v
  * @returns faux sans occurrence active
  */
 export function replaceCurrent(editor: Editor, replacement: string): boolean {
-  const { matches, active } = searchState(editor);
+  const { matches, active, query, caseSensitive } = searchState(editor);
   const match = matches[active];
   if (!match) return false;
   const tr = editor.state.tr;
   replaceMatch(tr, match, replacement);
   tr.setMeta(searchPluginKey, {
-    activeFrom: match.from + replacement.length,
+    // Dans un schéma, ses occurrences commencent toutes au même endroit : la suivante est la prochaine
+    // du schéma, sauf si le remplacement contient le texte cherché, pour ne pas boucler (critère 8).
+    activeFrom: match.diagram
+      ? findInText(replacement, query, caseSensitive).length > 0
+        ? match.to
+        : match.from
+      : match.from + replacement.length,
     noWrap: true,
   } satisfies SearchMeta);
   editor.view.dispatch(tr);

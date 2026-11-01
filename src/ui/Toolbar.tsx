@@ -17,11 +17,13 @@ import { calloutStyle } from "../core/calloutSchema";
 import { selectedImage } from "../editor/images";
 import { insertPageBreak } from "../editor/pageBreak";
 import { insertTableOfContents } from "../editor/toc";
+import { insertDiagram } from "../editor/diagram";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
 import {
   OutlineIcon,
   PageBreakIcon,
+  DiagramIcon,
   PageSetupIcon,
   RedoIcon,
   StrikeIcon,
@@ -223,6 +225,18 @@ export function Toolbar({
         }}
       >
         <TocIcon />
+      </button>
+      <button
+        type="button"
+        aria-label="Insérer un schéma"
+        title="Insérer un schéma : des formes reliées par des flèches"
+        onMouseDown={keepFocus}
+        onClick={() => {
+          editor.commands.focus();
+          insertDiagram(editor);
+        }}
+      >
+        <DiagramIcon />
       </button>
       <div className="nano-separator" aria-hidden="true" />
       {/* Dans la barre plutôt que dans le groupe Fichier, pour que l'en-tête tienne sur une ligne

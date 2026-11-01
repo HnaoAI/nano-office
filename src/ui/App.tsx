@@ -37,6 +37,7 @@ import "./styles/assistant.css";
 import "./styles/update.css";
 import "./styles/help.css";
 import "./styles/outline.css";
+import "./styles/diagram.css";
 import "./styles/print.css";
 
 /**

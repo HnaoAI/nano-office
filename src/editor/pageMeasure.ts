@@ -8,6 +8,7 @@ import { IMAGE_NODE } from "../core/images";
 import { PAGE_BREAK_NODE } from "../core/pageBreakSchema";
 import { CALLOUT_NODE } from "../core/calloutSchema";
 import { TOC_NODE } from "../core/tocSchema";
+import { DIAGRAM_NODE } from "../core/diagramSchema";
 import type { LineBox, PageUnit, PageUnitKind } from "../core/pageBreaks";
 
 /** Lignes d'un paragraphe déjà mesurées, relatives au haut du paragraphe, pour une taille donnée. */
@@ -96,6 +97,8 @@ function pieces(view: EditorView): PieceToMeasure[] {
     else if (name === IMAGE_NODE) kind = "keep";
     // Encadré (T2.19, critère 5) : jamais coupé s'il tient sur une page, comme à l'impression (`break-inside: avoid`).
     else if (name === CALLOUT_NODE) kind = "keep";
+    // Schéma (T2.20, critère 8) : entier, comme une image, s'il tient sur une page.
+    else if (name === DIAGRAM_NODE) kind = "keep";
     out.push({ kind, node, element });
   });
   return out;
