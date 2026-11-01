@@ -26,6 +26,7 @@ import type { DocumentJson } from "../core/types";
 import type { WordFont, WordImage } from "../core/wordExport";
 import { woffToSfnt } from "../core/woff";
 import { convertToPng } from "../editor/imageImport";
+import { loadDiagramImages } from "./diagram/diagramImage";
 import type * as Y from "yjs";
 
 /** Styles d'une police : normal, gras, italique, gras italique (IBM Plex Mono : sans italique, T1.4). */
@@ -95,6 +96,7 @@ const WORD_TYPES = { "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif"
 /**
  * Images du document prêtes pour Word, par empreinte : PNG, JPEG et GIF tels quels, WebP converti en
  * PNG (Word ne le lit pas). Une image absente ou illisible n'y est pas : elle s'exporte « Image manquante ».
+ * Les schémas y sont aussi, en PNG, sous `diagramImageKey` (T2.20).
  */
 export async function loadWordImages(
   ydoc: Y.Doc,
@@ -110,5 +112,7 @@ export async function loadWordImages(
     if (!data || !size) continue;
     images.set(hash, { type: WORD_TYPES[type], data, ...size });
   }
+  // Schémas (T2.20, critère 9) : une image PNG chacun, sous leur identifiant de bloc.
+  for (const [key, image] of await loadDiagramImages(content)) images.set(key, image);
   return images;
 }

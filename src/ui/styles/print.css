@@ -100,6 +100,27 @@
     outline: none;
   }
 
+  /* Schéma (T2.20, critère 8) : son dessin SVG, jamais coupé sur deux pages s'il tient sur une seule ;
+     ni la phrase d'un schéma vide, ni son cadre, ni sa sélection. */
+  .nano-editor .nano-diagram {
+    break-inside: avoid;
+  }
+
+  .nano-diagram-empty,
+  .nano-diagram-resize,
+  .nano-diagram-bar {
+    display: none !important;
+  }
+
+  .nano-editor .nano-diagram.ProseMirror-selectednode,
+  .nano-editor .nano-diagram-editing {
+    outline: none;
+  }
+
+  .nano-editor .nano-diagram-is-empty .nano-diagram-drawing {
+    border: 0;
+  }
+
   /* Recherche, sélection, poignées et curseurs ne s'impriment pas (critère 6). */
   .nano-editor .nano-search-match {
     background: none;
