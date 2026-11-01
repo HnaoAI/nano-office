@@ -5,12 +5,11 @@ import type { DiagramEditing } from "../../editor/diagram";
 import { DiagramEditor } from "./DiagramEditor";
 
 /**
- * Affiche l'éditeur de formes dans `host`, le focus sur le schéma pour le clavier (critère 13).
+ * Affiche l'éditeur de formes dans `host` ; il prend le focus pour le clavier (critère 13).
  * @returns démontage
  */
 export function renderDiagramEditor(host: HTMLElement, editing: DiagramEditing): () => void {
   const root = createRoot(host);
   root.render(<DiagramEditor editing={editing} />);
-  requestAnimationFrame(() => host.querySelector<HTMLElement>(".react-flow__pane")?.focus());
   return () => root.unmount();
 }

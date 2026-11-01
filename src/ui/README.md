@@ -34,7 +34,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `usePageSetup.ts` : mise en page (T2.5), numéros, en-tête et pied de page (T2.15, T2.16) du document affiché, relus à chaque changement et à chaque annulation
 - `HeaderFooterLayer.tsx` : en-tête et pied de page à l'écran, en gris clair dans les marges et près des repères de page, double clic pour les modifier (T2.16)
 - `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres, ⌘/ ou Ctrl+/ de l'aide)
-- `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), recherche (T2.1), barré (T2.3), souligné (T2.10), mise en page (T2.5), interligne (M1), saut de page (T2.8), retrait (T2.14), lien (T2.12), encadré (T2.19)
+- `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), recherche (T2.1), barré (T2.3), souligné (T2.10), mise en page (T2.5), interligne (M1), saut de page (T2.8), retrait (T2.14), lien (T2.12), encadré (T2.19), schéma (T2.20)
 - `fonts.ts` : polices intégrées : IBM Plex Sans et Mono de l'interface (U1a), cinq polices du document en quatre graisses (T1.4)
 - `ParagraphStyleSelect.tsx` : liste déroulante « Style du paragraphe » : texte normal, titre 1 à 3 (T1.1)
 - `ListButtons.tsx` : boutons « Liste à puces » et « Liste numérotée » (T1.2)
@@ -60,12 +60,13 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `useOutline.ts` : plan du document affiché (T2.9) : lignes relues au plus une fois par image, titre actif, numéros de page d'après les repères de T2.8, Alt+Shift+Flèche dans un titre du document
 - `SearchBar.tsx` : barre « Rechercher et remplacer » sous la barre de mise en forme, à droite (T2.1)
 - `useSearchShortcuts.ts` : Ctrl/Cmd+F, Ctrl+H (Windows) et Cmd+Option+F (Mac) sur toute la page, à la touche physique (T2.1)
-- `Toolbar.tsx` : barre de mise en forme flottante, figée en haut de la fenêtre (M1) (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Souligné (T2.10), Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, retrait (T2.14), encadré (T2.19), lien (T2.12), tableau, image, saut de page (T2.8), mise en page (T2.5), plan (T2.9), groupe « Assistant » quand il est en marche (T3.1))
+- `Toolbar.tsx` : barre de mise en forme flottante, figée en haut de la fenêtre (M1) (Annuler, Rétablir, style du paragraphe, police, taille, Gras, Italique, Souligné (T2.10), Barré, couleur, surlignage, majuscules et minuscules, alignement, interligne, listes, retrait (T2.14), encadré (T2.19), lien (T2.12), tableau, image, saut de page (T2.8), sommaire (T2.17), schéma (T2.20), mise en page (T2.5), plan (T2.9), groupe « Assistant » quand il est en marche (T3.1))
 - `SuggestionActions.tsx` : boutons « Accepter » et « Refuser » sous la modification choisie de l'assistant (T3.1, découpé en M1)
 - `SettingsDialog.tsx` : boîte « Réglages » : section « Assistant IA », interrupteur, fournisseur, clé masquée, modèle, texte sur les données envoyées, « Oublier la clé » (T3.1)
 - `useAssistantSettings.ts` : réglages et clés de l'assistant de cet ordinateur, configuration passée à l'éditeur, null quand il est éteint (T3.1)
 - `useAssistant.ts` : « Corriger » et « Traduire en anglais » : demande, Échap, texte suivi pendant la demande, propositions ou traduction, messages ; état en ligne (T3.1)
 - `AssistantButtons.tsx` : groupe « Assistant » de la barre, grisé sans sélection, hors ligne ou pendant une demande (T3.1)
 - `AssistantPanel.tsx` : panneau de l'assistant au style des messages : demande en cours, erreur, barre des modifications proposées, traduction (T3.1)
+- `diagram/` : éditeur de formes des schémas (T2.20), chargé à la demande, et image pour l'export Word (voir `diagram/README.md`)
 - `help/` : aide intégrée et hors ligne (A1) : contenu, panneau, raccourcis affichés, icônes (voir `help/README.md`)
 - `styles/` : feuilles de style de la charte, découpées par zone (voir `styles/README.md`) ; couleurs, rayons et ombres en variables `--nano-…` dans `styles/tokens.css`

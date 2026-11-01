@@ -189,4 +189,3 @@ describe("T2.20 : export Word", () => {
     expect(diagramImageKey({ type: "diagram", attrs: {} })).toBeNull();
   });
 });
-});
