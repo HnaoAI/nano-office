@@ -58,8 +58,8 @@ export interface WordStyles {
   defaultRPr: Element | null;
   /** Polices du thème : `minor` (texte) et `major` (titres). */
   themeFonts: { minor: string | null; major: string | null };
-  /** Format de chaque niveau de chaque liste : `numId` → niveau → `bullet`, `decimal`, `none`… */
-  numbering: Map<string, Map<number, string>>;
+  /** Format et premier numéro de chaque niveau de chaque liste : `numId` → niveau. */
+  numbering: Map<string, Map<number, ListLevel>>;
 }
 
 /**
@@ -112,29 +112,48 @@ export function readWordStyles(
   return result;
 }
 
-/** Numérotation : chaque `numId` mène à une liste abstraite, dont chaque niveau a un format. */
-function readNumbering(numbering: Element | null): Map<string, Map<number, string>> {
-  const result = new Map<string, Map<number, string>>();
-  if (!numbering) return result;
-  const levelsOf = (element: Element) => {
-    const levels = new Map<number, string>();
-    for (const lvl of wChildren(element, "lvl")) {
-      levels.set(intAttr(wAttr(lvl, "ilvl")) ?? 0, wVal(lvl, "numFmt") ?? "decimal");
-    }
-    return levels;
+/** Niveau d'une liste de Word : son format (`bullet`, `decimal`, `none`…) et son premier numéro. */
+export interface ListLevel {
+  format: string;
+  start: number;
+}
+
+/** Niveau lu dans un `w:lvl`, en gardant ce que `base` donne déjà (un remplacement peut ne changer que le début). */
+function readLevel(lvl: Element, base?: ListLevel): ListLevel {
+  return {
+    format: wVal(lvl, "numFmt") ?? base?.format ?? "decimal",
+    start: intAttr(wVal(lvl, "start")) ?? base?.start ?? 1,
   };
-  const abstract = new Map<string, Map<number, string>>();
+}
+
+/**
+ * Numérotation : chaque `numId` mène à une liste abstraite, dont chaque niveau a un format et un premier numéro,
+ * que le `w:num` peut remplacer (`w:lvlOverride`, `w:startOverride`).
+ */
+function readNumbering(numbering: Element | null): Map<string, Map<number, ListLevel>> {
+  const result = new Map<string, Map<number, ListLevel>>();
+  if (!numbering) return result;
+  const abstract = new Map<string, Map<number, ListLevel>>();
   for (const element of wChildren(numbering, "abstractNum")) {
     const id = wAttr(element, "abstractNumId");
-    if (id !== null) abstract.set(id, levelsOf(element));
+    if (id === null) continue;
+    const levels = new Map<number, ListLevel>();
+    for (const lvl of wChildren(element, "lvl"))
+      levels.set(intAttr(wAttr(lvl, "ilvl")) ?? 0, readLevel(lvl));
+    abstract.set(id, levels);
   }
   for (const num of wChildren(numbering, "num")) {
     const id = wAttr(num, "numId");
     if (id === null) continue;
     const levels = new Map(abstract.get(wVal(num, "abstractNumId") ?? "") ?? []);
     for (const override of wChildren(num, "lvlOverride")) {
+      const ilvl = intAttr(wAttr(override, "ilvl")) ?? 0;
       const lvl = wChild(override, "lvl");
-      if (lvl) levels.set(intAttr(wAttr(override, "ilvl")) ?? 0, wVal(lvl, "numFmt") ?? "decimal");
+      let level = levels.get(ilvl);
+      if (lvl) level = readLevel(lvl, level);
+      const start = intAttr(wVal(override, "startOverride"));
+      if (start !== null) level = { format: level?.format ?? "decimal", start };
+      if (level) levels.set(ilvl, level);
     }
     result.set(id, levels);
   }
@@ -332,11 +351,11 @@ export function isTocHeadingStyle(styles: WordStyles, ids: readonly string[]): b
   );
 }
 
-/** Format d'un niveau d'une liste (`bullet`, `decimal`, `none`…), ou null si la liste n'existe pas. */
-export function listFormat(styles: WordStyles, numId: string, ilvl: number): string | null {
+/** Format et premier numéro d'un niveau d'une liste, ou null si la liste n'existe pas. */
+export function listLevel(styles: WordStyles, numId: string, ilvl: number): ListLevel | null {
   const levels = styles.numbering.get(numId);
   if (!levels) return null;
-  return levels.get(ilvl) ?? levels.get(0) ?? "decimal";
+  return levels.get(ilvl) ?? levels.get(0) ?? { format: "decimal", start: 1 };
 }
 
 /** Alignement de Nano Buro d'une valeur `w:jc`, ou null pour la gauche (alignement par défaut). */

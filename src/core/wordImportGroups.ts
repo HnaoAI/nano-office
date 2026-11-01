@@ -12,7 +12,7 @@ const LIST_INDENT = 360;
 /** Liste vide d'un type. */
 function newList(ordered: boolean, start = 1): DocumentJson {
   return ordered
-    ? { type: "orderedList", attrs: start > 1 ? { start } : {}, content: [] }
+    ? { type: "orderedList", attrs: start !== 1 ? { start } : {}, content: [] }
     : { type: "bulletList", content: [] };
 }
 
@@ -44,7 +44,7 @@ function buildList(items: Item[], start: number, context: BlockContext): [Docume
   const root = first.list;
   const base = root.level;
   const done = context.listCounts.get(root.numId) ?? 0;
-  const stack = [{ list: newList(root.ordered, root.ordered ? done + 1 : 1), level: 0 }];
+  const stack = [{ list: newList(root.ordered, root.ordered ? root.start + done : 1), level: 0 }];
   const top = () => stack[stack.length - 1] as { list: DocumentJson; level: number };
   let index = start;
   for (; index < items.length; index++) {
@@ -74,14 +74,14 @@ function buildList(items: Item[], start: number, context: BlockContext): [Docume
       break;
     while (top().level > level) stack.pop();
     while (top().level < level) {
-      const nested = newList(item.list.ordered);
+      const nested = newList(item.list.ordered, top().level + 1 === level ? item.list.start : 1);
       lastItem(top().list).content?.push(nested);
       stack.push({ list: nested, level: top().level + 1 });
     }
     if (top().list.type !== type && level > 0) {
       // Autre type de liste au même niveau : une nouvelle liste dans l'élément parent.
       stack.pop();
-      const nested = newList(item.list.ordered);
+      const nested = newList(item.list.ordered, item.list.start);
       lastItem(top().list).content?.push(nested);
       stack.push({ list: nested, level });
     }

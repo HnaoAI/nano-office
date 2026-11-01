@@ -25,6 +25,7 @@ import { headerFooterOf, pageSetupOf, type SectionMargins } from "./wordImportPa
 import { readWordStyles } from "./wordImportStyles";
 import {
   childElements,
+  isW,
   parseXml,
   rAttr,
   wAttr,
@@ -32,7 +33,6 @@ import {
   wChildren,
   type XmlParser,
 } from "./wordXml";
-
 import { nanoNameOf } from "./wordFiles";
 
 export type { WordSkipped } from "./wordImportBlocks";
@@ -81,6 +81,7 @@ const SKIPPED_LABELS: Record<WordSkipped, string> = {
   shapes: "les formes, graphiques et objets",
   equations: "les équations",
   unsupportedImages: "les images d'un format non pris en charge (EMF, WMF, TIFF…)",
+  refusedImages: "les images trop lourdes ou illisibles",
   headerFooter: "les en-têtes et pieds de page complexes (seul leur texte principal est repris)",
   fields: "les champs (dates, renvois…), remplacés par leur texte",
   mergedCells: "les cellules fusionnées des tableaux, séparées",
@@ -96,6 +97,28 @@ const ENCRYPTED_PACKAGE = Array.from("EncryptedPackage", (char) => [char.charCod
 
 /** Taille au-delà de laquelle un fichier n'est pas lu (une archive de Word de 50 pages avec photos en fait 10 à 30). */
 export const MAX_WORD_BYTES = 200 * 1024 * 1024;
+
+/**
+ * Taille décompressée au-delà de laquelle une partie de l'archive n'est pas lue : une archive piégée de quelques
+ * kilo-octets peut annoncer des giga-octets. Une photo de Word dépasse rarement 20 Mo.
+ */
+export const MAX_PART_BYTES = 100 * 1024 * 1024;
+
+/** Lève une exception si la partie annonce une taille décompressée trop grande (lue dans l'index de l'archive). */
+function checkPartSize(file: JSZip.JSZipObject): void {
+  // `_data` est interne à JSZip, mais c'est le seul accès à la taille annoncée avant de décompresser.
+  const size = (file as unknown as { _data?: { uncompressedSize?: number } })._data
+    ?.uncompressedSize;
+  if (typeof size === "number" && size > MAX_PART_BYTES) throw new Error("partie trop grande");
+}
+
+/** Texte d'une partie de l'archive, ou undefined si elle manque. */
+async function partText(zip: JSZip, path: string): Promise<string | undefined> {
+  const file = zip.file(path);
+  if (!file) return undefined;
+  checkPartSize(file);
+  return file.async("string");
+}
 
 /** Vrai si les octets commencent par `signature` (à partir de `offset`). */
 function startsWith(bytes: Uint8Array, signature: readonly number[], offset = 0): boolean {
@@ -141,7 +164,7 @@ async function readRelationships(
   const folder = partPath.includes("/") ? partPath.slice(0, partPath.lastIndexOf("/")) : "";
   const name = partPath.slice(partPath.lastIndexOf("/") + 1);
   const rels = new Map<string, WordRelationship>();
-  const text = await zip.file(`${folder ? `${folder}/` : ""}_rels/${name}.rels`)?.async("string");
+  const text = await partText(zip, `${folder ? `${folder}/` : ""}_rels/${name}.rels`);
   if (!text) return rels;
   for (const rel of Array.from(parseXml(parser, text).children)) {
     const id = rel.getAttribute("Id");
@@ -163,7 +186,7 @@ async function readPart(
   path: string | undefined,
   parser: XmlParser,
 ): Promise<Element | null> {
-  const text = path ? await zip.file(path)?.async("string") : undefined;
+  const text = path ? await partText(zip, path) : undefined;
   return text === undefined ? null : parseXml(parser, text);
 }
 
@@ -174,45 +197,71 @@ function targetOf(rels: ReadonlyMap<string, WordRelationship>, kind: string): st
   return undefined;
 }
 
-/** En-têtes et pieds de page d'une section, lus dans l'archive. */
-async function readSectionMargins(
-  zip: JSZip,
-  sectPr: Element | null,
-  rels: ReadonlyMap<string, WordRelationship>,
-  parser: XmlParser,
-): Promise<SectionMargins> {
-  const part = async (tag: string, type: string) => {
-    const reference = (sectPr ? wChildren(sectPr, tag) : []).find(
-      (element) => (wAttr(element, "type") ?? "default") === type,
-    );
-    const id = rAttr(reference, "id");
-    return readPart(zip, id ? rels.get(id)?.target : undefined, parser);
-  };
-  const titlePage = wChild(sectPr, "titlePg");
-  return {
-    header: await part("headerReference", "default"),
-    footer: await part("footerReference", "default"),
-    first:
-      titlePage && wAttr(titlePage, "val") !== "0" && wAttr(titlePage, "val") !== "false"
-        ? {
-            header: await part("headerReference", "first"),
-            footer: await part("footerReference", "first"),
-          }
-        : null,
-    evenAndOdd:
-      sectPr !== null &&
-      [...wChildren(sectPr, "headerReference"), ...wChildren(sectPr, "footerReference")].some(
-        (element) => wAttr(element, "type") === "even",
-      ),
-  };
+/** Sections du document, dans l'ordre : celles des paragraphes qui en ferment une, puis celle de la fin du corps. */
+function sectionsOf(body: Element): Element[] {
+  // Une section sous `w:sectPrChange` est l'ancienne version d'une modification suivie : elle est ignorée.
+  return Array.from(body.getElementsByTagNameNS("*", "sectPr")).filter(
+    (element) =>
+      isW(element, "sectPr") &&
+      !(element.parentElement && isW(element.parentElement, "sectPrChange")),
+  );
 }
 
-/** Section du document : celle de la fin du corps, ou celle du dernier paragraphe qui en ferme une. */
+/** Dernière section du document : celle de la fin du corps, ou celle du dernier paragraphe qui en ferme une. */
 function lastSection(body: Element): Element | null {
-  const direct = wChild(body, "sectPr");
-  if (direct) return direct;
-  const sections = Array.from(body.getElementsByTagNameNS("*", "sectPr"));
-  return sections[sections.length - 1] ?? null;
+  const sections = sectionsOf(body);
+  return wChild(body, "sectPr") ?? sections[sections.length - 1] ?? null;
+}
+
+/** Références d'en-tête et de pied de page en vigueur à la fin d'une section, par balise et par type. */
+type MarginReferences = Map<string, string>;
+
+/**
+ * En-têtes et pieds de page de la dernière section. Comme dans Word, une section sans référence d'un type reprend
+ * celle de la section précédente. Des sections aux en-têtes différents ne peuvent pas être repris (un seul en-tête
+ * dans Nano Buro) : le résultat est alors signalé comme complexe.
+ */
+async function readSectionMargins(
+  zip: JSZip,
+  body: Element,
+  rels: ReadonlyMap<string, WordRelationship>,
+  parser: XmlParser,
+): Promise<{ margins: SectionMargins; differ: boolean }> {
+  const references: MarginReferences = new Map();
+  const seen = new Set<string>();
+  let differ = false;
+  for (const section of sectionsOf(body)) {
+    for (const tag of ["headerReference", "footerReference"]) {
+      for (const element of wChildren(section, tag)) {
+        const key = `${tag}:${wAttr(element, "type") ?? "default"}`;
+        const id = rAttr(element, "id");
+        if (!id) continue;
+        const target = rels.get(id)?.target ?? id;
+        if (references.has(key) && references.get(key) !== target) differ = true;
+        references.set(key, target);
+        seen.add(key);
+      }
+    }
+  }
+  const part = (tag: string, type: string) =>
+    readPart(zip, references.get(`${tag}:${type}`), parser);
+  const sectPr = lastSection(body);
+  const titlePage = wChild(sectPr, "titlePg");
+  return {
+    differ,
+    margins: {
+      header: await part("headerReference", "default"),
+      footer: await part("footerReference", "default"),
+      first:
+        titlePage && wAttr(titlePage, "val") !== "0" && wAttr(titlePage, "val") !== "false"
+          ? {
+              header: await part("headerReference", "first"),
+              footer: await part("footerReference", "first"),
+            }
+          : null,
+      evenAndOdd: seen.has("headerReference:even") || seen.has("footerReference:even"),
+    },
+  };
 }
 
 /**
@@ -229,7 +278,7 @@ export async function readWordFile(bytes: Uint8Array, parser: XmlParser): Promis
   }
   try {
     const zip = await JSZip.loadAsync(bytes);
-    const mimetype = await zip.file("mimetype")?.async("string");
+    const mimetype = await partText(zip, "mimetype");
     if (mimetype?.startsWith("application/vnd.oasis.opendocument"))
       return { ok: false, error: "opendocument" };
     const packageRels = await readRelationships(zip, "", parser);
@@ -246,10 +295,12 @@ export async function readWordFile(bytes: Uint8Array, parser: XmlParser): Promis
     const media = new Map<string, Uint8Array>();
     for (const [id, rel] of rels) {
       if (rel.external || !rel.type.endsWith("/image")) continue;
-      const data = await zip.file(rel.target)?.async("uint8array");
-      if (data) media.set(id, data);
+      const file = zip.file(rel.target);
+      if (!file) continue;
+      checkPartSize(file);
+      media.set(id, await file.async("uint8array"));
     }
-    const context: BlockContext = {
+    const newContext = (ignoreFields: boolean): BlockContext => ({
       styles,
       rels,
       media,
@@ -259,11 +310,20 @@ export async function readWordFile(bytes: Uint8Array, parser: XmlParser): Promis
       fields: [],
       listCounts: new Map(),
       imageKeys: new Map(),
-    };
-    const blocks = groupBlocks(blockItems(childElements(body), context, false), context);
+      ignoreFields,
+    });
+    let context = newContext(false);
+    let blocks = groupBlocks(blockItems(childElements(body), context, false), context);
+    if (context.fields.length > 0) {
+      // Un champ jamais fermé masquerait tout le texte qui le suit : on relit le document sans les champs.
+      context = newContext(true);
+      blocks = groupBlocks(blockItems(childElements(body), context, false), context);
+      context.skipped.add("fields");
+    }
     const sectPr = lastSection(body);
-    const margins = headerFooterOf(await readSectionMargins(zip, sectPr, rels, parser));
-    if (margins.complex) context.skipped.add("headerFooter");
+    const read = await readSectionMargins(zip, body, rels, parser);
+    const margins = headerFooterOf(read.margins);
+    if (margins.complex || read.differ) context.skipped.add("headerFooter");
     const content = withBlockIds({
       type: "doc",
       attrs: { ...pageSetupAttrs(pageSetupOf(sectPr)), ...headerFooterAttrs(margins.settings) },
@@ -341,9 +401,7 @@ export function wordDocument(
       suggestedName: nanoNameOf(wordName),
     },
     skipped:
-      missing.count > 0
-        ? new Set([...conversion.skipped, "unsupportedImages"])
-        : conversion.skipped,
+      missing.count > 0 ? new Set([...conversion.skipped, "refusedImages"]) : conversion.skipped,
   };
 }
 

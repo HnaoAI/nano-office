@@ -28,6 +28,7 @@ test("critère 1 : un fichier Word s'ouvre comme un nouveau document, nommé com
   );
   await expect(page.locator(".nano-document-title")).toHaveText("Rapport");
   await expect(page.locator(".nano-file-name")).toHaveCount(0);
+  await expect(page).toHaveTitle(/Rapport - Nano Buro$/);
   expect((await fakeFiles(page)).current).toBeNull();
 });
 
@@ -145,4 +146,38 @@ test("critère 6 : la copie de secours commence dès l'ouverture", async ({ page
     editor(page).getByRole("heading", { level: 1, name: "Titre principal" }),
   ).toBeVisible();
   await expect(page.getByRole("status")).toContainText("récupéré depuis la copie de secours");
+});
+
+test("règle produit 3 : ce qui est écrit pendant la conversion n'est pas perdu sans confirmation", async ({
+  page,
+}) => {
+  await start(page);
+  await page.keyboard.type("Avant");
+  // La conversion est retardée : le module de lecture de Word n'arrive qu'après la frappe.
+  let release: () => void = () => undefined;
+  const delayed = new Promise<void>((resolve) => (release = resolve));
+  await page.route(/wordOpen/, async (route) => {
+    await delayed;
+    await route.continue();
+  });
+  const questions: string[] = [];
+  let answer = true;
+  page.on("dialog", (dialog) => {
+    questions.push(dialog.message());
+    void (answer ? dialog.accept() : dialog.dismiss());
+  });
+  await openWord(page, "complet.docx");
+  await expect(page.getByRole("status")).toContainText("Ouverture de « complet.docx » en cours");
+  expect(questions).toHaveLength(1);
+  // « Nouveau » attend la fin de l'ouverture.
+  await button(page, "Nouveau").click();
+  expect(questions).toHaveLength(1);
+  await editor(page).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" et pendant");
+  answer = false;
+  release();
+  await expect.poll(() => questions.length).toBe(2);
+  await expect(editor(page)).toHaveText("Avant et pendant");
+  await expect(editor(page).getByRole("heading", { level: 1 })).toHaveCount(0);
 });

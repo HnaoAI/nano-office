@@ -1,11 +1,12 @@
 // Ouverture d'un fichier Word (T2.18) : corps du document de Word (`w:body`) converti en blocs de Nano Buro
-// (JSON de Tiptap) : paragraphes, titres, texte mis en forme, liens, images, sauts de page, tableaux, sommaire,
-// puis listes et encadrés regroupés par wordImportGroups.ts. Logique pure ; styles et propriétés dans
-// wordImportStyles.ts, XML dans wordXml.ts.
+// (JSON de Tiptap) : paragraphes, titres, texte mis en forme, liens, sauts de page, tableaux, puis listes et encadrés
+// regroupés par wordImportGroups.ts. Champs dans wordImportFields.ts, images dans wordImportImages.ts, styles et
+// propriétés dans wordImportStyles.ts, XML dans wordXml.ts. Logique pure.
 import { calloutStyle, type CalloutStyle } from "./calloutSchema";
-import { detectImageType } from "./images";
 import { isAllowedLinkUrl, LINK_COLOR } from "./links";
 import type { DocumentJson } from "./types";
+import { fieldHref, fieldKind, fieldLink, hiddenByField, readFieldChar } from "./wordImportFields";
+import { drawingImage, pictImage } from "./wordImportImages";
 import {
   alignmentOf,
   fontSizeOf,
@@ -13,7 +14,7 @@ import {
   indentOf,
   isTocHeadingStyle,
   lineHeightOf,
-  listFormat,
+  listLevel,
   nearestFont,
   nearestHighlight,
   nearestTextColor,
@@ -21,114 +22,28 @@ import {
   runProps,
   type ParagraphProps,
   type RunProps,
-  type WordStyles,
 } from "./wordImportStyles";
-import {
-  childElements,
-  descendants,
-  hasDescendant,
-  intAttr,
-  isW,
-  rAttr,
-  wAttr,
-  wChild,
-  wChildren,
-  wVal,
-} from "./wordXml";
+import type {
+  BlockContext,
+  Item,
+  ListRef,
+  ParagraphState,
+  Piece,
+  TableCellItems,
+} from "./wordImportTypes";
+import { childElements, intAttr, isW, rAttr, wAttr, wChild, wVal } from "./wordXml";
 
-/**
- * Éléments d'un fichier Word qui n'ont pas pu être repris, ou seulement en partie (critère 3), signalés dans
- * le message affiché à l'ouverture.
- */
-export type WordSkipped =
-  | "comments"
-  | "textBoxes"
-  | "shapes"
-  | "footnotes"
-  | "headerFooter"
-  | "fields"
-  | "equations"
-  | "unsupportedImages"
-  | "mergedCells"
-  | "nestedTables"
-  | "tableImages";
-
-/** Relation d'un fichier de l'archive : sa cible, et vrai si elle est hors de l'archive (lien web). */
-export interface WordRelationship {
-  type: string;
-  target: string;
-  external: boolean;
-}
-
-/** Champ de Word en cours de lecture (`w:fldChar`) : son code, puis son résultat affiché. */
-interface Field {
-  code: string;
-  phase: "code" | "result";
-  kind: "link" | "toc" | "other";
-  href: string | null;
-}
-
-/** État d'une conversion. */
-export interface BlockContext {
-  styles: WordStyles;
-  rels: ReadonlyMap<string, WordRelationship>;
-  /** Contenu des images de l'archive, par identifiant de relation. */
-  media: ReadonlyMap<string, Uint8Array>;
-  /** Images utilisées, par clé provisoire (attribut `hash` du nœud image, remplacé par l'empreinte ensuite). */
-  images: Map<string, Uint8Array>;
-  skipped: Set<WordSkipped>;
-  /** Vrai si le fichier contient un suivi des modifications, lu dans son état final (critère 3). */
-  trackedChanges: boolean;
-  fields: Field[];
-  /** Nombre d'éléments de premier niveau déjà écrits pour chaque liste de Word, pour continuer sa numérotation. */
-  listCounts: Map<string, number>;
-  /** Clé provisoire de chaque image déjà lue, par identifiant de relation : une image répétée n'est rangée qu'une fois. */
-  imageKeys: Map<string, string>;
-}
-
-/** Liste de Word d'un paragraphe : son numéro, son niveau (0 à 2) et son type. */
-export interface ListRef {
-  numId: string;
-  level: number;
-  ordered: boolean;
-}
-
-/** Bloc lu, avant le regroupement des listes et des encadrés (wordImportGroups.ts). */
-export type Item =
-  | {
-      kind: "text";
-      node: DocumentJson;
-      list: ListRef | null;
-      callout: CalloutStyle | null;
-      /** Marge de gauche en vingtièmes de point, pour reconnaître un paragraphe de suite d'un élément de liste. */
-      indentLeft: number | null;
-      /** Vrai pour le titre d'un sommaire de Word (« Table des matières »), retiré devant le sommaire. */
-      tocHeading: boolean;
-    }
-  | { kind: "image"; node: DocumentJson; callout: CalloutStyle | null }
-  | { kind: "pageBreak" }
-  | { kind: "toc" }
-  | { kind: "table"; rows: TableCellItems[][] };
-
-/** Cellule de tableau lue : ses blocs (paragraphes seulement), et vrai pour une cellule de la ligne d'en-tête. */
-export interface TableCellItems {
-  header: boolean;
-  items: Item[];
-}
-
-/** Morceau d'un paragraphe : du texte, une image, un saut de page, un retour à la ligne ou le sommaire. */
-type Piece =
-  | { kind: "text"; text: string; marks: NonNullable<DocumentJson["marks"]> }
-  | { kind: "image"; node: DocumentJson }
-  | { kind: "pageBreak" }
-  | { kind: "lineBreak" }
-  | { kind: "toc" };
+export type {
+  BlockContext,
+  Item,
+  ListRef,
+  TableCellItems,
+  WordRelationship,
+  WordSkipped,
+} from "./wordImportTypes";
 
 /** Espace de noms des équations de Word (`m:`). */
 const MATH_NAMESPACE = "http://schemas.openxmlformats.org/officeDocument/2006/math";
-
-/** Pixels (96 par pouce) d'une longueur en EMU de Word (914 400 par pouce). */
-const EMU_PER_PX = 9525;
 
 /** Titres de sommaire reconnus devant un sommaire, retirés car le sommaire de Nano Buro a le sien. */
 const TOC_TITLES = /^(sommaire|table des matières|contents|table of contents)$/i;
@@ -138,20 +53,6 @@ function hyperlinkHref(element: Element, context: BlockContext): string | null {
   const id = rAttr(element, "id");
   const rel = id ? context.rels.get(id) : undefined;
   return rel?.external && isAllowedLinkUrl(rel.target) ? rel.target : null;
-}
-
-/** Adresse d'un champ `HYPERLINK "https://…"` (sans `\l`, qui renvoie dans le document), ou null. */
-function fieldHref(code: string): string | null {
-  if (/\\l\b/.test(code)) return null;
-  const match = /HYPERLINK\s+"([^"]+)"/i.exec(code) ?? /HYPERLINK\s+(\S+)/i.exec(code);
-  const href = match?.[1] ?? null;
-  return isAllowedLinkUrl(href) ? href : null;
-}
-
-/** Sorte d'un champ d'après son code : lien, sommaire, ou autre (date, numéro de page, renvoi…). */
-function fieldKind(code: string): Field["kind"] {
-  const name = /^\s*(\w+)/.exec(code)?.[1]?.toUpperCase();
-  return name === "HYPERLINK" ? "link" : name === "TOC" ? "toc" : "other";
 }
 
 /** Marques de Nano Buro d'un morceau de texte de Word. */
@@ -177,135 +78,6 @@ function marksOf(props: RunProps, href: string | null): NonNullable<DocumentJson
   const highlight = nearestHighlight(props);
   if (highlight) marks.push({ type: "highlight", attrs: { color: highlight } });
   return marks;
-}
-
-/** État de lecture d'un paragraphe. */
-interface ParagraphState {
-  props: ParagraphProps;
-  heading: boolean;
-  align: string | null;
-  pieces: Piece[];
-  /** Vrai si une partie du paragraphe appartient à un sommaire de Word. */
-  touchedToc: boolean;
-  inTable: boolean;
-}
-
-/** Vrai si le texte est caché par un champ (son code) ou par le sommaire de Word (son résultat, remplacé). */
-function hiddenByField(context: BlockContext): boolean {
-  return context.fields.some((field) => field.phase === "code" || field.kind === "toc");
-}
-
-/** Adresse du lien de champ en cours, ou null. */
-function fieldLink(context: BlockContext): string | null {
-  for (let index = context.fields.length - 1; index >= 0; index--) {
-    const field = context.fields[index];
-    if (field?.kind === "link" && field.phase === "result") return field.href;
-  }
-  return null;
-}
-
-/** Image d'un dessin de Word (`w:drawing`), ou null avec la raison signalée (zone de texte, forme, format). */
-function drawingImage(
-  drawing: Element,
-  state: ParagraphState,
-  context: BlockContext,
-): DocumentJson | null {
-  if (hasDescendant(drawing, "txbx") || hasDescendant(drawing, "textbox")) {
-    context.skipped.add("textBoxes");
-  }
-  const blip = descendants(drawing, "blip")[0];
-  if (!blip) {
-    if (!hasDescendant(drawing, "txbx")) context.skipped.add("shapes");
-    return null;
-  }
-  const extent = descendants(drawing, "extent")[0];
-  const cx = intAttr(extent?.getAttribute("cx") ?? null);
-  const docPr = descendants(drawing, "docPr")[0];
-  const alt = docPr?.getAttribute("descr") || docPr?.getAttribute("title") || "";
-  return imageNode(rAttr(blip, "embed"), cx === null ? null : cx / EMU_PER_PX, alt, state, context);
-}
-
-/** Image d'un ancien dessin de Word (`w:pict`, VML), ou null avec la raison signalée. */
-function pictImage(
-  pict: Element,
-  state: ParagraphState,
-  context: BlockContext,
-): DocumentJson | null {
-  const data = descendants(pict, "imagedata")[0];
-  if (!data) {
-    context.skipped.add(hasDescendant(pict, "textbox") ? "textBoxes" : "shapes");
-    return null;
-  }
-  const shape = descendants(pict, "shape")[0];
-  const width = /width:\s*([\d.]+)pt/.exec(shape?.getAttribute("style") ?? "")?.[1];
-  const alt = shape?.getAttribute("alt") ?? "";
-  return imageNode(
-    rAttr(data, "id"),
-    width ? (Number(width) * 96) / 72 : null,
-    alt,
-    state,
-    context,
-  );
-}
-
-/**
- * Nœud image avec une clé provisoire. Une image d'un format que le navigateur n'affiche pas (EMF, WMF, TIFF…)
- * est signalée et laissée de côté.
- */
-function imageNode(
-  rId: string | null,
-  widthPx: number | null,
-  alt: string,
-  state: ParagraphState,
-  context: BlockContext,
-): DocumentJson | null {
-  const data = rId ? context.media.get(rId) : undefined;
-  if (!rId || !data || detectImageType(data) === null) {
-    context.skipped.add("unsupportedImages");
-    return null;
-  }
-  let key = context.imageKeys.get(rId);
-  if (!key) {
-    key = `word-image-${String(context.imageKeys.size + 1)}`;
-    context.imageKeys.set(rId, key);
-    context.images.set(key, data);
-  }
-  const width = widthPx !== null && widthPx >= 1 ? Math.round(widthPx) : null;
-  return {
-    type: "image",
-    attrs: { hash: key, alt, width, textAlign: alignmentOf(state.align) },
-  };
-}
-
-/** Lit un champ de Word (`w:fldChar`) : début, séparation entre code et résultat, fin. */
-function readFieldChar(element: Element, state: ParagraphState, context: BlockContext): void {
-  const type = wAttr(element, "fldCharType");
-  if (type === "begin") {
-    context.fields.push({ code: "", phase: "code", kind: "other", href: null });
-    return;
-  }
-  const field = context.fields[context.fields.length - 1];
-  if (!field) return;
-  if (type === "separate" && field.phase === "code") startFieldResult(field, state, context);
-  if (type === "end") {
-    if (field.phase === "code") startFieldResult(field, state, context);
-    if (field.kind === "toc") state.touchedToc = true;
-    context.fields.pop();
-  }
-}
-
-/** Passe un champ de son code à son résultat : un sommaire de Word devient celui de Nano Buro (T2.17). */
-function startFieldResult(field: Field, state: ParagraphState, context: BlockContext): void {
-  field.phase = "result";
-  field.kind = fieldKind(field.code);
-  field.href = field.kind === "link" ? fieldHref(field.code) : null;
-  const insideToc = context.fields.some((other) => other !== field && other.kind === "toc");
-  if (field.kind === "toc" && !insideToc) {
-    state.pieces.push({ kind: "toc" });
-    state.touchedToc = true;
-  }
-  // Les autres champs (date, numéro de page, renvoi…) gardent le texte affiché par Word, mais ne se mettent plus à jour.
-  if (field.kind === "other" && !insideToc) context.skipped.add("fields");
 }
 
 /** Ajoute du texte au paragraphe, sauf s'il est caché par un champ. */
@@ -493,16 +265,17 @@ export function paragraphItems(
     context.trackedChanges = true;
   }
 
-  const format =
+  const numbering =
     level === 0 && props.numId && props.numId !== "0"
-      ? listFormat(styles, props.numId, props.ilvl)
+      ? listLevel(styles, props.numId, props.ilvl)
       : null;
   const list: ListRef | null =
-    format && format !== "none" && props.numId
+    numbering && numbering.format !== "none" && props.numId
       ? {
           numId: props.numId,
           level: Math.min(Math.max(props.ilvl, 0), 2),
-          ordered: format !== "bullet",
+          ordered: numbering.format !== "bullet",
+          start: Math.max(numbering.start, 0),
         }
       : null;
   const callout = inTable ? null : calloutOf(props);
@@ -567,6 +340,19 @@ export function paragraphItems(
 }
 
 /**
+ * Enfants `w:<name>` d'un tableau ou d'une ligne, y compris ceux rangés dans un contrôle de contenu (`w:sdt`, par
+ * exemple une section répétable d'un formulaire) ou un `w:customXml`.
+ */
+function unwrapped(element: Element, name: string): Element[] {
+  return childElements(element).flatMap((child) => {
+    if (isW(child, name)) return [child];
+    if (isW(child, "sdt")) return unwrapped(wChild(child, "sdtContent") ?? child, name);
+    if (isW(child, "customXml")) return unwrapped(child, name);
+    return [];
+  });
+}
+
+/**
  * Convertit un tableau de Word (`w:tbl`) : cellules fusionnées séparées, colonnes complétées, ligne d'en-tête
  * répétée devenue ligne d'en-tête (T1.8). Les images d'une cellule sont placées après le tableau, car une image
  * ne va jamais dans un tableau (T1.9), et un tableau imbriqué est mis à plat dans sa cellule. Les listes des
@@ -575,10 +361,16 @@ export function paragraphItems(
 export function tableItems(table: Element, context: BlockContext): Item[] {
   const moved: Item[] = [];
   const rows: TableCellItems[][] = [];
-  wChildren(table, "tr").forEach((row, rowIndex) => {
+  const rowElements = unwrapped(table, "tr").filter((row) => {
+    // Ligne supprimée et suivie : retirée, modifications acceptées (critère 3).
+    const deleted = wChild(wChild(row, "trPr"), "del") !== null;
+    if (deleted || wChild(wChild(row, "trPr"), "ins")) context.trackedChanges = true;
+    return !deleted;
+  });
+  rowElements.forEach((row, rowIndex) => {
     const header = rowIndex === 0 && wChild(wChild(row, "trPr"), "tblHeader") !== null;
     const cells: TableCellItems[] = [];
-    for (const cell of wChildren(row, "tc")) {
+    for (const cell of unwrapped(row, "tc")) {
       const tcPr = wChild(cell, "tcPr");
       const span = Math.max(1, Math.min(intAttr(wVal(tcPr, "gridSpan")) ?? 1, 64));
       const vMerge = wChild(tcPr, "vMerge");
@@ -622,8 +414,8 @@ export function blockItems(elements: Element[], context: BlockContext, inTable: 
         continue;
       }
       context.skipped.add("nestedTables");
-      for (const row of wChildren(element, "tr")) {
-        for (const cell of wChildren(row, "tc"))
+      for (const row of unwrapped(element, "tr")) {
+        for (const cell of unwrapped(row, "tc"))
           items.push(...blockItems(childElements(cell), context, true));
       }
     } else if (isW(element, "sdt")) {

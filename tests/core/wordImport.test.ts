@@ -262,7 +262,11 @@ describe("T2.18 critère 2 : ce qui est repris d'un fichier de Word", () => {
     const refused = new Map([...conversion.images.keys()].map((key) => [key, null]));
     const { document, skipped } = wordDocument(conversion, refused, "a.docx");
     expect(all(contentOf(document.ydoc), "image")).toHaveLength(0);
-    expect(skipped.has("unsupportedImages")).toBe(true);
+    expect(skipped.has("refusedImages")).toBe(true);
+    expect(skipped.has("unsupportedImages")).toBe(false);
+    expect(wordOpenNotice("a.docx", skipped, false)).toContain(
+      "les images trop lourdes ou illisibles",
+    );
   });
 
   it("critère 2 : liens, saut de page", async () => {
