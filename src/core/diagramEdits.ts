@@ -83,6 +83,7 @@ export function connect(
 export function placeShapes(
   data: DiagramData,
   changes: ReadonlyMap<string, Partial<Pick<DiagramShape, "x" | "y" | "width" | "height">>>,
+  areaWidth = Number.POSITIVE_INFINITY,
 ): DiagramData {
   if (changes.size === 0) return data;
   return {
@@ -90,11 +91,17 @@ export function placeShapes(
     shapes: data.shapes.map((shape) => {
       const change = changes.get(shape.id);
       if (!change) return shape;
+      // Une forme ne sort jamais du schéma par la droite : elle y serait invisible, à l'écran comme à
+      // l'impression, tout en restant dans les données.
+      const width = Math.max(1, Math.min(Math.round(change.width ?? shape.width), areaWidth));
+      // Bord droit ramené sur la grille, pour que la forme reste alignée sur les autres (critère 4).
+      const right = Math.floor((areaWidth - width) / DIAGRAM_GRID) * DIAGRAM_GRID;
+      const x = Math.max(0, Math.min(Math.round(change.x ?? shape.x), right));
       return {
         ...shape,
-        x: Math.max(0, Math.round(change.x ?? shape.x)),
+        x,
         y: Math.max(0, Math.round(change.y ?? shape.y)),
-        width: Math.max(1, Math.round(change.width ?? shape.width)),
+        width,
         height: Math.max(1, Math.round(change.height ?? shape.height)),
       };
     }),

@@ -140,6 +140,25 @@ describe("T2.20 : actions sur un schéma", () => {
     expect(result.data.shapes[2]).toMatchObject({ id: "n-1", x: 40, y: 40, text: "Commande" });
     expect(result.data.arrows[1]).toMatchObject({ id: "n-3", from: "n-1", to: "n-2" });
   });
+
+  it("critère 4 : un deuxième collage, des formes collées, garde la flèche qui les relie", () => {
+    const first = pasteItems(TWO, copyItems(TWO, new Set(["a", "b"])), ids());
+    const again = copyItems(first.data, new Set(first.ids));
+    expect(again.arrows).toHaveLength(1);
+    const second = pasteItems(first.data, again, () => crypto.randomUUID());
+    expect(second.data.shapes).toHaveLength(6);
+    expect(second.data.arrows).toHaveLength(3);
+    expect(second.data.shapes[4]).toMatchObject({ x: 60, y: 60, text: "Commande" });
+  });
+
+  it("critère 6 : une forme déplacée ou agrandie ne sort jamais du schéma par la droite", () => {
+    const moved = placeShapes(TWO, new Map([["b", { x: 900 }]]), 600);
+    expect(moved.shapes[1]).toMatchObject({ x: 460, width: 140 });
+    const wide = placeShapes(TWO, new Map([["a", { x: 100, width: 2000 }]]), 600);
+    expect(wide.shapes[0]).toMatchObject({ x: 0, width: 600 });
+    // Sans largeur connue, rien n'est limité à droite.
+    expect(placeShapes(TWO, new Map([["b", { x: 900 }]])).shapes[1]?.x).toBe(900);
+  });
 });
 
 /** PNG minimal (1 × 1 pixel), pour l'image d'un schéma. */

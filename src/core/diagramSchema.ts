@@ -49,7 +49,10 @@ export const DiagramNode = Node.create({
       },
       height: {
         default: null,
-        parseHTML: (element) => chosenHeight(Number(element.getAttribute("data-height"))),
+        parseHTML: (element) => {
+          const height = element.getAttribute("data-height");
+          return height === null ? null : chosenHeight(Number(height));
+        },
         renderHTML: (attributes) => {
           const height = chosenHeight(attributes.height);
           return height === null ? {} : { "data-height": String(height) };

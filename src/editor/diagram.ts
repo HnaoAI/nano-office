@@ -99,6 +99,16 @@ interface DiagramRegistry {
 
 let viewCounter = 0;
 
+/** Formes et flèches surlignées par la recherche, lues dans les décorations du bloc (critère 10). */
+function highlightsOf(decorations: readonly Decoration[]): Set<string> {
+  const highlighted = new Set<string>();
+  for (const decoration of decorations) {
+    const spec = decoration.spec as Partial<DiagramSearchSpec>;
+    for (const id of spec.diagramMatches ?? []) highlighted.add(id);
+  }
+  return highlighted;
+}
+
 /** Vue d'un bloc Schéma : le dessin SVG, ou l'éditeur de formes en modification. */
 class DiagramView implements NodeView {
   readonly dom: HTMLElement;
@@ -122,7 +132,10 @@ class DiagramView implements NodeView {
     private readonly editor: Editor,
     private readonly mount: DiagramEditorMount | null,
     private readonly registry: DiagramRegistry,
+    decorations: readonly Decoration[] = [],
   ) {
+    // Une vue créée pendant une recherche (schéma collé, vue recréée) est surlignée dès son premier dessin.
+    this.highlighted = highlightsOf(decorations);
     this.dom = document.createElement("div");
     this.dom.className = "nano-diagram";
     this.dom.setAttribute(DIAGRAM_ATTRIBUTE, "");
@@ -221,6 +234,11 @@ class DiagramView implements NodeView {
    */
   close(select: boolean): void {
     if (!this.unmount) return;
+    // Un texte en cours de saisie n'est enregistré qu'à la sortie de son champ : on la provoque avant de
+    // démonter l'éditeur, sinon un clic à côté ou l'impression perdrait ce qui vient d'être tapé.
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && this.host.contains(active)) active.blur();
+    if (!this.unmount) return;
     const unmount = this.unmount;
     this.unmount = null;
     if (this.registry.editingId === this.id) this.registry.editingId = null;
@@ -246,11 +264,7 @@ class DiagramView implements NodeView {
 
   update(node: ProseMirrorNode, decorations: readonly Decoration[]): boolean {
     if (node.type !== this.node.type) return false;
-    const highlighted = new Set<string>();
-    for (const decoration of decorations) {
-      const spec = decoration.spec as Partial<DiagramSearchSpec>;
-      for (const id of spec.diagramMatches ?? []) highlighted.add(id);
-    }
+    const highlighted = highlightsOf(decorations);
     const changed =
       node !== this.node ||
       highlighted.size !== this.highlighted.size ||
@@ -320,8 +334,8 @@ export function createDiagramNode(mount: DiagramEditorMount | null) {
     },
     addNodeView() {
       const editor = this.editor;
-      return ({ node, view, getPos }) =>
-        new DiagramView(node, view, getPos, editor, mount, registry);
+      return ({ node, view, getPos, decorations }) =>
+        new DiagramView(node, view, getPos, editor, mount, registry, decorations);
     },
     addKeyboardShortcuts() {
       return {

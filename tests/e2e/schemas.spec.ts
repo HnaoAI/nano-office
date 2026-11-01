@@ -195,10 +195,11 @@ test.describe("T2.20 : schémas", () => {
   }) => {
     await startWithProcess(page);
     await openDiagram(page);
-    await dragShape(shapes(page).nth(2), 33, 87);
+    // « Livraison » touche le bord droit de la page : on la déplace vers la gauche et vers le bas.
+    await dragShape(shapes(page).nth(2), -33, 87);
     await expect.poll(async () => (await diagramData(page)).shapes[2]?.y).not.toBe(20);
     const moved = (await diagramData(page)).shapes[2];
-    expect(moved?.x).toBeGreaterThan(440);
+    expect(moved?.x).toBeLessThan(440);
     expect((moved?.x ?? 1) % 10).toBe(0);
     expect((moved?.y ?? 1) % 10).toBe(0);
     expect((await diagramData(page)).arrows).toHaveLength(2);
@@ -210,6 +211,19 @@ test.describe("T2.20 : schémas", () => {
       .first()
       .getAttribute("d");
     expect(path).toContain(`L ${moved?.x} ${(moved?.y ?? 0) + 30}`);
+  });
+
+  test("critère 6 : une forme glissée vers la droite s'arrête au bord du schéma", async ({
+    page,
+  }) => {
+    await startWithProcess(page);
+    await openDiagram(page);
+    const area = await block(page).locator(".nano-diagram-area").boundingBox();
+    await dragShape(shapes(page).nth(2), 300, 0);
+    await expect(block(page).locator(".react-flow__node").nth(2)).not.toHaveClass(/dragging/);
+    const moved = (await diagramData(page)).shapes[2];
+    expect((moved?.x ?? 0) + (moved?.width ?? 0)).toBeLessThanOrEqual(area?.width ?? 0);
+    expect((moved?.x ?? 1) % 10).toBe(0);
   });
 
   test("critère 2 : un double clic sur une forme permet d'y écrire, sur plusieurs lignes", async ({
@@ -242,6 +256,24 @@ test.describe("T2.20 : schémas", () => {
     await expect.poll(async () => (await diagramData(page)).arrows[0]?.text).toBe("ok");
     await page.keyboard.press("Escape");
     await expect(block(page).locator(".nano-diagram-drawing svg")).toContainText("à domicile");
+  });
+
+  test("critère 1 : un texte en cours de saisie est gardé quand un clic à côté ferme le schéma", async ({
+    page,
+  }) => {
+    await startWithProcess(page);
+    await openDiagram(page);
+    await shapes(page).nth(2).dblclick();
+    const field = block(page).getByRole("textbox", { name: "Texte de la forme" });
+    await expect(field).toBeFocused();
+    await field.fill("");
+    await page.keyboard.type("Livraison reçue");
+    await editor(page).getByText("Le processus :").click();
+    await expect(bar(page)).toBeHidden();
+    await expect
+      .poll(async () => (await diagramData(page)).shapes[2]?.text)
+      .toBe("Livraison reçue");
+    await expect(block(page).locator(".nano-diagram-drawing svg")).toContainText("Livraison reçue");
   });
 
   test("critère 4 : Ctrl/Cmd+Z annule une action à la fois", async ({ page }) => {
@@ -287,6 +319,26 @@ test.describe("T2.20 : schémas", () => {
     await block(page).locator(".react-flow__edge").nth(0).click({ force: true });
     await page.keyboard.press("Delete");
     await expect.poll(async () => (await diagramData(page)).arrows.length).toBe(1);
+  });
+
+  test("critère 4 : coller deux fois garde les flèches entre les formes copiées", async ({
+    page,
+  }) => {
+    await startWithProcess(page);
+    await openDiagram(page);
+    // Les deux premières formes du processus sont reliées par une flèche.
+    await shapes(page).nth(0).click();
+    await shapes(page)
+      .nth(1)
+      .click({ modifiers: ["Control"] });
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    await expect(shapes(page)).toHaveCount(5);
+    await page.keyboard.press("Control+v");
+    await expect(shapes(page)).toHaveCount(7);
+    const data = await diagramData(page);
+    expect(data.arrows).toHaveLength(4);
+    expect(data.shapes[5]).toMatchObject({ text: "Commande", x: 60, y: 60 });
   });
 
   test("critère 5 : fond blanc et cadre noir par défaut, fond choisi dans les couleurs de surlignage", async ({

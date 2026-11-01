@@ -64,10 +64,12 @@ const edgeTypes = { arrow: ArrowEdge };
 
 /** Textes d'accessibilité de React Flow, en français (critère 13). */
 const ARIA_LABELS = {
+  // `default` est lu quand le clavier de React Flow est coupé, `keyboardDisabled` quand il est actif (le
+  // cas ici) : les noms de React Flow sont inversés, ses textes d'origine le montrent.
   "node.a11yDescription.default":
-    "Entrée ou Espace pour choisir une forme, puis les flèches pour la déplacer, Suppr pour la supprimer, et Échap pour revenir au texte.",
+    "Entrée ou Espace pour choisir une forme, Suppr pour la supprimer, et Échap pour revenir au texte.",
   "node.a11yDescription.keyboardDisabled":
-    "Entrée ou Espace pour choisir une forme, puis les flèches pour la déplacer, Suppr pour la supprimer.",
+    "Entrée ou Espace pour choisir une forme, puis les flèches pour la déplacer, Suppr pour la supprimer, et Échap pour revenir au texte.",
   "node.a11yDescription.ariaLiveMessage": ({ x, y }: { direction: string; x: number; y: number }) =>
     `Forme déplacée : ${x}, ${y}.`,
   "edge.a11yDescription.default":
@@ -145,6 +147,18 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
   const [editingText, setEditingText] = useState<string | null>(null);
   const [dragHeight, setDragHeight] = useState<number | null>(null);
   const area = useRef<HTMLDivElement>(null);
+  // Largeur de la zone, qui borne le déplacement des formes à droite (elle suit la largeur de la page).
+  const [areaLimit, setAreaLimit] = useState(Number.POSITIVE_INFINITY);
+  useLayoutEffect(() => {
+    const element = area.current;
+    if (!element) return;
+    const measure = () => setAreaLimit(element.clientWidth || Number.POSITIVE_INFINITY);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   // Dernières formes et flèches affichées, lues par les actions sans attendre un nouveau rendu.
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
@@ -196,7 +210,7 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
           { x: shape.x, y: shape.y, width: shape.width, height: shape.height },
         ]),
       );
-      commit(placeShapes(data, places));
+      commit(placeShapes(data, places, area.current?.clientWidth ?? Number.POSITIVE_INFINITY));
     },
     [commit, data],
   );
@@ -300,11 +314,9 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
       event.preventDefault();
       if (!copied || copied.shapes.length === 0) return;
       const result = pasteItems(data, copied, newId);
-      copied = {
-        shapes: result.data.shapes.filter((shape) => result.ids.includes(shape.id)),
-        arrows: [],
-      };
       const pasted = new Set(result.ids);
+      // Un deuxième collage reprend les formes collées et leurs flèches, décalées une fois de plus.
+      copied = copyItems(result.data, pasted);
       nodesRef.current = nodesRef.current.map((node) => ({ ...node, selected: false }));
       commit(result.data);
       setNodes((current) => current.map((node) => ({ ...node, selected: pasted.has(node.id) })));
@@ -333,14 +345,26 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
     const heightAt = (clientY: number) =>
       Math.max(minimum, Math.round((start + clientY - startY) / DIAGRAM_GRID) * DIAGRAM_GRID);
     const move = (moveEvent: PointerEvent) => setDragHeight(heightAt(moveEvent.clientY));
-    const end = (endEvent: PointerEvent) => {
+    const stop = () => {
       handle.removeEventListener("pointermove", move);
       handle.removeEventListener("pointerup", end);
+      handle.removeEventListener("pointercancel", cancel);
+      handle.removeEventListener("lostpointercapture", cancel);
+    };
+    const end = (endEvent: PointerEvent) => {
+      stop();
       setDragHeight(null);
       commit(data, heightAt(endEvent.clientY));
     };
+    // Un geste interrompu (écran tactile, changement de fenêtre) ne laisse pas la poignée bloquée.
+    const cancel = () => {
+      stop();
+      setDragHeight(null);
+    };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", end);
+    handle.addEventListener("pointercancel", cancel);
+    handle.addEventListener("lostpointercapture", cancel);
   };
 
   const shapes = useMemo(() => liveShapes(data, nodes), [data, nodes]);
@@ -399,7 +423,7 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
             snapGrid={[DIAGRAM_GRID, DIAGRAM_GRID]}
             nodeExtent={[
               [0, 0],
-              [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
+              [areaLimit, Number.POSITIVE_INFINITY],
             ]}
             defaultViewport={{ x: 0, y: 0, zoom: 1 }}
             minZoom={1}

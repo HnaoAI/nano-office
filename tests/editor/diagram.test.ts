@@ -219,6 +219,31 @@ describe("T2.20 : schémas dans l'éditeur", () => {
     expect(block?.innerHTML).toContain('fill="#FFF176"');
   });
 
+  it("critère 10 : un schéma collé pendant une recherche est surligné dès son premier dessin", () => {
+    const source = create([diagram("d-1", PROCESS), para("p-1", "")]);
+    source.view.dispatch(source.state.tr.setSelection(NodeSelection.create(source.state.doc, 0)));
+    const { html } = copyAll(source);
+    setSearch(source, "Livraison", false);
+    source.commands.setTextSelection(source.state.doc.content.size - 1);
+    pasteHtml(source, html);
+    const blocks = source.view.dom.querySelectorAll(".nano-diagram");
+    expect(blocks).toHaveLength(2);
+    expect(blocks[1]?.innerHTML).toContain('fill="#FFF176"');
+  });
+
+  it("critère 7 : un schéma collé sans hauteur choisie garde une hauteur qui suit son contenu", () => {
+    const source = create([diagram("d-1", PROCESS), para("p-1", "")]);
+    source.view.dispatch(source.state.tr.setSelection(NodeSelection.create(source.state.doc, 0)));
+    const { html } = copyAll(source);
+    source.commands.setTextSelection(source.state.doc.content.size - 1);
+    pasteHtml(source, html);
+    const heights: unknown[] = [];
+    source.state.doc.forEach((node) => {
+      if (node.type.name === "diagram") heights.push(node.attrs.height);
+    });
+    expect(heights).toEqual([null, null]);
+  });
+
   it("critère 10 : « Remplacer » et « Tout remplacer » changent les textes des formes, en une annulation", () => {
     const target = create([
       para("p-1", "Commande"),
