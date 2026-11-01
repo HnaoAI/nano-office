@@ -189,7 +189,8 @@ test("critères 1, 6 et 9 : la nouvelle version s'affiche ensuite, avec le docum
   await expect(updateWindow(page)).toBeVisible();
   await takeControl(page);
   expect(await wasReloaded(page, 5_000)).toBe(true);
-  await expect(updateWindow(page)).toHaveCount(0);
+  // Adapté le 2026-11-01, avec l'accord du PO : la fenêtre reste au moins 5 s en tout (critère 1), d'où 10 s d'attente.
+  await expect(updateWindow(page)).toHaveCount(0, { timeout: 10_000 });
   await expect(notice(page)).toHaveText(UPDATED);
   // Critère 9 : le document restauré revient à l'identique, avec son message.
   await expect(editor(page)).toHaveText("Brouillon élève 😀");
@@ -200,6 +201,28 @@ test("critères 1, 6 et 9 : la nouvelle version s'affiche ensuite, avec le docum
   ).toBe(false);
 });
 
+test("critère 1 : la fenêtre reste affichée au moins 5 secondes en tout, même si la nouvelle version arrive tout de suite", async ({
+  page,
+}) => {
+  await relaunchWithDraft(page, "Brouillon");
+  await simulateHeldUpdate(page);
+  await expect(updateWindow(page)).toBeVisible();
+  const shownAt = Date.now();
+  await takeControl(page);
+  expect(await wasReloaded(page, 5_000)).toBe(true);
+  // Nouvelle version affichée, document restauré : la fenêtre reste quand même, et tout est bloqué.
+  await expect(editor(page)).toHaveText("Brouillon");
+  await expect(updateWindow(page)).toBeVisible();
+  expect(
+    await page.locator(".nano-app").evaluate((element) => (element as HTMLElement).inert),
+  ).toBe(true);
+  await expect(notice(page)).toHaveCount(0);
+  await expect(updateWindow(page)).toHaveCount(0, { timeout: 10_000 });
+  // Marge pour le temps entre l'apparition dans la page et sa constatation par le test.
+  expect(Date.now() - shownAt).toBeGreaterThanOrEqual(4_500);
+  await expect(notice(page)).toHaveText(UPDATED);
+});
+
 test("critère 6 : le message « mis à jour » se ferme avec son bouton, et ne revient pas au rechargement suivant", async ({
   page,
 }) => {
@@ -207,6 +230,8 @@ test("critère 6 : le message « mis à jour » se ferme avec son bouton, et ne 
   await simulateHeldUpdate(page);
   await takeControl(page);
   expect(await wasReloaded(page, 5_000)).toBe(true);
+  // Adapté le 2026-11-01, avec l'accord du PO : la fenêtre reste au moins 5 s en tout (critère 1), d'où 10 s d'attente.
+  await expect(notice(page)).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "Fermer l'information de mise à jour" }).click();
   await expect(notice(page)).toHaveCount(0);
   await page.reload();
@@ -221,7 +246,8 @@ test("critère 6 : le message « mis à jour » disparaît seul à la première 
   await simulateHeldUpdate(page);
   await takeControl(page);
   expect(await wasReloaded(page, 5_000)).toBe(true);
-  await expect(notice(page)).toBeVisible();
+  // Adapté le 2026-11-01, avec l'accord du PO : la fenêtre reste au moins 5 s en tout (critère 1), d'où 10 s d'attente.
+  await expect(notice(page)).toBeVisible({ timeout: 10_000 });
   await editor(page).click();
   await page.keyboard.press("End");
   await expect(notice(page)).toHaveCount(0);
