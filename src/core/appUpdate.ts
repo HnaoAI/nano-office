@@ -76,6 +76,28 @@ export function decideUpdate(state: LaunchState): UpdateDecision {
 export const UPDATE_WINDOW_TIMEOUT_MS = 20_000;
 
 /**
+ * Durée minimale d'affichage de la fenêtre « Nano Buro se met à jour » (H3, critère 1, décision du PO du
+ * 2026-11-01), comptée depuis son apparition avant le rechargement : une mise à jour rapide ne fait plus
+ * clignoter la fenêtre, qu'on a le temps de lire.
+ */
+export const UPDATE_WINDOW_MIN_MS = 5_000;
+
+/**
+ * Temps pendant lequel la fenêtre de mise à jour doit encore rester affichée (H3, critère 1).
+ * @param shownAt heure d'apparition de la fenêtre, en millisecondes (`Date.now()`)
+ * @param now heure actuelle, en millisecondes
+ * @param minMs durée minimale d'affichage
+ * @returns un nombre de millisecondes, jamais négatif ni supérieur à `minMs` (horloge reculée)
+ */
+export function updateWindowRemainingMs(
+  shownAt: number,
+  now: number,
+  minMs: number = UPDATE_WINDOW_MIN_MS,
+): number {
+  return Math.min(minMs, Math.max(0, shownAt + minMs - now));
+}
+
+/**
  * Vrai si la fenêtre « Nano Buro se met à jour » doit s'afficher (H3, critères 1 et 4) : seulement quand
  * la mise à jour au lancement est décidée, donc jamais une fois le travail commencé.
  */

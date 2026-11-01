@@ -3,13 +3,14 @@
 // `decideUpdate` (src/core/appUpdate.ts) le permet. Sinon, elle attend le lancement suivant.
 // Indique aussi à l'alerte avant fermeture (useBackup.ts) que la page se recharge pour une mise à jour (H2).
 // H3 : fenêtre « Nano Buro se met à jour » qui bloque l'application du choix de recharger jusqu'à
-// l'affichage de la nouvelle version (ou 20 s au plus), puis message « mis à jour ».
+// l'affichage de la nouvelle version, et au moins 5 s en tout (ou 20 s au plus), puis message « mis à jour ».
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { registerSW } from "virtual:pwa-register";
 import {
   decideUpdate,
   showsUpdateWindow,
   startUpdateWatchdog,
+  updateWindowRemainingMs,
   type LaunchActivity,
 } from "../core/appUpdate";
 import {
@@ -66,11 +67,13 @@ export function cancelReloadForUpdate(): void {
 }
 
 /**
- * Vrai si cette page vient d'être rechargée pour une mise à jour (H3). Lu une seule fois, au chargement
- * du module : React appelle deux fois les initialiseurs d'état en développement (StrictMode).
- * La fenêtre reste alors affichée, et le clavier bloqué, jusqu'à l'affichage du document (critère 1).
+ * Heure d'apparition de la fenêtre si cette page vient d'être rechargée pour une mise à jour (H3), sinon
+ * null. Lu une seule fois, au chargement du module : React appelle deux fois les initialiseurs d'état en
+ * développement (StrictMode). La fenêtre reste alors affichée, et le clavier bloqué, jusqu'à l'affichage
+ * du document et au moins 5 s après son apparition (critère 1).
  */
-const RELOADED_FOR_UPDATE = typeof window !== "undefined" && takeUpdateNotice();
+const UPDATE_SHOWN_AT = typeof window !== "undefined" ? takeUpdateNotice() : null;
+const RELOADED_FOR_UPDATE = UPDATE_SHOWN_AT !== null;
 setKeyboardLocked(RELOADED_FOR_UPDATE);
 
 /**
@@ -95,6 +98,9 @@ export function useAppUpdate(
   // H3 : fenêtre affichée avant le rechargement ; délai dépassé après lui ; message fermé.
   const [applyingWindow, setApplyingWindow] = useState(false);
   const [finishTimedOut, setFinishTimedOut] = useState(false);
+  const [minShown, setMinShown] = useState(
+    () => UPDATE_SHOWN_AT === null || updateWindowRemainingMs(UPDATE_SHOWN_AT, Date.now()) === 0,
+  );
   const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   const decide = useEffectEvent((ready: boolean) =>
@@ -146,12 +152,24 @@ export function useAppUpdate(
     void applyUpdate.current?.();
   }, [updateReady, documentLoaded, activity]);
 
-  // H3, critère 1 : après le rechargement, la fenêtre reste jusqu'à l'affichage du document.
-  const finishing = RELOADED_FOR_UPDATE && !documentLoaded && !finishTimedOut;
+  // H3, critère 1 : après le rechargement, la fenêtre reste jusqu'à l'affichage du document, et au moins
+  // 5 s depuis son apparition. Le délai de 20 s (critère 5) l'emporte toujours.
+  const finishing = RELOADED_FOR_UPDATE && (!documentLoaded || !minShown) && !finishTimedOut;
   const updating = applyingWindow || finishing;
   // H3, critère 6 : le message « mis à jour » remplace alors la fenêtre.
   const notice =
-    RELOADED_FOR_UPDATE && documentLoaded && !noticeDismissed ? updatedNotice(APP_VERSION) : null;
+    RELOADED_FOR_UPDATE && documentLoaded && !finishing && !noticeDismissed
+      ? updatedNotice(APP_VERSION)
+      : null;
+
+  useEffect(() => {
+    if (minShown || UPDATE_SHOWN_AT === null) return;
+    const timer = setTimeout(
+      () => setMinShown(true),
+      updateWindowRemainingMs(UPDATE_SHOWN_AT, Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [minShown]);
 
   useEffect(() => {
     setKeyboardLocked(updating);

@@ -31,10 +31,13 @@ export function markReloadedForUpdate(): boolean {
  */
 const NOTICE_KEY = "nano-office-update-notice";
 
-/** Retient qu'un message « mis à jour » est à afficher après le rechargement (H3, critère 6). */
+/**
+ * Retient qu'un message « mis à jour » est à afficher après le rechargement (H3, critère 6), avec l'heure
+ * d'apparition de la fenêtre, pour la garder affichée au moins 5 s en tout (H3, critère 1).
+ */
 export function markUpdateNotice(): void {
   try {
-    sessionStorage.setItem(NOTICE_KEY, "1");
+    sessionStorage.setItem(NOTICE_KEY, String(Date.now()));
   } catch {
     // Stockage bloqué : le message ne s'affichera pas, la mise à jour se fait quand même.
   }
@@ -50,15 +53,18 @@ export function clearUpdateNotice(): void {
 }
 
 /**
- * Vrai si cette page vient d'être rechargée pour une mise à jour (H3, critères 1 et 6). Le souvenir est
- * effacé à la lecture : un rechargement fait ensuite à la main n'affiche plus le message.
+ * Heure d'apparition de la fenêtre de mise à jour si cette page vient d'être rechargée pour une mise à jour
+ * (H3, critères 1 et 6), sinon null. Le souvenir est effacé à la lecture : un rechargement fait ensuite à la
+ * main n'affiche plus le message. Un souvenir sans heure lisible compte comme une fenêtre déjà assez vue.
  */
-export function takeUpdateNotice(): boolean {
+export function takeUpdateNotice(): number | null {
   try {
-    const found = sessionStorage.getItem(NOTICE_KEY) !== null;
+    const found = sessionStorage.getItem(NOTICE_KEY);
     sessionStorage.removeItem(NOTICE_KEY);
-    return found;
+    if (found === null) return null;
+    const shownAt = Number(found);
+    return Number.isFinite(shownAt) ? shownAt : 0;
   } catch {
-    return false;
+    return null;
   }
 }

@@ -19,7 +19,7 @@ lancement, avec une petite animation : un N majuscule qui tourne sur lui-même. 
 
 1. Quand une nouvelle version est prête et que la mise à jour au lancement est décidée (règles de H1 et H2 :
    rien n'est commencé), une fenêtre s'affiche **avant le rechargement** et reste jusqu'à ce que la nouvelle version
-   soit affichée.
+   soit affichée, et **au moins 5 secondes** en tout, pour qu'on ait le temps de la lire (décision du PO, 2026-11-01).
 2. La fenêtre est centrée, au style de la boîte de dialogue de la charte, sur la page estompée. Elle contient :
    - un **N majuscule** en IBM Plex Sans 600, d'environ 48 px, couleur d'encre, qui **tourne sur lui-même** autour
      de son axe vertical (rotation 3D `rotateY`, un tour en 1,6 s environ, en continu) ;
