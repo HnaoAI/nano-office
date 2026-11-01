@@ -153,6 +153,11 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
     edgesRef.current = edges;
   });
 
+  // À l'ouverture, le schéma prend le focus : Échap, Tab, Suppr et Ctrl/Cmd+Z s'y appliquent (critère 13).
+  useEffect(() => {
+    area.current?.focus({ preventScroll: true });
+  }, []);
+
   // Document modifié (action enregistrée, annulation, remplacement) : formes et flèches relues, sélection gardée.
   useEffect(
     () =>
@@ -260,14 +265,21 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
       setEditingText(null);
       const current = [...data.shapes, ...data.arrows].find((item) => item.id === id);
       if (current && current.text !== text) commit(setText(data, id, text));
-      area.current?.querySelector<HTMLElement>(".react-flow__pane")?.focus();
+      area.current?.focus();
     },
     [commit, data],
   );
 
+  // Formes choisies avant la touche : React Flow choisit la forme à Entrée avant onKeyDown.
+  const selectedBeforeKey = useRef<ReadonlySet<string>>(new Set());
+  const onKeyDownCapture = () => {
+    selectedBeforeKey.current = selectedIds(nodesRef.current);
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
     if (target.closest("textarea, input")) return;
+    const onButton = target.closest("button") !== null;
     const mod = isMacPlatform() ? event.metaKey : event.ctrlKey;
     const key = event.key.toLowerCase();
     if (mod && key === "z") {
@@ -299,12 +311,13 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
     } else if (mod && key === "a") {
       event.preventDefault();
       setNodes((current) => current.map((node) => ({ ...node, selected: true })));
-    } else if (event.key === "Enter" && !mod) {
-      // Entrée sur une forme choisie : écrire son texte (critère 13, clavier).
-      const chosen = [...selectedIds(nodesRef.current)];
-      if (chosen.length === 1 && chosen[0]) {
+    } else if (event.key === "Enter" && !mod && !onButton) {
+      // Entrée sur une forme atteinte au clavier : la première fois la choisit (React Flow), la
+      // suivante permet d'écrire son texte (critère 13).
+      const focused = target.closest<HTMLElement>(".react-flow__node")?.dataset.id;
+      if (focused && selectedBeforeKey.current.has(focused)) {
         event.preventDefault();
-        setEditingText(chosen[0]);
+        setEditingText(focused);
       }
     }
   };
@@ -347,69 +360,76 @@ export function DiagramEditor({ editing }: { editing: DiagramEditing }) {
 
   return (
     <DiagramContext.Provider value={context}>
-      <ArrowMarker />
-      <DiagramToolbar
-        onAdd={add}
-        onFill={fill}
-        onDelete={removeSelection}
-        onClose={editing.close}
-        selected={selectedShapes}
-        canDelete={selectedShapes.length > 0 || edges.some((edge) => edge.selected)}
-      />
+      {/* Le clavier de toute la zone (barre comprise) : annuler, copier, coller (critère 4). */}
       <div
-        ref={area}
-        className="nano-diagram-area"
-        style={{ height }}
-        role="application"
-        aria-label="Schéma en modification"
+        className="nano-diagram-wrapper"
+        onKeyDownCapture={onKeyDownCapture}
         onKeyDown={onKeyDown}
       >
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onDelete={onDelete}
-          onNodeDoubleClick={(_event, node) => setEditingText(node.id)}
-          onEdgeDoubleClick={(_event, edge) => setEditingText(edge.id)}
-          connectionMode={ConnectionMode.Loose}
-          snapToGrid
-          snapGrid={[DIAGRAM_GRID, DIAGRAM_GRID]}
-          nodeExtent={[
-            [0, 0],
-            [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
-          ]}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          minZoom={1}
-          maxZoom={1}
-          panOnDrag={false}
-          panOnScroll={false}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
-          zoomOnDoubleClick={false}
-          preventScrolling={false}
-          autoPanOnNodeDrag={false}
-          autoPanOnConnect={false}
-          selectionOnDrag
-          deleteKeyCode={["Delete", "Backspace"]}
-          multiSelectionKeyCode={isMacPlatform() ? "Meta" : "Control"}
-          ariaLabelConfig={ARIA_LABELS}
-          proOptions={{ hideAttribution: true }}
+        <ArrowMarker />
+        <DiagramToolbar
+          onAdd={add}
+          onFill={fill}
+          onDelete={removeSelection}
+          onClose={editing.close}
+          selected={selectedShapes}
+          canDelete={selectedShapes.length > 0 || edges.some((edge) => edge.selected)}
+        />
+        <div
+          ref={area}
+          className="nano-diagram-area"
+          style={{ height }}
+          role="application"
+          aria-label="Schéma en modification"
+          tabIndex={-1}
         >
-          <Background variant={BackgroundVariant.Dots} gap={DIAGRAM_GRID * 2} size={1} />
-        </ReactFlow>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onDelete={onDelete}
+            onNodeDoubleClick={(_event, node) => setEditingText(node.id)}
+            onEdgeDoubleClick={(_event, edge) => setEditingText(edge.id)}
+            connectionMode={ConnectionMode.Loose}
+            snapToGrid
+            snapGrid={[DIAGRAM_GRID, DIAGRAM_GRID]}
+            nodeExtent={[
+              [0, 0],
+              [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
+            ]}
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+            minZoom={1}
+            maxZoom={1}
+            panOnDrag={false}
+            panOnScroll={false}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
+            preventScrolling={false}
+            autoPanOnNodeDrag={false}
+            autoPanOnConnect={false}
+            selectionOnDrag
+            deleteKeyCode={["Delete", "Backspace"]}
+            multiSelectionKeyCode={isMacPlatform() ? "Meta" : "Control"}
+            ariaLabelConfig={ARIA_LABELS}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={DIAGRAM_GRID * 2} size={1} />
+          </ReactFlow>
+        </div>
+        <div
+          className="nano-diagram-resize"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Hauteur du schéma"
+          title="Agrandir le schéma"
+          onPointerDown={startResize}
+        />
       </div>
-      <div
-        className="nano-diagram-resize"
-        role="separator"
-        aria-orientation="horizontal"
-        aria-label="Hauteur du schéma"
-        title="Agrandir le schéma"
-        onPointerDown={startResize}
-      />
     </DiagramContext.Provider>
   );
 }

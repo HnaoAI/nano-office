@@ -2,7 +2,7 @@
 
 Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `core/schema.ts`.
 
-- `editorOptions.ts` : options de l'éditeur pour un Y.Doc (`createEditorOptions`) : schéma partagé, collaboration Yjs, aucune mise en forme automatique, correcteur orthographique, raccourcis et copier-coller du lot A, images reliées au Y.Doc (T1.9), recherche (T2.1)
+- `editorOptions.ts` : options de l'éditeur pour un Y.Doc (`createEditorOptions`) : schéma partagé, collaboration Yjs, aucune mise en forme automatique, correcteur orthographique, raccourcis et copier-coller du lot A, images reliées au Y.Doc (T1.9), recherche (T2.1), schémas (T2.20)
 - `blockIds.ts` : génère l'identifiant de chaque paragraphe nouveau ou en double (`BlockIdGenerator`, `createBlockIdPlugin`)
 - `platform.ts` : reconnaît un Mac, pour choisir les raccourcis (`isMacPlatform`, T1.1)
 - `blockStyle.ts` : texte normal ou titre 1 à 3, en gardant les attributs du bloc (`setBlockStyle`, `currentBlockStyle`, T1.1)
@@ -12,7 +12,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `indent.ts` : retrait (T2.14) : boutons qui décalent l'élément dans une liste, sinon les paragraphes et titres sélectionnés, et sur une sélection mixte chaque ligne selon sa nature (B2), en une transaction ; état des boutons (`changeIndent`, `indentAvailability`)
 - `links.ts` : liens (T2.12) : poser, modifier, retirer en une étape d'annulation, lien au curseur, Ctrl/Cmd+clic qui ouvre un nouvel onglet (`noopener`), Ctrl/Cmd+K qui demande la fenêtre « Lien » (`applyLink`, `removeLink`, `currentLink`, `openLink`, `LinkClick`)
 - `callout.ts` : encadrés (T2.19) : encadrer la sélection, changer le style, retirer en rendant les paragraphes, Entrée deux fois en fin d'encadré pour en sortir, chacun en une étape d'annulation (`setCallout`, `removeCallout`, `currentCallout`, `canWrapInCallout`, `CalloutKeys`)
-- `search.ts` : rechercher et remplacer (T2.1) : plugin qui surligne les occurrences par des décorations, jamais dans le document ; suivante, précédente, remplacer, tout remplacer en une transaction (`Search`, `setSearch`, `goToMatch`, `replaceCurrent`, `replaceAll`)
+- `search.ts` : rechercher et remplacer (T2.1) : plugin qui surligne les occurrences par des décorations, jamais dans le document ; suivante, précédente, remplacer, tout remplacer en une transaction, textes des formes des schémas compris (T2.20) (`Search`, `setSearch`, `goToMatch`, `replaceCurrent`, `replaceAll`)
 - `blockText.ts` : texte d'un bloc aligné sur ses positions, pour la recherche et les majuscules (T2.1, T2.4)
 - `textCase.ts` : majuscules et minuscules de la sélection, marques et sélection gardées, en une transaction (`changeCase`, T2.4)
 - `fontStyle.ts` : police et taille de la sélection ou du texte tapé ensuite, lecture au curseur (`setFontFamily`, `setFontSize`, `currentTextStyle`, T1.4)
@@ -31,6 +31,7 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `pageBreakPaste.ts` : sauts de page collés depuis Word et Google Docs (`page-break-before: always`) : paragraphe coupé, saut de page ignoré dans une cellule ou une liste (`convertPageBreaks`, T2.8)
 - `pageMeasure.ts` : mesure de la page affichée pour les repères (T2.8) : chaque paragraphe, titre, élément de liste, ligne de tableau, image, saut de page et encadré entier (T2.19), et les lignes d'un paragraphe seulement s'il traverse une fin de page, gardées tant qu'il ne change pas, mesure à la largeur de la feuille imprimée dans une fenêtre étroite (`measurePage`, `withTextWidth`)
 - `toc.ts` : sommaire dans l'éditeur (T2.17) : vue des lignes (retrait, points de conduite, numéros), mise à jour à chaque modification, clic sur une ligne, ancres des titres, paragraphe après un sommaire final, insertion au curseur en une étape d'annulation (`TableOfContentsEditorNode`, `insertTableOfContents`, `tocState`)
+- `diagram.ts` : schémas (T2.20) : vue d'un bloc Schéma (dessin SVG, surlignage de la recherche), ouverture au double clic ou à Entrée, fermeture par Échap, un clic à côté ou l'impression, chaque action enregistrée en une étape d'annulation, insertion au curseur ; l'éditeur de formes est fourni par l'interface (`createDiagramNode`, `insertDiagram`, `openDiagramAt`, `DiagramEditing`, `measureDiagramText`)
 - `outline.ts` : plan du document (T2.9) : aller à un titre sous la barre figée, déplacer une partie à la souris ou au clavier en une étape d'annulation, titre au curseur (`goToHeading`, `moveSectionBefore`, `moveSectionStep`, `canDropSection`, `headingAtCursor`)
 - `stickyScroll.ts` : défilement de l'éditeur sous la partie figée de l'interface : le curseur n'est jamais caché par la barre (`scrollBelowStickyTop`, M1), ni par le pied de page figé (T2.8)
 - `focus.ts` : redonne le focus à l'éditeur tout de suite après un clic sur la barre (`focusEditor`, lot A)

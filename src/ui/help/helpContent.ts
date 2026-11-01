@@ -217,6 +217,10 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Schémas : « Insérer un schéma » ajoute un schéma à l'endroit du curseur. Une petite barre propose quatre formes : un clic en ajoute une. Double-cliquez sur une forme pour y écrire ; Entrée passe à la ligne. Pour relier deux formes, tirez une flèche d'un point rond au bord de l'une vers un point de l'autre. Un double clic sur la flèche y ajoute un texte, comme « oui ». Suppr efface la forme ou la flèche choisie. Échap, « Terminer » ou un clic à côté revient au texte, et un double clic rouvre le schéma. Il s'imprime net et devient une image dans l'export Word.",
+      },
+      {
+        kind: "text",
         icon: "lineHeight",
         text: "Interligne : la liste « Interligne » règle l'espace entre les lignes du paragraphe.",
       },

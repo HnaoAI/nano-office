@@ -101,6 +101,7 @@
   font-family: var(--nano-font-sans);
 }
 
+.nano-diagram-area:focus,
 .nano-diagram-area .react-flow__pane:focus-visible,
 .nano-diagram-area .react-flow__node:focus-visible,
 .nano-diagram-area .react-flow__edge:focus-visible {
