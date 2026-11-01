@@ -257,7 +257,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         items: [
           "Dans la fenêtre d'impression, ouvrez « Plus de paramètres » (Chrome) ou « Autres paramètres » (Edge).",
           "Puis décochez la case « En-têtes et pieds de page ».",
-          "Le navigateur n'ajoute plus l'adresse de Nano Buro, la date ni son propre numéro de page. L'en-tête, le pied de page et les numéros que vous avez choisis dans « Mise en page… » restent imprimés.",
+          "Le navigateur n'ajoute plus l'adresse de Nano Buro, la date ni son propre numéro de page. L'en-tête, le pied de page et les numéros que vous avez choisis dans « Mise en page… » restent imprimés. Si la case reste cochée, les numéros de page de Nano Buro peuvent ne pas s'imprimer.",
         ],
       },
       {

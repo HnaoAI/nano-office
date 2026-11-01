@@ -54,14 +54,30 @@ export async function settleSelection(page: Page) {
 }
 
 /**
+ * Laisse passer le contrôle que ProseMirror fait 20 ms après chaque retour du focus dans l'éditeur
+ * (`handlers.focus` de prosemirror-view) : s'il n'a pas encore lu la sélection du navigateur, il la
+ * remplace par la sienne, l'ancienne. Un humain ne déplace jamais le curseur aussi vite ; un test, si,
+ * et sur une CI chargée l'événement `selectionchange` arrive souvent après ces 20 ms. Cause des tests
+ * instables H2 (critère 2 : « Fin » perdu, frappe au début) et T1.7 (critère 7 : couleur posée sur
+ * l'ancienne sélection), Issue #106.
+ * Attente déterministe : une minuterie de la page posée après le retour du focus, plus longue que
+ * celle de ProseMirror, passe forcément après elle.
+ */
+export async function passFocusCheck(page: Page) {
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 25)));
+}
+
+/**
  * Attend que l'éditeur d'un document qui vient d'être ouvert ou créé ait reçu le focus. L'éditeur
- * est recréé pour chaque Y.Doc et prend le focus un peu après son affichage (`autofocus` de Tiptap,
- * différé d'une tâche) : une touche frappée avant serait perdue. Cause du test instable des polices
- * (T1.4, critère 8), signalé sur la PR 65.
+ * est recréé pour chaque Y.Doc et prend le focus un peu après son affichage (`focusEditor` à sa
+ * création, différé d'une tâche) : une touche frappée avant serait perdue. Cause du test instable des
+ * polices (T1.4, critère 8), signalé sur la PR 65. Attend aussi le contrôle de ProseMirror qui suit le
+ * retour du focus (`passFocusCheck`, Issue #106).
  */
 export async function waitEditorFocus(page: Page) {
   await expect(editor(page)).toBeFocused();
   await settleSelection(page);
+  await passFocusCheck(page);
 }
 
 /**
@@ -97,8 +113,13 @@ export async function saveAndReopen(page: Page): Promise<DocumentJson> {
   return ydocJson(page);
 }
 
-/** Sélectionne le texte exact `text` dans l'éditeur (double-clic impossible sur plusieurs mots). */
+/**
+ * Sélectionne le texte exact `text` dans l'éditeur (double-clic impossible sur plusieurs mots). Après un
+ * choix dans la barre (couleur, police…), le focus vient de revenir dans l'éditeur : la sélection n'est
+ * posée qu'après le contrôle de ProseMirror qui suit ce retour (`passFocusCheck`, Issue #106).
+ */
 export async function selectText(page: Page, text: string) {
+  await passFocusCheck(page);
   await page.evaluate((target) => {
     const root = document.querySelector(".nano-editor");
     if (!root) throw new Error("éditeur absent");
