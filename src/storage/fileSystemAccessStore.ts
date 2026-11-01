@@ -2,11 +2,26 @@
 // Les sélecteurs sont fournis par l'appelant, ce qui permet de les remplacer dans les tests.
 import { DEFAULT_FILE_NAME } from "../core/types";
 import type { FileHandleMemory } from "./fileHandleMemory";
-import type { FileStore, OpenedFile, RestoredFile, SaveOptions, SaveResult } from "./fileStore";
+import type { FileStore, RestoredFile, SaveOptions, SaveResult } from "./fileStore";
+import { readOpenedFile, type OpenedFile } from "./openedFile";
 
-/** Types de fichiers proposés par les sélecteurs. */
+/** Type de fichier proposé par le sélecteur d'enregistrement : on n'enregistre qu'en `.nano`. */
 const NANO_FILE_TYPES = [
   { description: "Document Nano Buro", accept: { "application/json": [".nano"] } },
+];
+
+/**
+ * Types de fichiers proposés par « Ouvrir… » : un document Nano Buro, ou un fichier Word, lu sans jamais être
+ * modifié (T2.18, critère 1). Un seul filtre, pour que les deux soient visibles sans changer de filtre.
+ */
+const OPEN_FILE_TYPES = [
+  {
+    description: "Document Nano Buro ou Word",
+    accept: {
+      "application/json": [".nano"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    },
+  },
 ];
 
 /**
@@ -28,7 +43,7 @@ export interface NanoFileHandle {
 /** Sélecteurs de l'API File System Access (`window.showOpenFilePicker`, `window.showSaveFilePicker`). */
 export interface FilePickers {
   showOpenFilePicker(options: {
-    types: typeof NANO_FILE_TYPES;
+    types: typeof OPEN_FILE_TYPES;
     multiple: false;
   }): Promise<NanoFileHandle[]>;
   showSaveFilePicker(options: {
@@ -127,15 +142,17 @@ export class FileSystemAccessStore implements FileStore {
   async open(accept?: (file: OpenedFile) => boolean): Promise<OpenedFile | null> {
     let handle: NanoFileHandle | undefined;
     try {
-      [handle] = await this.pickers.showOpenFilePicker({ types: NANO_FILE_TYPES, multiple: false });
+      [handle] = await this.pickers.showOpenFilePicker({ types: OPEN_FILE_TYPES, multiple: false });
     } catch (error) {
       if (isAbort(error)) return null;
       throw error;
     }
     if (!handle) return null;
     const blob = await handle.getFile();
-    const file = { name: handle.name, text: await blob.text() };
-    if (!accept || accept(file)) this.setCurrent(handle, blob.lastModified);
+    const file = await readOpenedFile(handle.name, blob);
+    // INVARIANT : un fichier Word n'est jamais le fichier courant, pour que « Enregistrer » ne puisse pas y écrire
+    // (T2.18, critère 1), même si `accept` l'accepte.
+    if ((!accept || accept(file)) && !file.bytes) this.setCurrent(handle, blob.lastModified);
     return file;
   }
 

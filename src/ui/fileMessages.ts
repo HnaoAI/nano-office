@@ -152,3 +152,16 @@ export function wordExportMessage(
       return null;
   }
 }
+
+/** Message d'attente pendant la lecture d'un fichier Word (T2.18, critère 5). */
+export function wordOpeningMessage(name: string): FileMessage {
+  return { kind: "status", icon: "recovered", text: `Ouverture de « ${name} » en cours…` };
+}
+
+/**
+ * Message après l'ouverture d'un fichier Word (T2.18, critères 1 et 3), texte de src/core/wordImport.ts, avec
+ * « Enregistrer sous… » pour garder le document dans un fichier `.nano`.
+ */
+export function wordOpenedMessage(notice: string): FileMessage {
+  return { kind: "status", icon: "recovered", text: notice, action: "save-as" };
+}

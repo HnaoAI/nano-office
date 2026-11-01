@@ -3,6 +3,7 @@
 import { DownloadStore } from "./downloadStore";
 import { createFileHandleMemory } from "./fileHandleMemory";
 import { type FilePickers, FileSystemAccessStore } from "./fileSystemAccessStore";
+import type { OpenedFile } from "./openedFile";
 
 /**
  * Résultat d'un enregistrement. Ne lève jamais d'exception :
@@ -45,11 +46,7 @@ export interface SaveOptions {
   onlyIfUnchanged?: boolean;
 }
 
-/** Fichier lu par « Ouvrir » : son nom et son texte (UTF-8). */
-export interface OpenedFile {
-  name: string;
-  text: string;
-}
+export type { OpenedFile } from "./openedFile";
 
 /**
  * Accès aux fichiers de l'utilisateur. Garde en mémoire le « fichier courant », celui que

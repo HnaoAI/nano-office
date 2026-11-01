@@ -1,7 +1,8 @@
 // Repli pour Safari et Firefox (T0c, critère 8) : « Enregistrer » télécharge le fichier,
 // « Ouvrir » passe par un champ de choix de fichier. Fonctionne dans tous les navigateurs.
 import { DEFAULT_FILE_NAME } from "../core/types";
-import type { FileStore, OpenedFile, RestoredFile, SaveResult } from "./fileStore";
+import type { FileStore, RestoredFile, SaveResult } from "./fileStore";
+import { readOpenedFile, type OpenedFile } from "./openedFile";
 
 /** Opérations du navigateur utilisées par `DownloadStore`, remplaçables dans les tests. */
 export interface DownloadDependencies {
@@ -29,7 +30,8 @@ function pickFileWithInput(): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".nano,application/json";
+    // Un fichier Word s'ouvre aussi (T2.18, critère 1).
+    input.accept = ".nano,application/json,.docx";
     input.addEventListener("change", () => resolve(input.files?.[0] ?? null), { once: true });
     input.addEventListener("cancel", () => resolve(null), { once: true });
     input.click();
@@ -70,8 +72,9 @@ export class DownloadStore implements FileStore {
   async open(accept?: (file: OpenedFile) => boolean): Promise<OpenedFile | null> {
     const picked = await this.dependencies.pickFile();
     if (!picked) return null;
-    const file = { name: picked.name, text: await picked.text() };
-    if (!accept || accept(file)) this.currentName = file.name;
+    const file = await readOpenedFile(picked.name, picked);
+    // INVARIANT : un fichier Word ne devient jamais le fichier courant (T2.18, critère 1).
+    if ((!accept || accept(file)) && !file.bytes) this.currentName = file.name;
     return file;
   }
 

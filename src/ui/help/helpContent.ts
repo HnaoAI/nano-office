@@ -86,6 +86,11 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        icon: "word",
+        text: "« Ouvrir… » ouvre aussi un fichier Word (.docx) reçu par e-mail : il devient un nouveau document Nano Buro, et le fichier Word n'est jamais modifié. Enregistrez-le avec « Enregistrer sous… » pour le garder. Un message dit ce qui n'a pas pu être repris (commentaires, zones de texte…).",
+      },
+      {
+        kind: "text",
         text: "Évitez de travailler sur le même document sur les deux ordinateurs à la fois : Nano Buro vous préviendrait, mais il faudrait choisir quelle version garder.",
       },
     ],

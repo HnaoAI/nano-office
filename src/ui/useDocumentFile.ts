@@ -1,7 +1,7 @@
 // Hook React du document affiché (T0c) : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Ctrl/Cmd+S,
 // titre de la fenêtre et messages, question de la copie de secours (T0d), état de l'indicateur et
 // actions des messages (U1b), sauvegarde automatique par le même verrou que « Enregistrer » (T1.6),
-// espacée pour un gros fichier (T1.9). Découpé en M1 : restauration au lancement et fichier retrouvé
+// espacée pour un gros fichier (T1.9), ouverture d'un fichier Word comme nouveau document (T2.18). Découpé en M1 : restauration au lancement et fichier retrouvé
 // (useLaunchRestore.ts, T0d, PL3), signes de travail commencé (useLaunchActivity.ts, H1), types et
 // état de l'indicateur (documentState.ts). Logique dans src/core/, fichiers et copie dans src/storage/.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -25,6 +25,8 @@ import {
   READ_ERROR,
   imageRejectedMessage,
   saveMessage,
+  wordOpenedMessage,
+  wordOpeningMessage,
   type FileMessage,
 } from "./fileMessages";
 import type { ImageRejection } from "../editor/imageImport";
@@ -179,7 +181,9 @@ export function useDocumentFile() {
       let error: string | null = null;
       try {
         // Le fichier n'est retenu comme fichier courant que s'il est lisible (critère 15).
-        const file = await store.open(({ name, text }) => {
+        // Un fichier Word n'est jamais retenu : il devient un nouveau document (T2.18, critère 1).
+        const file = await store.open(({ name, text, bytes }) => {
+          if (bytes) return false;
           const result = openDocumentText(name, text);
           if (result.ok) {
             opened = result.document;
@@ -188,6 +192,10 @@ export function useDocumentFile() {
           return result.ok;
         });
         if (!file) return;
+        if (file.bytes) {
+          await openWord(file.name, file.bytes);
+          return;
+        }
       } catch {
         error = READ_ERROR;
       }
@@ -203,6 +211,25 @@ export function useDocumentFile() {
       // Sans effet si l'ancien document a été remplacé (son AutoSaver est arrêté).
       held?.release();
     }
+  }
+
+  /**
+   * Ouvre un fichier Word comme un nouveau document (T2.18) : un message d'attente pendant la conversion (critère 5),
+   * puis ce qui n'a pas pu être repris (critère 3), ou le message d'un refus (critère 4). Le document en cours
+   * n'est remplacé qu'une fois la conversion réussie, et le fichier courant est oublié : « Enregistrer » demande
+   * toujours un emplacement, et n'écrit jamais dans le fichier Word (critère 1).
+   */
+  async function openWord(name: string, bytes: Uint8Array) {
+    setMessage(wordOpeningMessage(name));
+    const { openWordFile } = await import("./wordOpen");
+    const result = await openWordFile(name, bytes);
+    if (!result.ok) {
+      setMessage({ kind: "alert", icon: "unreadable", text: result.message });
+      return;
+    }
+    store.forget();
+    show(result.document);
+    setMessage(wordOpenedMessage(result.notice));
   }
 
   /**
@@ -226,9 +253,12 @@ export function useDocumentFile() {
       // Empreinte prise avant l'écriture : une saisie pendant l'enregistrement reste « non enregistrée ».
       const snapshot = contentSnapshot(saved.ydoc);
       const text = serializeDocument(saved);
-      const result = asNew
-        ? await store.saveAs(text, saved.fileName ?? DEFAULT_FILE_NAME)
-        : await store.save(text, { onlyIfUnchanged: auto });
+      // Un document ouvert depuis Word propose le nom du fichier Word en .nano (T2.18, critère 1).
+      const suggested = saved.fileName ?? saved.suggestedName ?? DEFAULT_FILE_NAME;
+      const result =
+        asNew || (saved.fileName === null && saved.suggestedName !== undefined)
+          ? await store.saveAs(text, suggested)
+          : await store.save(text, { onlyIfUnchanged: auto });
       if (result.status === "saved" || result.status === "downloaded") {
         const name = result.name;
         savedBytes.current = { ydoc: saved.ydoc, size: text.length };

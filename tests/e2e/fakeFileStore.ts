@@ -7,6 +7,8 @@ import type { SaveResult } from "../../src/storage/fileStore";
 export interface FakeFilesState {
   /** Contenu des fichiers, par nom. */
   files: Record<string, string>;
+  /** Fichiers Word (T2.18), en base64, par nom : lus en octets, jamais retenus comme fichier courant. */
+  binaryFiles: Record<string, string>;
   /** Fichier courant, celui que « Enregistrer » réécrit sans rien demander. */
   current: string | null;
   /**
@@ -66,6 +68,7 @@ export async function installFakeFileStore(
       // Ce code s'exécute dans le navigateur : il ne peut rien importer.
       const state: FakeFilesState = {
         files: {},
+        binaryFiles: {},
         current: null,
         calls: [],
         nextOpen: null,
@@ -147,6 +150,14 @@ export async function installFakeFileStore(
           state.calls.push("open");
           const name = state.nextOpen;
           if (name === null) return null;
+          const binary = state.binaryFiles[name];
+          if (binary !== undefined) {
+            // Comme le vrai FileStore : un fichier Word n'est jamais le fichier courant (T2.18, critère 1).
+            const bytes = Uint8Array.from(atob(binary), (char) => char.charCodeAt(0));
+            const file = { name, text: "", bytes };
+            accept?.(file);
+            return file;
+          }
           const text = state.files[name];
           if (text === undefined) throw new Error(`Fichier de test absent : ${name}`);
           if (!accept || accept({ name, text })) {
