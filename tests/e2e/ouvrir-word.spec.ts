@@ -54,6 +54,32 @@ test("critère 1 : Ctrl/Cmd+S propose « Enregistrer sous… » en .nano et n'é
   await expect.poll(async () => (await fakeFiles(page)).calls).toEqual(["save"]);
 });
 
+test("critère 1 : après un .nano, ouvrir un Word n'écrit jamais dans l'ancien fichier .nano (relecteur)", async ({
+  page,
+}) => {
+  await start(page);
+  // Un document enregistré dans lettre.nano devient le fichier courant.
+  await setFakeFiles(page, { calls: [], nextSaveName: "lettre.nano" });
+  await editor(page).click();
+  await page.keyboard.type("Lettre de Mamie");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect.poll(async () => (await fakeFiles(page)).files["lettre.nano"]).toBeDefined();
+  await flushBackups(page);
+  const lettre = (await fakeFiles(page)).files["lettre.nano"];
+  // Ouvrir un fichier Word : l'ancien fichier courant est oublié.
+  await openWord(page, "complet.docx", "Rapport.docx");
+  await expect(editor(page).getByRole("heading", { level: 1 })).toBeVisible();
+  expect((await fakeFiles(page)).current).toBeNull();
+  await setFakeFiles(page, { calls: [], nextSaveName: "Rapport.nano" });
+  await editor(page).click();
+  await page.keyboard.type("x");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect.poll(async () => (await fakeFiles(page)).files["Rapport.nano"]).toBeDefined();
+  const state = await fakeFiles(page);
+  expect(state.calls[0]).toBe("saveAs:Rapport.nano");
+  expect(state.files["lettre.nano"]).toBe(lettre);
+});
+
 test("critère 2 : titres, mise en forme, liste, tableau, image et saut de page sont repris", async ({
   page,
 }) => {
