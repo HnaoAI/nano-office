@@ -3,7 +3,7 @@
 Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèques.
 
 - `types.ts` : types partagés (`DocumentJson`, `NanoFileV1`, `NanoFileV2`, `ParseResult`) et constantes du format
-- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), barré (T2.3), sauts de page (T2.8), souligné (T2.10), exposant et indice qui s'excluent (T2.13)
+- `schema.ts` : schéma du document, source unique réutilisée par l'éditeur (`documentExtensions`, `documentSchema`, `YJS_FRAGMENT_NAME`, `BlockId`) ; titres 1 à 3 (T1.1), listes (T1.2), alignement (T1.3), police et taille (T1.4), couleur et surlignage (T1.7), tableaux (T1.8), images (T1.9), interligne (T2.2), barré (T2.3), sauts de page (T2.8), souligné (T2.10), exposant et indice qui s'excluent (T2.13), schémas (T2.20)
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `lineHeight.ts` : interligne (T2.2) : valeurs proposées, hauteur de ligne CSS équivalente à Word (`cssLineHeight`), attribut de bloc `lineHeight`
 - `indent.ts` : retrait de paragraphe (T2.14) : 5 niveaux de 1,25 cm, attribut de bloc `indent` des paragraphes et titres, valeur venue d'un fichier ramenée dans les bornes (`indentLevel`, `IndentAttribute`)
@@ -19,6 +19,9 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `toc.ts` : sommaire automatique (T2.17) : lignes des Titre 1 à 3 de premier niveau, texte d'un titre vide, ancre HTML et signet de Word d'un titre (`tocEntries`, `tocEntriesFromJson`, `hasToc`, `tocAnchor`, `wordBookmark`)
 - `tocSchema.ts` : nœud « sommaire » du schéma, dans son propre groupe : un bloc atomique, jamais dans une liste, un tableau ou un encadré (`TableOfContentsNode`, T2.17)
 - `wordToc.ts` : sommaire de l'export Word : titre « Sommaire » et champ de table des matières écrit avec ses numéros, que Word sait mettre à jour (`wordTocBlocks`, T2.17)
+- `diagram.ts` : schémas (T2.20) : formes et flèches relues sans confiance, fond pris dans le surlignage, hauteur qui suit le contenu, grille magnétique, points d'accroche, texte coupé en lignes, texte de remplacement (`readDiagram`, `diagramHeight`, `anchorPoint`, `wrapText`, `diagramDescription`)
+- `diagramSvg.ts` : dessin SVG d'un schéma, pour l'affichage, l'impression et l'image Word (`diagramToSvg`, `shapeLines`, T2.20)
+- `diagramSchema.ts` : nœud « schéma » du schéma, dans son propre groupe : un bloc atomique, jamais dans une liste, un tableau ou un encadré, avec ses formes et ses flèches en attributs (`DiagramNode`, T2.20)
 - `outline.ts` : plan du document (T2.9) : titres et sauts de page de premier niveau, parties (un titre jusqu'au suivant de même niveau ou de niveau supérieur), titre actif, déplacement d'une partie entière avec ses identifiants, voisine de même niveau pour le clavier (`documentOutline`, `sectionRange`, `moveSection`, `neighbourTarget`)
 - `wordExport.ts` : export en fichier Word `.docx` avec `docx` (T2.7) : styles des titres de Word, listes, page A4 avec orientation et marges, polices embarquées, en-têtes et pieds de page de Word avec le champ de numéro de page (T2.15, T2.16), nom proposé (`buildWordDocument`, `exportWord`, `wordFileName`, `usedFonts`)
 - `wordBlocks.ts` : conversion des blocs pour Word (T2.7) : paragraphes, titres, listes, tableaux, images, souligné (T2.10), exposant et indice (T2.13), retrait (T2.14), liens de Word (T2.12), encadrés en bordure et trame de paragraphe (T2.19) (`convertBlock`)
