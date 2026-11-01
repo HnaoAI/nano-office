@@ -116,6 +116,69 @@ test.describe("B3 : impression de l'en-tête, du pied de page et des numéros", 
     });
   });
 
+  // Essai du PO sur la PR 110 : « en bas à droite » choisi, numéro centré dans le PDF de Chrome.
+  for (const position of ["right", "center"] as const) {
+    for (const footer of [null, FOOTER]) {
+      test(`critère 2 : numéro « ${position === "right" ? "en bas à droite" : "en bas au centre"} » à sa place sur chaque page, ${footer ? "avec" : "sans"} pied de page centré`, async ({
+        page,
+      }) => {
+        await start(page);
+        await openDocument(
+          page,
+          CONSTAT,
+          settings({
+            footer: { text: footer ?? "", align: "center" },
+            pageNumbers: { position, skipFirst: false },
+          }),
+        );
+        const printed = await pdfLines(await printToPdf(page));
+        expect(printed.length).toBeGreaterThanOrEqual(3);
+        printed.forEach(({ lines, width }, index) => {
+          const bottom = lines.filter((line) => line.y < MARGIN);
+          const number = String(index + 1);
+          if (position === "right") {
+            const numbers = bottom.filter((line) => line.text === number);
+            expect(numbers).toHaveLength(1);
+            // Dans le dernier tiers de la page, contre la marge de droite.
+            expect(numbers[0]?.x).toBeGreaterThan((width * 2) / 3);
+            expect(numbers[0]?.x).toBeLessThan(width - MARGIN);
+            if (footer) expect(linesWith(bottom, footer)).toHaveLength(1);
+          } else {
+            // Au centre, seul ou après le pied de page centré (« Collège Jean Moulin – 2 »).
+            const line = bottom.find((candidate) =>
+              footer ? candidate.text === `${footer} – ${number}` : candidate.text === number,
+            );
+            expect(line, `page ${number} : ${JSON.stringify(bottom)}`).toBeDefined();
+            const middle = (line?.x ?? 0) + (line?.width ?? 0) / 2;
+            expect(Math.abs(middle - width / 2)).toBeLessThan(20);
+          }
+        });
+      });
+    }
+  }
+
+  test("critère 2 : « en bas à droite » reste à droite même si le navigateur centre par défaut le texte des marges", async ({
+    page,
+  }) => {
+    await start(page);
+    // Imite le Chrome du PO : sans règle de la page, le numéro de la zone de droite y était centré.
+    await page.addStyleTag({
+      content:
+        "@page { @bottom-left { text-align: center; } @bottom-center { text-align: center; } @bottom-right { text-align: center; } }",
+    });
+    await openDocument(
+      page,
+      CONSTAT,
+      settings({ pageNumbers: { position: "right", skipFirst: false } }),
+    );
+    const printed = await pdfLines(await printToPdf(page));
+    printed.forEach(({ lines, width }, index) => {
+      const numbers = lines.filter((line) => line.y < MARGIN && line.text === String(index + 1));
+      expect(numbers).toHaveLength(1);
+      expect(numbers[0]?.x).toBeGreaterThan((width * 2) / 3);
+    });
+  });
+
   test("critère 4 : l'aide rappelle de décocher « En-têtes et pieds de page » dans « Imprimer, PDF et Word »", async ({
     page,
   }) => {
@@ -130,7 +193,10 @@ test.describe("B3 : impression de l'en-tête, du pied de page et des numéros", 
     const reminder = section.getByText("décochez la case « En-têtes et pieds de page »");
     await expect(reminder).toBeVisible();
     await expect(reminder).toBeInViewport();
-    await expect(reminder).toContainText("numéros de page");
+    // La liste d'étapes de l'aide (PR 109) dit aussi ce que la case coche empêche.
+    await expect(section).toContainText(
+      "les numéros de page de Nano Buro peuvent ne pas s'imprimer",
+    );
   });
 
   test("critère 5 : à l'écran, rien ne change : l'en-tête et le pied de page restent affichés en gris clair", async ({

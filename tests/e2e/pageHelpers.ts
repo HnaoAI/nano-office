@@ -164,6 +164,8 @@ export interface PdfLine {
   text: string;
   x: number;
   y: number;
+  /** Largeur de la ligne, en points. */
+  width: number;
 }
 
 /** Page de PDF relue par `pdfLines`. */
@@ -208,7 +210,7 @@ export async function pdfLines(pdf: Buffer): Promise<PdfPageLines[]> {
             line.text += part.text;
             line.end = part.end;
           } else {
-            line = { text: part.text, x: part.x, y: row.y, end: part.end };
+            line = { text: part.text, x: part.x, y: row.y, width: 0, end: part.end };
             lines.push(line);
           }
         }
@@ -217,7 +219,12 @@ export async function pdfLines(pdf: Buffer): Promise<PdfPageLines[]> {
         width,
         height,
         lines: lines
-          .map(({ text, x, y }) => ({ text: text.replace(/\s+/g, " ").trim(), x, y }))
+          .map(({ text, x, y, end }) => ({
+            text: text.replace(/\s+/g, " ").trim(),
+            x,
+            y,
+            width: end - x,
+          }))
           .filter((line) => line.text !== "")
           .sort((a, b) => b.y - a.y),
       });

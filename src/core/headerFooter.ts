@@ -220,9 +220,11 @@ function cssBoxes(boxes: MarginBoxes, all: boolean): string {
       const parts = boxes[side][align];
       // Pour la première page, toutes les zones sont écrites, pour effacer celles des autres pages.
       if (!all && !parts) continue;
+      // `text-align` explicite (B3) : seule à avoir un contenu, la zone de droite peut occuper toute la
+      // largeur de la marge, et le Chrome du PO y centrait le numéro « en bas à droite ».
       rules.push(
         `@${side}-${align} { content: ${cssContent(parts)}; font-family: "IBM Plex Sans", sans-serif; ` +
-          `font-size: 10pt; color: ${PRINT_MARGIN_COLOR}; }`,
+          `font-size: 10pt; color: ${PRINT_MARGIN_COLOR}; text-align: ${align}; }`,
       );
     }
   }
