@@ -373,3 +373,15 @@ export function SuggestionIcon() {
     </Icon>
   );
 }
+
+/** Schéma (T2.20, critère 1) : deux cases reliées par une flèche, sous un losange. */
+export function DiagramIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="15" width="7" height="6" rx="1" />
+      <rect x="14" y="15" width="7" height="6" rx="1" />
+      <path d="M12 3l3.5 3.5L12 10 8.5 6.5z" />
+      <path d="M10.5 9l-4 6M13.5 9l4 6" />
+    </Icon>
+  );
+}

@@ -107,7 +107,11 @@ export function shapeLines(shape: DiagramShape, measure: MeasureText): string[] 
   return wrapText(shape.text, textWidth(shape), measure);
 }
 
-function shapeSvg(shape: DiagramShape, measure: MeasureText, highlighted: boolean): string {
+/**
+ * Dessin d'une forme et de son texte, aussi utilisé par l'éditeur de formes, pour qu'une forme ait le
+ * même aspect en modification et hors modification.
+ */
+export function shapeSvg(shape: DiagramShape, measure: MeasureText, highlighted = false): string {
   const fill = highlighted ? SEARCH_FILL : (shape.fill ?? "#FFFFFF");
   return `<g data-shape-id="${escapeXml(shape.id)}">${shapeOutline(shape, fill)}${textLines(
     shapeLines(shape, measure),

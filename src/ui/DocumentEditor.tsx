@@ -13,6 +13,7 @@ import type * as Y from "yjs";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { focusEditor } from "../editor/focus";
 import { createEditorOptions } from "../editor/editorOptions";
+import { mountDiagramEditor } from "./diagram/mountDiagramEditor";
 import { scrollBelowStickyTop } from "../editor/stickyScroll";
 import type { ImageRejection } from "../editor/imageImport";
 import { isUserEdit } from "../editor/userEdits";
@@ -95,7 +96,7 @@ export function DocumentEditor({
   // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
   // `onImageRejected`, `coveredTop` et `coveredBottom` sont stables, ils ne recréent pas la configuration.
   const options = useMemo(() => {
-    const base = createEditorOptions(ydoc, onImageRejected);
+    const base = createEditorOptions(ydoc, onImageRejected, mountDiagramEditor);
     return {
       ...base,
       editorProps: { ...base.editorProps, ...scrollBelowStickyTop(coveredTop, coveredBottom) },

@@ -74,6 +74,10 @@ export const WORD_ERROR_MESSAGES: Record<WordOpenError, string> = {
 };
 
 /** Ce qui n'a pas été repris, dans l'ordre du message (critère 3). */
+/** Phrase ajoutée quand le fichier Word contient des formes (T2.20, critère 9). */
+export const WORD_SHAPES_NOTICE =
+  "Les formes de Word ne deviennent pas des schémas : redessinez-les avec « Insérer un schéma ».";
+
 const SKIPPED_LABELS: Record<WordSkipped, string> = {
   comments: "les commentaires",
   footnotes: "les notes de bas de page et de fin",
@@ -422,6 +426,8 @@ export function wordOpenNotice(
     .map((key) => SKIPPED_LABELS[key]);
   if (labels.length > 0)
     parts.push(`Certains éléments n'ont pas pu être repris : ${labels.join(", ")}.`);
+  // Schémas (T2.20, critère 9) : les formes de Word ne sont pas converties, et le message le dit.
+  if (skipped.has("shapes")) parts.push(WORD_SHAPES_NOTICE);
   if (trackedChanges) {
     parts.push("Le suivi des modifications a été lu avec toutes les modifications acceptées.");
   }

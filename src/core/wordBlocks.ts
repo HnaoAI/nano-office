@@ -31,6 +31,8 @@ import { nearestHighlight, wordColor } from "./wordColors";
 import { DOCUMENT_FONTS, fontSizePoints } from "./textStyle";
 import type { DocumentJson } from "./types";
 import { TOC_NODE } from "./tocSchema";
+import { DIAGRAM_NODE } from "./diagramSchema";
+import { diagramDescription, readDiagram } from "./diagram";
 import { wordTocBlocks, type WordToc } from "./wordToc";
 
 /** Image prête pour Word : PNG, JPEG ou GIF (un WebP est converti avant), avec ses dimensions en pixels. */
@@ -392,9 +394,58 @@ export function convertBlock(
     case TOC_NODE:
       // Sommaire (T2.17, critère 5) : champ de table des matières de Word, avec ses lignes et ses numéros.
       return context.toc ? wordTocBlocks(context.toc) : [];
+    case DIAGRAM_NODE:
+      return diagramBlocks(node, context);
     default:
       return [new Paragraph({ children: [new TextRun({ text: plainText(node) })] })];
   }
+}
+
+/**
+ * Clé de l'image d'un schéma dans `BlockContext.images` (T2.20, critère 9) : son identifiant de bloc,
+ * ou null sans identifiant.
+ */
+export function diagramImageKey(node: DocumentJson): string | null {
+  const id = node.attrs?.id;
+  return typeof id === "string" && id !== "" ? `diagram:${id}` : null;
+}
+
+/**
+ * Schéma (T2.20, critère 9) : son image PNG, centrée, au plus la largeur du texte, avec un texte de
+ * remplacement qui liste les textes des formes. Un schéma vide n'écrit rien ; un schéma dont l'image
+ * manque écrit son texte de remplacement.
+ */
+function diagramBlocks(node: DocumentJson, context: BlockContext): Paragraph[] {
+  const data = readDiagram(node.attrs);
+  if (data.shapes.length === 0) return [];
+  const description = diagramDescription(data);
+  const key = diagramImageKey(node);
+  const image = key ? context.images.get(key) : undefined;
+  if (!image) {
+    return [
+      new Paragraph({
+        spacing: { after: PARAGRAPH_AFTER },
+        children: [new TextRun({ text: description, italics: true, color: "5F5F5C" })],
+      }),
+    ];
+  }
+  const width = Math.min(image.width, context.textWidthPx);
+  const height = (image.height * width) / image.width;
+  return [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      keepLines: true,
+      spacing: { after: PARAGRAPH_AFTER },
+      children: [
+        new ImageRun({
+          type: image.type,
+          data: image.data,
+          transformation: { width: Math.round(width), height: Math.round(height) },
+          altText: { name: "Schéma", description, title: description },
+        }),
+      ],
+    }),
+  ];
 }
 
 /** Texte brut d'un nœud. */
