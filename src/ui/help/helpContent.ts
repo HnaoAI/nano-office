@@ -82,6 +82,7 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Ensuite, Nano Buro enregistre tout seul dans ce même fichier, quelques secondes après chaque modification.",
           `« Enregistrer » (${SAVE_SHORTCUT}) enregistre tout de suite, sans rien redemander.`,
           "Pour reprendre un document, cliquez sur « Ouvrir… » et choisissez-le dans le dossier synchronisé.",
+          "Pour commencer un document vide, cliquez sur « Nouveau ». Si le document affiché n'est pas enregistré, Nano Buro vous le demande d'abord.",
         ],
       },
       {
@@ -181,6 +182,14 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Police et taille : choisissez-les dans les listes « Police » et « Taille » de la barre. Elles s'appliquent au texte sélectionné, ou à ce que vous allez taper. Les polices de Nano Buro s'affichent de la même façon sur Mac et sur PC.",
+      },
+      {
+        kind: "text",
+        text: "Alignement : « Aligner à gauche », « Centrer », « Aligner à droite » ou « Justifier » placent le paragraphe où se trouve le curseur.",
+      },
+      {
+        kind: "text",
         icon: "list",
         text: "Listes : « Liste à puces » ou « Liste numérotée ». La touche Tab décale un élément vers la droite, Shift+Tab vers la gauche.",
       },
@@ -231,6 +240,18 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Numéros de page, en-tête et pied de page : dans « Mise en page… », cochez « Numéroter les pages », puis choisissez « En bas au centre » ou « En bas à droite ». Écrivez aussi le texte de l'en-tête et du pied de page, répété sur chaque page. Une case permet de ne rien mettre sur la première page. Ils apparaissent à l'impression et dans le PDF.",
+      },
+      {
+        kind: "text",
+        text: "Pages : un trait en pointillé montre où finit chaque page, et le bas de la fenêtre indique « Page 3 sur 7 », par exemple. Pour commencer une nouvelle page, utilisez « Saut de page », ou Ctrl+Entrée (Cmd+Entrée sur Mac).",
+      },
+      {
+        kind: "text",
+        text: "Sommaire : placez le curseur où vous le voulez, puis « Insérer un sommaire ». Il liste les Titre 1, Titre 2 et Titre 3 avec leur page, et se met à jour tout seul quand vous changez un titre. Un clic sur une ligne amène à ce titre.",
+      },
+      {
+        kind: "text",
         text: "Plan : le bouton « Plan », au bout de la barre, liste les titres du document avec leur page. Cliquez sur un titre pour y aller. Faites-le glisser pour déplacer toute sa partie. Au clavier : cliquez sur le titre dans le plan, puis Alt+Shift et une flèche (Option+Shift sur Mac) le font monter ou descendre d'une place. Une partie déjà en tête ne monte pas, et une sous-partie reste dans sa partie.",
       },
       {
@@ -240,6 +261,14 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         kind: "text",
         text: "Rechercher et remplacer : la recherche s'ouvre avec le raccourci indiqué dans « Raccourcis clavier ». Tapez le mot cherché, puis passez d'un résultat à l'autre avec Entrée. « Remplacer… » permet de remplacer un mot ou tous à la fois. Un seul « Annuler » remet tout comme avant.",
+      },
+      {
+        kind: "text",
+        text: "Copier-coller : un texte collé depuis Word, un e-mail ou une page web garde ses titres, listes, gras, italique et tableaux. Il prend la police et la taille du document. Pour coller le texte seul, sans aucune mise en forme : Ctrl+Shift+V (Cmd+Shift+V sur Mac).",
+      },
+      {
+        kind: "text",
+        text: "Annuler : « Annuler » (Ctrl+Z, Cmd+Z sur Mac) défait la dernière action, et « Rétablir » la refait.",
       },
       {
         kind: "text",
@@ -324,6 +353,16 @@ export const HELP_SECTIONS: HelpSection[] = [
         kind: "text",
         icon: "settings",
         text: "L'assistant IA est facultatif, et éteint au départ. Si vous l'allumez dans les « Réglages », seul le texte que vous sélectionnez est envoyé, après un clic sur « Corriger » ou « Traduire en anglais », au fournisseur choisi (Claude ou Gemini), avec votre propre clé. Cette clé reste sur cet ordinateur.",
+      },
+      {
+        kind: "steps",
+        title: "Utiliser l'assistant IA",
+        items: [
+          "Dans « Réglages », cochez « Activer l'assistant », choisissez Claude ou Gemini, et collez votre clé. Un abonnement à Claude ou à Gemini ne suffit pas : la clé se crée sur l'espace développeurs du site du fournisseur.",
+          "Les boutons « Corriger » et « Traduire en anglais » apparaissent alors au bout de la barre. Sélectionnez un texte, puis cliquez sur l'un d'eux.",
+          "« Corriger » montre chaque modification proposée dans le texte. Cliquez sur « Accepter » ou « Refuser » pour chacune, ou sur « Tout accepter » ou « Tout refuser ».",
+          "« Traduire en anglais » affiche la traduction à part. Choisissez « Remplacer la sélection », « Insérer après » ou « Copier ».",
+        ],
       },
     ],
   },
