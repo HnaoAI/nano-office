@@ -83,6 +83,17 @@ describe("T2.15 : numéros de page imprimés", () => {
     expect(right).not.toContain("@bottom-center");
   });
 
+  it("B3, critère 2 : chaque zone de marge aligne son texte de son côté, sans compter sur le navigateur", () => {
+    const right = printMarginRules({
+      ...NUMBERED,
+      header: { text: "Exposé", align: "left" },
+      pageNumbers: { position: "right", skipFirst: true },
+    });
+    expect(right).toMatch(/@bottom-right \{ content: counter\(page\);[^}]*text-align: right;/);
+    expect(right).toMatch(/@top-left \{ content: "Exposé";[^}]*text-align: left;/);
+    expect(right).toMatch(/@bottom-center \{ content: none;[^}]*text-align: center;/);
+  });
+
   it("critère 1 et 2 : « Pas de numéro sur la première page » efface le numéro de la page 1 seulement", () => {
     const rules = printMarginRules({
       ...NUMBERED,

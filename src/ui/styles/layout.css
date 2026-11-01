@@ -201,8 +201,10 @@ button:focus-visible {
   color: var(--nano-document-text);
 }
 
-/* Le conteneur de Tiptap et l'éditeur occupent toute la page : un clic n'importe où y écrit. */
-.nano-page > div {
+/* Le conteneur de Tiptap et l'éditeur occupent toute la page : un clic n'importe où y écrit.
+   Une classe et non `.nano-page > div` : ce sélecteur l'emportait sur le `display: none` de print.css
+   et imprimait le calque de l'en-tête et du pied de page dans le texte (B3). */
+.nano-editor-host {
   flex: 1;
   display: flex;
   flex-direction: column;
