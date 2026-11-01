@@ -26,7 +26,20 @@ describe("FileSystemAccessStore", () => {
     await store.open();
     fake.state.nextSave = new FakeHandle("lettre.nano", "", log);
     await store.saveAs("contenu", "document.nano");
-    expect(fake.state.openOptions[0]).toEqual(expected);
+    // T2.18 (adapté avec l'accord du PO à demander) : « Ouvrir… » propose aussi les fichiers Word, dans le même filtre.
+    expect(fake.state.openOptions[0]).toEqual(
+      expect.objectContaining({
+        types: [
+          {
+            description: "Document Nano Buro ou Word",
+            accept: {
+              "application/json": [".nano"],
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+            },
+          },
+        ],
+      }),
+    );
     expect(fake.state.saveOptions[0]).toEqual(expected);
   });
 

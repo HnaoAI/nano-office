@@ -1,7 +1,7 @@
 // Hook React du document affiché (T0c) : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Ctrl/Cmd+S,
 // titre de la fenêtre et messages, question de la copie de secours (T0d), état de l'indicateur et
 // actions des messages (U1b), sauvegarde automatique par le même verrou que « Enregistrer » (T1.6),
-// espacée pour un gros fichier (T1.9). Découpé en M1 : restauration au lancement et fichier retrouvé
+// espacée pour un gros fichier (T1.9), ouverture d'un fichier Word comme nouveau document (T2.18). Découpé en M1 : restauration au lancement et fichier retrouvé
 // (useLaunchRestore.ts, T0d, PL3), signes de travail commencé (useLaunchActivity.ts, H1), types et
 // état de l'indicateur (documentState.ts). Logique dans src/core/, fichiers et copie dans src/storage/.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -10,6 +10,7 @@ import {
   contentSnapshot,
   createNewDocument,
   DEFAULT_FILE_NAME,
+  documentTitle,
   hasUnsavedChanges,
   markSaved,
   openDocumentText,
@@ -25,6 +26,8 @@ import {
   READ_ERROR,
   imageRejectedMessage,
   saveMessage,
+  wordOpenedMessage,
+  wordOpeningMessage,
   type FileMessage,
 } from "./fileMessages";
 import type { ImageRejection } from "../editor/imageImport";
@@ -60,6 +63,10 @@ export function useDocumentFile() {
   // Taille du dernier fichier écrit ou ouvert, pour espacer la sauvegarde automatique au-delà de 2 Mo
   // (T1.9). En caractères : le JSON est presque tout en ASCII (base64), un caractère vaut un octet.
   const savedBytes = useRef<{ ydoc: Y.Doc | null; size: number }>({ ydoc: null, size: 0 });
+  // Document affiché au dernier rendu : lu après une attente (conversion d'un fichier Word, T2.18), quand les
+  // valeurs de la fonction peuvent dater d'avant des modifications.
+  const documentRef = useRef(document);
+  documentRef.current = document;
 
   const subscribe = useCallback(
     (onChange: () => void) => {
@@ -75,8 +82,11 @@ export function useDocumentFile() {
   const backupLinked = useBackup(backups, document, unsaved);
 
   useEffect(() => {
-    window.document.title = windowTitle(document?.fileName ?? null, unsaved);
-  }, [document?.fileName, unsaved]);
+    // Un document ouvert depuis Word porte le nom de ce fichier, comme dans l'en-tête (T2.18).
+    const suggested = document?.suggestedName;
+    const name = document?.fileName ?? (suggested ? documentTitle(suggested) : null);
+    window.document.title = windowTitle(name, unsaved);
+  }, [document?.fileName, document?.suggestedName, unsaved]);
 
   /**
    * Enregistrement lancé par la sauvegarde automatique (T1.6). Seulement si le document a déjà un
@@ -113,7 +123,9 @@ export function useDocumentFile() {
     autoSaver.current?.dispose();
     // L'utilisateur a accepté de perdre ces modifications : elles ne reviennent plus au chargement.
     // Leur copie reste dans IndexedDB, pour le futur mode récupération (#15). Décision de relecture de T0d.
-    if (document && unsaved && backups.lastModifiedId() === document.id) {
+    // Lu dans la référence : après la conversion d'un fichier Word, les valeurs de cette fonction sont anciennes.
+    const current = documentRef.current;
+    if (current && hasUnsavedChanges(current) && backups.lastModifiedId() === current.id) {
       backups.setLastModifiedId(null);
     }
     setPending(null);
@@ -123,7 +135,8 @@ export function useDocumentFile() {
 
   function newDocument() {
     // Pendant une écriture, « Nouveau » attend : la fin de l'écriture reprendrait le fichier oublié (lot B).
-    if (saving.current || !canDiscard()) return;
+    // Pendant l'ouverture d'un fichier (conversion d'un Word comprise), « Nouveau » attend aussi (T2.18).
+    if (saving.current || opening.current || !canDiscard()) return;
     store.forget();
     show(createNewDocument());
   }
@@ -179,7 +192,9 @@ export function useDocumentFile() {
       let error: string | null = null;
       try {
         // Le fichier n'est retenu comme fichier courant que s'il est lisible (critère 15).
-        const file = await store.open(({ name, text }) => {
+        // Un fichier Word n'est jamais retenu : il devient un nouveau document (T2.18, critère 1).
+        const file = await store.open(({ name, text, bytes }) => {
+          if (bytes) return false;
           const result = openDocumentText(name, text);
           if (result.ok) {
             opened = result.document;
@@ -188,6 +203,10 @@ export function useDocumentFile() {
           return result.ok;
         });
         if (!file) return;
+        if (file.bytes) {
+          await openWord(file.name, file.bytes);
+          return;
+        }
       } catch {
         error = READ_ERROR;
       }
@@ -203,6 +222,49 @@ export function useDocumentFile() {
       // Sans effet si l'ancien document a été remplacé (son AutoSaver est arrêté).
       held?.release();
     }
+  }
+
+  /**
+   * Ouvre un fichier Word comme un nouveau document (T2.18) : un message d'attente pendant la conversion (critère 5),
+   * puis ce qui n'a pas pu être repris (critère 3), ou le message d'un refus (critère 4). Le document en cours
+   * n'est remplacé qu'une fois la conversion réussie, et le fichier courant est oublié : « Enregistrer » demande
+   * toujours un emplacement, et n'écrit jamais dans le fichier Word (critère 1).
+   */
+  async function openWord(name: string, bytes: Uint8Array) {
+    setMessage(wordOpeningMessage(name));
+    // Le document reste modifiable pendant la conversion : ce qui y est écrit ne doit pas être perdu sans
+    // confirmation, même si l'utilisateur avait accepté d'abandonner les modifications d'avant (règle produit 3).
+    const before = documentRef.current;
+    let edited = false;
+    const onEdit = () => {
+      edited = true;
+    };
+    before?.ydoc.on("update", onEdit);
+    let result: Awaited<ReturnType<typeof import("./wordOpen").openWordFile>>;
+    try {
+      const { openWordFile } = await import("./wordOpen");
+      result = await openWordFile(name, bytes);
+    } finally {
+      before?.ydoc.off("update", onEdit);
+    }
+    if (!result.ok) {
+      setMessage({ kind: "alert", icon: "unreadable", text: result.message });
+      return;
+    }
+    const current = documentRef.current;
+    if (
+      edited &&
+      current === before &&
+      current !== null &&
+      hasUnsavedChanges(current) &&
+      !window.confirm(DISCARD_QUESTION)
+    ) {
+      setMessage(null);
+      return;
+    }
+    store.forget();
+    show(result.document);
+    setMessage(wordOpenedMessage(result.notice));
   }
 
   /**
@@ -226,9 +288,12 @@ export function useDocumentFile() {
       // Empreinte prise avant l'écriture : une saisie pendant l'enregistrement reste « non enregistrée ».
       const snapshot = contentSnapshot(saved.ydoc);
       const text = serializeDocument(saved);
-      const result = asNew
-        ? await store.saveAs(text, saved.fileName ?? DEFAULT_FILE_NAME)
-        : await store.save(text, { onlyIfUnchanged: auto });
+      // Un document ouvert depuis Word propose le nom du fichier Word en .nano (T2.18, critère 1).
+      const suggested = saved.fileName ?? saved.suggestedName ?? DEFAULT_FILE_NAME;
+      const result =
+        asNew || (saved.fileName === null && saved.suggestedName !== undefined)
+          ? await store.saveAs(text, suggested)
+          : await store.save(text, { onlyIfUnchanged: auto });
       if (result.status === "saved" || result.status === "downloaded") {
         const name = result.name;
         savedBytes.current = { ydoc: saved.ydoc, size: text.length };

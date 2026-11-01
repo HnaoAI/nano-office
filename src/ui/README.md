@@ -24,6 +24,7 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `MessageBar.tsx` : message d'information ou d'alerte, avec puce d'icône, action éventuelle (« Enregistrer sous… », « Enregistrer », « Autoriser ») et bouton de fermeture (U1b, PL3)
 - `FileMenu.tsx` : groupe Fichier : Nouveau, Ouvrir…, Enregistrer sous…, Imprimer (T2.6), Exporter en Word… (T2.7), Enregistrer (bouton principal)
 - `usePrintShortcut.ts` : Ctrl/Cmd+P sur toute la page, à la touche physique, jamais avec AltGr (T2.6)
+- `wordOpen.ts` : ouverture d'un fichier Word, chargée à la demande : XML lu par DOMParser, images réduites comme au lot D, nouveau document et message (`openWordFile`, T2.18)
 - `useWordExport.ts` : « Exporter en Word… » : charge l'export à la demande, avec l'en-tête, le pied de page et les numéros du sommaire, écrit le fichier par `storage/`, affiche le message (T2.7)
 - `useTableOfContents.ts` : numéros de page des sommaires, d'après les repères de T2.8, et clic sur une ligne qui amène au titre (T2.17)
 - `tocPages.ts` : derniers numéros de page des sommaires d'un document, gardés pour l'export Word (T2.17)

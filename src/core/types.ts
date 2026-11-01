@@ -81,4 +81,9 @@ export interface OpenDocument {
   fileName: string | null;
   /** Contenu au dernier enregistrement ou à l'ouverture (voir `contentSnapshot`), ou null si jamais enregistré. */
   savedSnapshot: string | null;
+  /**
+   * Nom proposé au premier « Enregistrer » d'un document jamais enregistré, et affiché dans l'en-tête : celui du
+   * fichier Word ouvert, avec `.nano` (T2.18, critère 1). Absent : `document.nano` et « Sans titre ».
+   */
+  suggestedName?: string;
 }

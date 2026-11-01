@@ -12,6 +12,7 @@ import type { SaveState } from "./documentState";
 /**
  * En-tête de l'application.
  * @param fileName nom du fichier du document affiché, null s'il n'a jamais été enregistré
+ * @param suggestedName nom proposé d'un document jamais enregistré ouvert depuis Word (T2.18), affiché sans `.nano`
  * @param saveState état de l'indicateur d'enregistrement (U1b), null pour ne pas l'afficher
  * @param actions boutons du groupe Fichier ; absents, avec l'indicateur, pendant le chargement de la copie de secours
  * @param onSettings ouvre la boîte « Réglages » (T3.1, critère 1)
@@ -19,12 +20,14 @@ import type { SaveState } from "./documentState";
  */
 export function AppHeader({
   fileName,
+  suggestedName = null,
   saveState,
   actions,
   onSettings,
   help,
 }: {
   fileName: string | null;
+  suggestedName?: string | null;
   saveState: SaveState | null;
   actions: FileMenuActions | null;
   onSettings?: () => void;
@@ -48,7 +51,7 @@ export function AppHeader({
         <>
           <div className="nano-header-divider" aria-hidden="true" />
           <div className="nano-document-name">
-            <span className="nano-document-title">{documentTitle(fileName)}</span>
+            <span className="nano-document-title">{documentTitle(fileName ?? suggestedName)}</span>
             {fileName && <span className="nano-file-name">{fileName}</span>}
           </div>
           <div className="nano-header-spacer" />

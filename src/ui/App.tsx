@@ -115,6 +115,7 @@ export function App() {
         <div className="nano-top" ref={topRef}>
           <AppHeader
             fileName={document?.fileName ?? null}
+            suggestedName={document?.suggestedName ?? null}
             saveState={saveState}
             actions={document ? actions : null}
             onSettings={document ? () => setSettingsOpen(true) : undefined}
