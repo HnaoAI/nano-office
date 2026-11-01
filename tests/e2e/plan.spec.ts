@@ -344,6 +344,9 @@ test.describe("T2.9 : plan du document", () => {
     expect((await topIds(page))[0]).toBe("h-c");
     await page.keyboard.press("ControlOrMeta+Shift+z");
     expect((await topIds(page))[0]).toBe("h-a");
+    // Le plan se met à jour à l'image suivante, en recréant ses lignes : on attend qu'il montre le
+    // nouvel ordre avant d'y déplacer le focus, qui serait sinon perdu par ce rafraîchissement (Issue #106).
+    await expect(panel(page).locator(".nano-outline-item").first()).toHaveText(/^Le vent/);
     await item(page, "Conclusion").focus();
     // Les flèches seules passent d'un titre à l'autre.
     await page.keyboard.press("ArrowDown");
