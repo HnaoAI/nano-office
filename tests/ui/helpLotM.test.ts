@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Contenu de l'aide intégrée (A1) pour le lot M : copie automatique de la sélection (T2.21, critère 9),
-// couleurs des corrections (T2.22, critère 8).
+// couleurs des corrections (T2.22, critère 8), « Mes fautes » (T2.23, critère 16).
 import { describe, expect, it } from "vitest";
 import { HELP_SECTIONS, type HelpBlock } from "../../src/ui/help/helpContent";
 
@@ -36,5 +36,13 @@ describe("aide du lot M", () => {
     expect(sectionText("privacy")).toContain(
       "Les fautes sont en rouge, barrées, et les corrections proposées en vert, soulignées.",
     );
+  });
+
+  it("T2.23, critère 16 : l'aide explique « Mes fautes » et dit que les statistiques restent sur l'ordinateur", () => {
+    const text = sectionText("privacy");
+    expect(text).toContain("« Mes fautes »");
+    expect(text).toContain("Seules les corrections acceptées comptent.");
+    expect(text).toContain("Ces statistiques restent sur cet ordinateur");
+    expect(text).toContain("« Remettre à zéro »");
   });
 });

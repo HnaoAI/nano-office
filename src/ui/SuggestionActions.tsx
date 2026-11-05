@@ -1,10 +1,13 @@
 // Boutons « Accepter » et « Refuser » de la modification choisie par l'assistant (T3.1, critère 8),
-// posés sous elle dans le texte. Découpé de AssistantPanel.tsx (M1), sans changement.
+// posés sous elle dans le texte. Découpé de AssistantPanel.tsx (M1). Type de la faute en texte discret
+// à côté des boutons (T2.23, critère 4) ; accepter la compte dans « Mes fautes » (critère 5).
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { acceptSuggestions, rejectSuggestions } from "../editor/suggestionCommands";
 import { suggestionState } from "../editor/suggestions";
+import { MISTAKE_LABELS } from "../core/mistakes";
+import { recordAcceptedSuggestions } from "./useMistakeStats";
 import { CheckIcon, CloseIcon } from "./icons";
 
 const keepFocus = (event: React.MouseEvent) => event.preventDefault();
@@ -65,7 +68,7 @@ export function SuggestionActions({
       <button
         type="button"
         onMouseDown={keepFocus}
-        onClick={() => acceptSuggestions(editor, [active.id])}
+        onClick={() => acceptSuggestions(editor, [active.id], recordAcceptedSuggestions)}
       >
         <CheckIcon />
         Accepter
@@ -78,6 +81,11 @@ export function SuggestionActions({
         <CloseIcon />
         Refuser
       </button>
+      {active.mistake && (
+        <span className="nano-suggestion-type" title="Type de faute, compté dans « Mes fautes »">
+          {MISTAKE_LABELS[active.mistake]}
+        </span>
+      )}
     </div>
   );
 }

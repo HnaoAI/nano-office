@@ -367,6 +367,8 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Les boutons « Corriger » et « Traduire en anglais » apparaissent alors au bout de la barre. Sélectionnez un texte, puis cliquez sur l'un d'eux.",
           "« Corriger » montre chaque modification proposée dans le texte. Les fautes sont en rouge, barrées, et les corrections proposées en vert, soulignées. Cliquez sur « Accepter » ou « Refuser » pour chacune, ou sur « Tout accepter » ou « Tout refuser ».",
           "« Traduire en anglais » affiche la traduction à part. Choisissez « Remplacer la sélection », « Insérer après » ou « Copier ».",
+          "« Mes fautes », à côté de « Corriger », montre les fautes que vous faites le plus souvent, de la plus fréquente à la plus rare, avec la règle à retenir et vos derniers exemples. Seules les corrections acceptées comptent.",
+          "Ces statistiques restent sur cet ordinateur : elles ne vont ni dans vos documents ni sur Internet. « Remettre à zéro » les efface.",
         ],
       },
     ],

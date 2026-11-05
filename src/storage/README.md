@@ -13,3 +13,4 @@ Accès aux fichiers de l'utilisateur, derrière l'interface `FileStore`. Aucun c
 - `backupStore.ts` : copie de secours dans IndexedDB, une base par `id` de document via y-indexeddb, dernier document modifié (T0d)
 - `assistantSettingsStore.ts` : réglages de l'assistant et clés d'API dans le localStorage de cet ordinateur, les clés à part, « Oublier la clé » (T3.1)
 - `preferencesStore.ts` : réglages de l'éditeur (copie automatique de la sélection, T2.21) dans le localStorage de cet ordinateur, jamais dans un fichier
+- `mistakeStatsStore.ts` : statistiques de « Mes fautes » (T2.23) dans le localStorage de cet ordinateur, à part des copies de secours, jamais dans un fichier

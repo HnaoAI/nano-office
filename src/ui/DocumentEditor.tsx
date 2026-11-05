@@ -7,7 +7,14 @@
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
-import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { createPortal } from "react-dom";
 import type * as Y from "yjs";
 import { attachAutoCopy } from "../editor/autoCopy";
@@ -23,12 +30,14 @@ import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
 import { printMarginRules } from "../core/headerFooter";
 import { loadOutlineOpen, saveOutlineOpen } from "../storage/outlinePreference";
 import { AssistantPanel } from "./AssistantPanel";
+import { MistakesDialog } from "./MistakesDialog";
 import { OutlinePanel } from "./OutlinePanel";
 import { PageMarksLayer } from "./PageMarksLayer";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import type { HeaderFooterField } from "./HeaderFooterFields";
 import { useAssistant } from "./useAssistant";
+import { refreshMistakeStats, resetMistakeStats, useMistakeStats } from "./useMistakeStats";
 import { useOutline } from "./useOutline";
 import { useTableOfContents } from "./useTableOfContents";
 import type { AssistantConfig } from "./useAssistantSettings";
@@ -158,6 +167,13 @@ export function DocumentEditor({
   });
 
   const helper = useAssistant(editor, assistant);
+  // « Mes fautes » (T2.23) : statistiques de cet ordinateur ; la fenêtre se ferme avec l'assistant.
+  const mistakeStats = useMistakeStats();
+  const [mistakesOpen, setMistakesOpen] = useState(false);
+  const closeMistakes = useCallback(() => {
+    setMistakesOpen(false);
+    focusEditor(editor);
+  }, [editor]);
 
   const toolbar = (
     <>
@@ -172,6 +188,10 @@ export function DocumentEditor({
                   online: helper.online,
                   pending: helper.status.kind === "pending",
                   onRun: (task) => void helper.run(task),
+                  onMistakes: () => {
+                    refreshMistakeStats();
+                    setMistakesOpen(true);
+                  },
                 }
               : null
           }
@@ -194,6 +214,9 @@ export function DocumentEditor({
   return (
     <>
       {tools && createPortal(toolbar, tools)}
+      {assistant && mistakesOpen && (
+        <MistakesDialog stats={mistakeStats} onReset={resetMistakeStats} onClose={closeMistakes} />
+      )}
       {counter &&
         createPortal(
           <>
