@@ -134,7 +134,7 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **J. Documents complets** | T2.15 numéros de page, T2.16 en-tête et pied de page, T2.17 sommaire | #89, #90, #91 |
 | **K. Ouvrir un fichier Word** | T2.18 ouvrir un `.docx` | #92 |
 | **L. Schémas** | T2.20 schémas (processus, organigrammes), avec React Flow | #96 |
-| **M. Améliorations du PO** | T2.21 copier automatiquement la sélection (réglage), T2.22 corrections de l'assistant en rouge et en vert, puis les autres idées du PO | #118, #120 |
+| **M. Améliorations du PO** | T2.21 copier automatiquement la sélection (réglage), T2.22 corrections de l'assistant en rouge et en vert, T2.23 mes fautes et Pareto, puis les autres idées du PO | #118, #120, #122 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -245,3 +245,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-11-01 : La fenêtre « Nano Buro se met à jour » reste au moins 5 secondes en tout (H3, critère 1), pour qu'on ait le temps de la lire ; le déblocage au bout de 20 s est inchangé.
 - 2026-11-05 : Ouvrir un PDF est écarté pour l'instant (un PDF se lit déjà dans Chrome ou Edge). Copie automatique de la sélection (T2.21, lot M « améliorations du PO ») : un réglage éteint par défaut, et seulement pour une sélection à la souris, car une famille habituée à Word sélectionne souvent un mot pour le remplacer par Ctrl+V.
 - 2026-11-05 : Corrections de l'assistant (T2.22, lot M) : les fautes en rouge barré, les corrections proposées en vert souligné, sur un fond très clair. C'est la seule exception à l'interface monochrome de la charte, visible seulement pendant une correction ; le barré et le souligné restent pour les personnes qui distinguent mal le rouge du vert.
+- 2026-11-05 : Mes fautes (T2.23, lot M) : chaque correction de l'assistant porte un type de faute, demandé dans la même requête ; seules les corrections acceptées comptent, sur l'ordinateur, jamais dans un fichier ni sur le réseau ; un seul compte par ordinateur, avec « Remettre à zéro ». La fenêtre montre un Pareto monochrome, avec une règle courte et les 3 derniers exemples de chaque type. Le correcteur du navigateur ne peut pas être compté.
