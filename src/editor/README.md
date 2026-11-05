@@ -40,4 +40,5 @@ Configuration de Tiptap et de ses extensions. Sans React ; le schéma vient de `
 - `devTestHook.ts` : expose le contenu du Y.Doc aux tests Playwright, en développement seulement
 - `assistantEdits.ts` : assistant (T3.1) : texte sélectionné paragraphe par paragraphe, plages suivies pendant une demande, une étape d'annulation, traduction qui remplace la sélection ou s'insère après (`selectedParagraphs`, `watchRanges`, `replaceWithParagraphs`, `insertParagraphsAfter`)
 - `suggestions.ts` : corrections proposées par l'assistant (T3.1) : plugin qui les affiche par des décorations, hors du document, et disparition si le texte change (`Suggestions`, `suggestionState`)
+- `autoCopy.ts` : copie automatique de la sélection faite à la souris, par le même chemin que Ctrl/Cmd+C, sans transaction (`attachAutoCopy`, T2.21)
 - `suggestionCommands.ts` : commandes des corrections proposées : afficher, choisir, accepter, refuser, tout accepter en une annulation, navigation (`showSuggestions`, `acceptSuggestions`, `rejectSuggestions`, `goToSuggestion`, découpé en M1)

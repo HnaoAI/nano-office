@@ -45,6 +45,14 @@
   accent-color: var(--nano-ink);
 }
 
+/* Phrase discrète sous une case des Réglages (T2.21, critère 1). */
+.nano-settings-hint {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 13px;
+  color: var(--nano-text-quiet);
+}
+
 .nano-settings-field {
   display: flex;
   flex-direction: column;

@@ -15,6 +15,7 @@ import { SettingsDialog } from "./SettingsDialog";
 import { UpdateDialog } from "./UpdateDialog";
 import { UpdateNotice } from "./UpdateNotice";
 import { useAssistantSettings } from "./useAssistantSettings";
+import { usePreferences } from "./usePreferences";
 import { usePageSetupDialog } from "./usePageSetupDialog";
 import { useAppUpdate } from "./useAppUpdate";
 import { useDocumentFile } from "./useDocumentFile";
@@ -85,6 +86,8 @@ export function App() {
   const pageDialog = usePageSetupDialog(document?.ydoc ?? null, noteEdit, noteFileAction);
   // Réglages de l'assistant (T3.1), gardés sur cet ordinateur, communs à tous les documents.
   const assistant = useAssistantSettings();
+  // Réglages de l'éditeur (T2.21, copie automatique de la sélection), gardés sur cet ordinateur.
+  const editorPreferences = usePreferences();
   const [settingsOpen, setSettingsOpen] = useState(false);
   // Aide (A1) : une boîte ouverte compte comme travail commencé, pour qu'une mise à jour ne la ferme pas (H1).
   const help = useHelpPanel(noteFileAction);
@@ -154,6 +157,7 @@ export function App() {
                 onImageRejected={imageRejected}
                 onPageSetup={pageDialog.show}
                 assistant={assistant.config}
+                autoCopySelection={editorPreferences.preferences.autoCopySelection}
                 tools={editorTools}
                 coveredTop={coveredTop}
                 coveredBottom={coveredBottom}
@@ -173,8 +177,10 @@ export function App() {
               <SettingsDialog
                 settings={assistant.settings}
                 keys={assistant.keys}
-                onSave={(settings, keys) => {
+                preferences={editorPreferences.preferences}
+                onSave={(settings, keys, preferences) => {
                   assistant.save(settings, keys);
+                  editorPreferences.save(preferences);
                   closeSettings();
                 }}
                 onForgetKeys={assistant.forgetKeys}

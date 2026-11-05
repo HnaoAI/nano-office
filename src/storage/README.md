@@ -12,3 +12,4 @@ Accès aux fichiers de l'utilisateur, derrière l'interface `FileStore`. Aucun c
 - `outlinePreference.ts` : plan ouvert ou fermé, retenu dans le localStorage de cet ordinateur, jamais dans le document (`loadOutlineOpen`, `saveOutlineOpen`, T2.9)
 - `backupStore.ts` : copie de secours dans IndexedDB, une base par `id` de document via y-indexeddb, dernier document modifié (T0d)
 - `assistantSettingsStore.ts` : réglages de l'assistant et clés d'API dans le localStorage de cet ordinateur, les clés à part, « Oublier la clé » (T3.1)
+- `preferencesStore.ts` : réglages de l'éditeur (copie automatique de la sélection, T2.21) dans le localStorage de cet ordinateur, jamais dans un fichier

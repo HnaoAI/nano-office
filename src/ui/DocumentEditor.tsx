@@ -10,6 +10,7 @@ import type { EditorEvents } from "@tiptap/core";
 import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type * as Y from "yjs";
+import { attachAutoCopy } from "../editor/autoCopy";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { focusEditor } from "../editor/focus";
 import { createEditorOptions } from "../editor/editorOptions";
@@ -64,6 +65,7 @@ function pageStyle(setup: PageSetup): CSSProperties {
  *   page après un double clic sur l'un d'eux (T2.16, critère 3)
  * @param assistant fournisseur, modèle et clé de l'assistant (T3.1) ; null quand il est éteint : ni
  *   bouton, ni panneau, ni requête (critère 4)
+ * @param autoCopySelection copier tout seul la sélection faite à la souris (T2.21), réglage de cet ordinateur
  * @param tools emplacement de la barre de mise en forme, du panneau de l'assistant et de la recherche, dans la partie figée en
  *   haut de la fenêtre (M1) ; null avant son affichage
  * @param coveredTop hauteur cachée par la partie figée, pour que le curseur n'y passe jamais (M1,
@@ -78,6 +80,7 @@ export function DocumentEditor({
   onImageRejected,
   onPageSetup,
   assistant,
+  autoCopySelection,
   tools,
   coveredTop,
   coveredBottom,
@@ -88,6 +91,7 @@ export function DocumentEditor({
   onImageRejected: (reasons: ImageRejection[]) => void;
   onPageSetup: (field?: HeaderFooterField) => void;
   assistant: AssistantConfig | null;
+  autoCopySelection: boolean;
   tools: HTMLElement | null;
   coveredTop: () => number;
   coveredBottom: () => number;
@@ -133,6 +137,12 @@ export function DocumentEditor({
       editor.off("transaction", onTransaction);
     };
   }, [editor]);
+
+  // Copie automatique de la sélection (T2.21) : installée seulement quand le réglage est coché.
+  useEffect(() => {
+    if (!autoCopySelection) return;
+    return attachAutoCopy(editor.view);
+  }, [editor, autoCopySelection]);
 
   useEffect(() => {
     exposeDocumentForTests(ydoc);

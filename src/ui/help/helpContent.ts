@@ -268,6 +268,11 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        icon: "settings",
+        text: "Copier automatiquement la sélection : si vous cochez cette case dans les « Réglages », le texte que vous sélectionnez à la souris (en glissant, ou d'un double clic) est copié tout seul, comme avec Ctrl+C (Cmd+C sur Mac). Il ne reste qu'à le coller. Une sélection faite au clavier n'est pas copiée. La case est décochée au départ : sinon, sélectionner un mot pour le remplacer par Ctrl+V remplacerait ce que vous aviez copié avant.",
+      },
+      {
+        kind: "text",
         text: "Annuler : « Annuler » (Ctrl+Z, Cmd+Z sur Mac) défait la dernière action, et « Rétablir » la refait.",
       },
       {
