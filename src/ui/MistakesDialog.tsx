@@ -150,14 +150,15 @@ export function MistakesDialog({
   const [confirming, setConfirming] = useState(false);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      }
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      // Pendant la confirmation, Échap revient en arrière sans rien effacer.
+      if (confirming) setConfirming(false);
+      else onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, confirming]);
 
   const rows = paretoRows(stats);
   const total = totalMistakes(stats);

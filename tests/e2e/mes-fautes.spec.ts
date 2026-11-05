@@ -274,4 +274,30 @@ test.describe("T2.23 : mes fautes", () => {
     await openMistakes(page);
     await expect(dialog(page)).toContainText("Aucune faute comptée pour l'instant.");
   });
+
+  test("critère 5 : Ctrl/Cmd+Z après une acceptation ne retire pas le compte", async ({ page }) => {
+    await withTypes(page);
+    await start(page);
+    await correct(page);
+    await button(page, "Tout accepter").click();
+    await editor(page).focus();
+    await page.keyboard.press("ControlOrMeta+Z");
+    await expect(editor(page)).toHaveText(FAULTY);
+    await openMistakes(page);
+    expect(await tableRows(page)).toHaveLength(3);
+  });
+
+  test("critère 14 : Échap pendant la confirmation revient en arrière sans rien effacer", async ({
+    page,
+  }) => {
+    await withTypes(page);
+    await start(page);
+    await correct(page);
+    await button(page, "Tout accepter").click();
+    await openMistakes(page);
+    await dialog(page).getByRole("button", { name: "Remettre à zéro" }).click();
+    await page.keyboard.press("Escape");
+    await expect(dialog(page).getByRole("button", { name: "Remettre à zéro" })).toBeVisible();
+    expect(await tableRows(page)).toHaveLength(3);
+  });
 });

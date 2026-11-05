@@ -312,4 +312,19 @@ test.describe("T2.21 : copier automatiquement la sélection", () => {
     await expectClipboard(page, "part");
     expect(requests.filter((url) => !url.startsWith("http://localhost"))).toEqual([]);
   });
+
+  test("critère 2 : un Shift+clic qui étend la sélection la copie", async ({ page }) => {
+    await start(page);
+    await setAutoCopy(page, true);
+    await page.keyboard.type("Début milieu fin.");
+    await fillClipboard(page);
+    const first = await textBox(page, "Début");
+    const end = await textBox(page, "milieu");
+    await page.mouse.click(first.left + 0.5, first.y);
+    await expectClipboardUnchanged(page);
+    await page.keyboard.down("Shift");
+    await page.mouse.click(end.right - 0.5, end.y);
+    await page.keyboard.up("Shift");
+    await expectClipboard(page, "Début milieu");
+  });
 });

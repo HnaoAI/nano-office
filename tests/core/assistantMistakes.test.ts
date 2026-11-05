@@ -98,4 +98,27 @@ describe("T2.23 : type de faute des corrections", () => {
     const plain = correctionChanges([{ text: SENT }], parsed);
     expect(changesFor(raw)).toEqual(plain.map((change) => ({ ...change, mistake: "other" })));
   });
+
+  it("critère 1 : une correction ne donne son type qu'aux mots entiers qu'elle contient", () => {
+    const raw = JSON.stringify({
+      paragraphs: [FIXED],
+      corrections: [{ paragraph: 0, before: "la", after: "là", type: "accent" }],
+    });
+    // « a » n'est pas dans « la » : sans correction annoncée pour lui, il reste « Autre ».
+    expect(changesFor(raw).find((change) => change.removed === "a")?.mistake).toBe("other");
+  });
+
+  it("critère 1 : le même texte annoncé l'emporte sur une correction regroupée", () => {
+    const raw = JSON.stringify({
+      paragraphs: [FIXED],
+      corrections: [
+        { paragraph: 0, before: "aller a", after: "allés à", type: "conjugation" },
+        { paragraph: 0, before: "a", after: "à", type: "homophone" },
+      ],
+    });
+    const types = Object.fromEntries(
+      changesFor(raw).map((change) => [change.removed, change.mistake]),
+    );
+    expect(types).toMatchObject({ aller: "conjugation", a: "homophone" });
+  });
 });

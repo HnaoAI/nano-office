@@ -2,7 +2,7 @@
 // propositions de correction au mot ou au paragraphe, et messages d'erreur en français.
 // Logique pure : les appels réseau sont dans src/assistant/, la clé dans src/storage/.
 import { MISTAKE_HINTS, MISTAKE_TYPES, mistakeType, type MistakeType } from "./mistakes";
-import { diffWords, MAX_ASSISTANT_WORDS, type TextChange } from "./wordDiff";
+import { diffWords, MAX_ASSISTANT_WORDS, wordTokens, type TextChange } from "./wordDiff";
 
 /** Fournisseurs proposés (décision du PO du 2026-10-21). */
 export type AssistantProviderId = "anthropic" | "gemini";
@@ -222,24 +222,47 @@ export interface ParagraphChange extends TextChange {
 
 const normalize = (text: string) => text.normalize("NFC").replace(/\s+/g, " ").trim();
 
-/** Vrai si une correction annoncée couvre une modification : même texte, ou un texte qui la contient. */
+/** Mots et signes d'un texte, sans les espaces, pour comparer au mot près. */
+function words(text: string): string[] {
+  return wordTokens(normalize(text)).filter((token) => token.trim() !== "");
+}
+
+/** Vrai si `needle` apparaît mot pour mot, d'un seul tenant, dans `haystack`. */
+function containsWords(haystack: string[], needle: string[]): boolean {
+  if (needle.length === 0) return true;
+  for (let start = 0; start + needle.length <= haystack.length; start += 1) {
+    if (needle.every((token, index) => haystack[start + index] === token)) return true;
+  }
+  return false;
+}
+
+/**
+ * Vrai si une correction annoncée couvre une modification : même texte, ou un texte qui la contient
+ * mot pour mot (jamais une partie de mot : « a » n'est pas dans « la »).
+ */
 function covers(reported: ReportedCorrection, change: ParagraphChange, exact: boolean): boolean {
-  const before = normalize(reported.before);
-  const after = normalize(reported.after);
-  const removed = normalize(change.removed);
-  const insert = normalize(change.insert);
-  if (exact) return before === removed && after === insert;
-  if (removed === "" && insert === "") return false;
-  const keepsRemoved = removed === "" || before.includes(removed);
-  const keepsInsert = insert === "" || after.includes(insert);
-  return keepsRemoved && keepsInsert && before !== after;
+  if (exact) {
+    return (
+      normalize(reported.before) === normalize(change.removed) &&
+      normalize(reported.after) === normalize(change.insert)
+    );
+  }
+  const removed = words(change.removed);
+  const insert = words(change.insert);
+  if (removed.length === 0 && insert.length === 0) return false;
+  if (normalize(reported.before) === normalize(reported.after)) return false;
+  return (
+    containsWords(words(reported.before), removed) && containsWords(words(reported.after), insert)
+  );
 }
 
 /**
  * Type de faute de chaque modification proposée (T2.23, critère 1), retrouvé parmi les corrections
- * annoncées : d'abord le même texte dans le même paragraphe, puis une correction du même paragraphe
- * qui contient la modification (l'assistant peut regrouper « aller a » → « allés à »), puis le même
- * texte dans un autre paragraphe. Sinon « Autre » (critère 3). Les modifications ne changent pas.
+ * annoncées : d'abord le même texte dans le même paragraphe, puis le même texte dans un autre
+ * paragraphe (numéro erroné), puis une correction du même paragraphe qui contient la modification mot
+ * pour mot (l'assistant peut regrouper « aller a » → « allés à »). Sinon « Autre » (critère 3). Une
+ * proposition « paragraphe entier » (réponse peu fiable) compte donc une seule faute « Autre ».
+ * Les modifications ne changent pas.
  */
 export function withMistakeTypes(
   changes: ParagraphChange[],
@@ -249,8 +272,8 @@ export function withMistakeTypes(
     const samePlace = reported.filter((entry) => entry.paragraph === change.paragraph);
     const found =
       samePlace.find((entry) => covers(entry, change, true)) ??
-      samePlace.find((entry) => covers(entry, change, false)) ??
-      reported.find((entry) => covers(entry, change, true));
+      reported.find((entry) => covers(entry, change, true)) ??
+      samePlace.find((entry) => covers(entry, change, false));
     return { ...change, mistake: found?.type ?? "other" };
   });
 }

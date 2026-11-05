@@ -42,9 +42,33 @@ function copyWithClipboardApi(view: EditorView): void {
   navigator.clipboard.write([item]).catch(() => undefined);
 }
 
-/** Copie la sélection de l'éditeur si elle doit l'être, sans jamais lever d'erreur (critère 7). */
-function copySelection(view: EditorView): void {
-  if (view.isDestroyed || !view.hasFocus() || !shouldAutoCopy(view.state)) return;
+/** Vrai si le navigateur montre une sélection non vide dans l'éditeur. */
+function domHasSelection(view: EditorView): boolean {
+  const selection = document.getSelection();
+  return (
+    selection !== null &&
+    !selection.isCollapsed &&
+    selection.anchorNode !== null &&
+    view.dom.contains(selection.anchorNode)
+  );
+}
+
+/** Nombre d'essais, espacés de 30 ms, pour laisser ProseMirror lire une sélection tardive. */
+const SELECTION_RETRIES = 5;
+
+/**
+ * Copie la sélection de l'éditeur si elle doit l'être, sans jamais lever d'erreur (critère 7).
+ * Sur un ordinateur chargé, l'événement `selectionchange` d'un double clic peut arriver après la
+ * tâche qui suit le mouseup : tant que le navigateur montre une sélection que ProseMirror n'a pas
+ * encore lue, on réessaie un peu plus tard.
+ */
+function copySelection(view: EditorView, retries = SELECTION_RETRIES): void {
+  if (view.isDestroyed || !view.hasFocus()) return;
+  if (view.state.selection.empty && retries > 0 && domHasSelection(view)) {
+    setTimeout(() => copySelection(view, retries - 1), 30);
+    return;
+  }
+  if (!shouldAutoCopy(view.state)) return;
   if (document.activeElement !== view.dom) return;
   try {
     // Même chemin que Ctrl/Cmd+C : l'événement `copy` est traité par ProseMirror (critère 2).
@@ -74,11 +98,23 @@ export function attachAutoCopy(view: EditorView): () => void {
     clearTimeout(timer);
     timer = setTimeout(() => copySelection(view), 0);
   };
+  // Un glisser-déposer natif (déplacer un texte, une image) se termine sans mouseup : le clic suivant
+  // ne doit pas hériter de ce bouton enfoncé (sinon une sélection au clavier serait copiée, critère 3).
+  const onDragStart = () => {
+    pressed = false;
+  };
+  const onOutsideDown = (event: MouseEvent) => {
+    if (!(event.target instanceof Node) || !view.dom.contains(event.target)) pressed = false;
+  };
   view.dom.addEventListener("mousedown", onMouseDown);
+  window.addEventListener("mousedown", onOutsideDown, true);
+  window.addEventListener("dragstart", onDragStart, true);
   window.addEventListener("mouseup", onMouseUp, true);
   return () => {
     clearTimeout(timer);
     view.dom.removeEventListener("mousedown", onMouseDown);
+    window.removeEventListener("mousedown", onOutsideDown, true);
+    window.removeEventListener("dragstart", onDragStart, true);
     window.removeEventListener("mouseup", onMouseUp, true);
   };
 }

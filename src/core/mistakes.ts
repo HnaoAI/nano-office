@@ -221,7 +221,7 @@ export function paretoRows(stats: MistakeStats): ParetoRow[] {
   let before = 0;
   for (const { type, count } of counted) {
     // Calcul en entiers : 4 × 20 % fait exactement 80 %.
-    const vital = before * 10 < total * PARETO_THRESHOLD * 10;
+    const vital = before * 10 < total * Math.round(PARETO_THRESHOLD * 10);
     before += count;
     rows.push({
       type,

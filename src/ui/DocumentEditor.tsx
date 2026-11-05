@@ -170,6 +170,12 @@ export function DocumentEditor({
   // « Mes fautes » (T2.23) : statistiques de cet ordinateur ; la fenêtre se ferme avec l'assistant.
   const mistakeStats = useMistakeStats();
   const [mistakesOpen, setMistakesOpen] = useState(false);
+  // Assistant éteint : la fenêtre se ferme, et ne revient pas d'elle-même quand on le rallume.
+  const [mistakesFor, setMistakesFor] = useState(assistant);
+  if (mistakesFor !== assistant) {
+    setMistakesFor(assistant);
+    if (!assistant) setMistakesOpen(false);
+  }
   const closeMistakes = useCallback(() => {
     setMistakesOpen(false);
     focusEditor(editor);
