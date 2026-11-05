@@ -46,8 +46,10 @@ restent monochromes, seuls le trait sous le « A » du bouton « Couleur du text
 grilles montrent les couleurs. Les deux palettes sont fixes (`src/core/documentColors.ts`).
 
 Exception (T2.22, décision du PO du 2026-11-05) : pendant une correction de l'assistant, le texte retiré est en rouge
-`#C62828` barré sur `#FDECEA` (`--nano-suggest-removed`), et le texte proposé en vert `#2E7D32` souligné sur `#E8F5E9`
-(`--nano-suggest-inserted`). Ces marques ne sont jamais dans le document.
+`#C62828` barré sur `#FDECEA` (`--nano-suggest-removed`, fond `--nano-suggest-removed-bg`), et le texte proposé en vert
+`#2E7D32` souligné sur `#E8F5E9` (`--nano-suggest-inserted`, fond `--nano-suggest-inserted-bg`). Ces marques ne sont jamais
+dans le document, ne s'impriment pas, et le barré et le souligné restent pour qui distingue mal le rouge du vert.
+Contrastes : environ 4,9:1 pour le rouge sur son fond, et 4,6:1 pour le vert (au moins 4,5:1, vérifié par `tests/ui/suggestionColors.test.ts`).
 
 | Couleur du texte | Valeur | | Surlignage | Valeur |
 |---|---|---|---|---|

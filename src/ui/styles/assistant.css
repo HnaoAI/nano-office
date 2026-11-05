@@ -1,6 +1,7 @@
 /* Assistant facultatif (T3.1) : bouton « Réglages » de l'en-tête et sa boîte, groupe « Assistant » de
    la barre, panneau au style des messages, marques de suggestion dans le texte, boutons d'une
-   modification. Monochrome : aucune couleur vive, seulement les variables de la charte. */
+   modification. Monochrome, seulement les variables de la charte, sauf les marques de suggestion en
+   rouge et en vert (T2.22). */
 
 /* Bouton « Réglages » au bout de l'en-tête, à la hauteur du groupe Fichier. */
 .nano-settings-button {
@@ -178,17 +179,25 @@
   color: var(--nano-text-quiet);
 }
 
-/* Marques de suggestion dans le texte (critère 7) : retrait barré en gris, ajout souligné sur le gris
-   clair des surfaces atténuées. Lisibles en monochrome ; la couleur du document est remplacée. */
+/* Marques de suggestion dans le texte (T3.1, critère 7 ; couleurs de T2.22) : retrait en rouge barré
+   sur fond rouge très clair, ajout en vert souligné sur fond vert très clair. Seule exception à
+   l'interface monochrome, visible seulement pendant une correction. Le barré et le souligné restent
+   pour qui distingue mal le rouge du vert (critère 3) ; la couleur du document est remplacée pendant
+   la correction (critère 7) et revient une fois la modification acceptée ou refusée. */
 .nano-editor .nano-suggest-removed,
 .nano-editor .nano-suggest-removed * {
-  color: var(--nano-text-quiet);
+  color: var(--nano-suggest-removed);
   text-decoration: line-through;
   cursor: pointer;
 }
 
+.nano-editor .nano-suggest-removed {
+  background: var(--nano-suggest-removed-bg);
+}
+
 .nano-editor .nano-suggest-inserted {
-  background: var(--nano-surface-muted);
+  color: var(--nano-suggest-inserted);
+  background: var(--nano-suggest-inserted-bg);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -248,6 +257,7 @@
      leur décoration, que `inherit` aurait effacée. */
   .nano-editor .nano-suggest-removed {
     color: inherit;
+    background: none;
     text-decoration: none;
   }
 

@@ -365,7 +365,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         items: [
           "Dans « Réglages », cochez « Activer l'assistant », choisissez Claude ou Gemini, et collez votre clé. Un abonnement à Claude ou à Gemini ne suffit pas : la clé se crée sur l'espace développeurs du site du fournisseur.",
           "Les boutons « Corriger » et « Traduire en anglais » apparaissent alors au bout de la barre. Sélectionnez un texte, puis cliquez sur l'un d'eux.",
-          "« Corriger » montre chaque modification proposée dans le texte. Cliquez sur « Accepter » ou « Refuser » pour chacune, ou sur « Tout accepter » ou « Tout refuser ».",
+          "« Corriger » montre chaque modification proposée dans le texte. Les fautes sont en rouge, barrées, et les corrections proposées en vert, soulignées. Cliquez sur « Accepter » ou « Refuser » pour chacune, ou sur « Tout accepter » ou « Tout refuser ».",
           "« Traduire en anglais » affiche la traduction à part. Choisissez « Remplacer la sélection », « Insérer après » ou « Copier ».",
         ],
       },

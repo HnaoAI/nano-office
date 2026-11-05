@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-// Contenu de l'aide intégrée (A1) pour le lot M : copie automatique de la sélection (T2.21, critère 9).
+// Contenu de l'aide intégrée (A1) pour le lot M : copie automatique de la sélection (T2.21, critère 9),
+// couleurs des corrections (T2.22, critère 8).
 import { describe, expect, it } from "vitest";
 import { HELP_SECTIONS, type HelpBlock } from "../../src/ui/help/helpContent";
 
@@ -29,5 +30,11 @@ describe("aide du lot M", () => {
     expect(text).toContain("« Réglages »");
     expect(text).toMatch(/au clavier n'est pas copiée/);
     expect(text.indexOf("Copier automatiquement")).toBeGreaterThan(text.indexOf("Copier-coller"));
+  });
+
+  it("T2.22, critère 8 : l'aide dit que les fautes sont en rouge et les corrections en vert", () => {
+    expect(sectionText("privacy")).toContain(
+      "Les fautes sont en rouge, barrées, et les corrections proposées en vert, soulignées.",
+    );
   });
 });

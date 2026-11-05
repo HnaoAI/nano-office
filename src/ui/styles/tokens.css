@@ -15,6 +15,11 @@
   --nano-text-quiet: #5f5f5c;
   --nano-text-disabled: #9a9a96;
   --nano-icon-chip-on-ink: #2a2a29;
+  /* Seule exception à l'interface monochrome (T2.22) : marques des corrections de l'assistant. */
+  --nano-suggest-removed: #c62828;
+  --nano-suggest-removed-bg: #fdecea;
+  --nano-suggest-inserted: #2e7d32;
+  --nano-suggest-inserted-bg: #e8f5e9;
   --nano-font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --nano-font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --nano-radius-page: 6px;
