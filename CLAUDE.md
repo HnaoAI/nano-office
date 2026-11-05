@@ -134,6 +134,7 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **J. Documents complets** | T2.15 numéros de page, T2.16 en-tête et pied de page, T2.17 sommaire | #89, #90, #91 |
 | **K. Ouvrir un fichier Word** | T2.18 ouvrir un `.docx` | #92 |
 | **L. Schémas** | T2.20 schémas (processus, organigrammes), avec React Flow | #96 |
+| **M. Améliorations du PO** | T2.21 copier automatiquement la sélection (réglage), puis les autres idées du PO | #118 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -242,3 +243,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-11-01 : Lot L. Le schéma est un nouveau bloc du document, dont les formes et les flèches sont des données du bloc, avec l'« ok » du PO sur le format : un ordinateur pas encore mis à jour refuse un fichier avec schéma sans le modifier. React Flow (MIT) n'est chargé qu'au premier schéma ouvert. Les textes du schéma sont échappés et les couleurs limitées à la palette, pour qu'un fichier ne puisse rien injecter dans le dessin.
 - 2026-11-01 : L'adresse de Nano Buro est donnée à la famille, pour le pilote sur PC. Les PR continuent d'être fusionnées par le relecteur dès que la CI est verte : une mise à jour ne s'installe qu'à l'ouverture, jamais en plein travail, et un changement du format `.nano` attend toujours l'« ok » du PO. Les retours de la famille alimentent les idées d'améliorations, avant la collaboration. L'aide a été complétée avant le partage (PR #115).
 - 2026-11-01 : La fenêtre « Nano Buro se met à jour » reste au moins 5 secondes en tout (H3, critère 1), pour qu'on ait le temps de la lire ; le déblocage au bout de 20 s est inchangé.
+- 2026-11-05 : Ouvrir un PDF est écarté pour l'instant (un PDF se lit déjà dans Chrome ou Edge). Copie automatique de la sélection (T2.21, lot M « améliorations du PO ») : un réglage éteint par défaut, et seulement pour une sélection à la souris, car une famille habituée à Word sélectionne souvent un mot pour le remplacer par Ctrl+V.
