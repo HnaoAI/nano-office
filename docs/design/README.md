@@ -45,6 +45,10 @@ Les seules couleurs à l'écran sont celles du document, jamais celles de l'inte
 restent monochromes, seuls le trait sous le « A » du bouton « Couleur du texte » et les pastilles des
 grilles montrent les couleurs. Les deux palettes sont fixes (`src/core/documentColors.ts`).
 
+Exception (T2.22, décision du PO du 2026-11-05) : pendant une correction de l'assistant, le texte retiré est en rouge
+`#C62828` barré sur `#FDECEA` (`--nano-suggest-removed`), et le texte proposé en vert `#2E7D32` souligné sur `#E8F5E9`
+(`--nano-suggest-inserted`). Ces marques ne sont jamais dans le document.
+
 | Couleur du texte | Valeur | | Surlignage | Valeur |
 |---|---|---|---|---|
 | Automatique | couleur du texte du document | | Aucun | pastille blanche barrée |
