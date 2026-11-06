@@ -252,7 +252,11 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
-        text: "Pages : un trait en pointillé montre où finit chaque page, et le bas de la fenêtre indique « Page 3 sur 7 », par exemple. Pour commencer une nouvelle page, utilisez « Saut de page », ou Ctrl+Entrée (Cmd+Entrée sur Mac).",
+        text: "Pages : le document s'affiche en feuilles séparées, coupées comme à l'impression, avec l'en-tête, le pied de page et le numéro dans les marges de chaque feuille. Le texte passe tout seul d'une feuille à la suivante, et le bas de la fenêtre indique « Page 3 sur 7 », par exemple. Pour commencer une nouvelle page, utilisez « Saut de page », ou Ctrl+Entrée (Cmd+Entrée sur Mac).",
+      },
+      {
+        kind: "text",
+        text: "Vue des pages : le bouton à côté de « Page 3 sur 7 » montre toutes les feuilles en petit, la page du curseur entourée de noir. Cliquez sur une feuille pour y aller, ou passez de l'une à l'autre avec les flèches puis Entrée. Échap ou « Fermer » ferme la vue sans bouger. Pour déplacer une partie du document, utilisez le plan.",
       },
       {
         kind: "text",

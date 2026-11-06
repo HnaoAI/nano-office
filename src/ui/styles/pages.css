@@ -215,3 +215,146 @@
   font-size: 14px;
   color: var(--nano-text-quiet);
 }
+
+/* Bouton « Vue des pages » du pied de page (PL6, critère 12), à côté de « Page 3 sur 7 », au style du compteur de
+   mots. */
+.nano-pages-view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border: none;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.nano-pages-view-button:hover {
+  background: var(--nano-group-bg);
+  color: var(--nano-text-secondary);
+}
+
+.nano-pages-view-button:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+/* Vue des pages (PL6, critères 13 à 16) : un écran qui remplit la fenêtre, sur le gris de l'application, au-dessus de
+   la partie figée et du pied de page ; une grille de feuilles réduites à 160 px, leur numéro dessous, la page du
+   curseur entourée de noir. Rien ne s'imprime (print.css). */
+.nano-thumbnails {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  background: var(--nano-app-bg);
+  font-family: var(--nano-font-sans);
+  color: var(--nano-ink);
+}
+
+.nano-thumbnails-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px 12px;
+}
+
+.nano-thumbnails-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.nano-thumbnails-count {
+  flex: 1;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-thumbnails-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface);
+  color: var(--nano-ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nano-thumbnails-close:focus-visible,
+.nano-thumbnail:focus-visible {
+  outline: none;
+  box-shadow: var(--nano-focus-ring);
+}
+
+.nano-thumbnails-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  align-content: start;
+  justify-items: center;
+  gap: 28px 24px;
+  padding: 12px 28px 40px;
+  overflow-y: auto;
+}
+
+.nano-thumbnail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nano-radius-button);
+  background: transparent;
+  color: var(--nano-text-secondary);
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nano-thumbnail-frame {
+  position: relative;
+  width: 160px;
+  overflow: hidden;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-page);
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+.nano-thumbnail[aria-current="page"] .nano-thumbnail-frame {
+  outline-color: var(--nano-ink);
+}
+
+.nano-thumbnail[aria-current="page"] .nano-thumbnail-number {
+  color: var(--nano-ink);
+  font-weight: 600;
+}
+
+.nano-thumbnail-sheet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  color: var(--nano-document-text);
+  pointer-events: none;
+}
+
+.nano-thumbnail-content {
+  position: absolute;
+  inset: 0;
+}
+
+.nano-thumbnail-sheet .nano-sheet-margins {
+  position: absolute;
+  inset: 0;
+}

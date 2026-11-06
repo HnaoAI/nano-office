@@ -66,6 +66,7 @@
      DocumentEditor.tsx d'après src/core/headerFooter.ts.
      INVARIANT : aucune règle de l'écran plus précise ne doit redonner un `display` à ces calques (B3). */
   .nano-sheets,
+  .nano-thumbnails,
   .nano-margin-texts,
   .nano-editor .nano-sheet-gap {
     display: none;

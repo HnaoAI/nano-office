@@ -33,6 +33,9 @@ import { AssistantPanel } from "./AssistantPanel";
 import { MistakesDialog } from "./MistakesDialog";
 import { OutlinePanel } from "./OutlinePanel";
 import { SheetMarginsLayer, SheetsBackground } from "./SheetsLayer";
+import { PageThumbnails } from "./PageThumbnails";
+import { usePagesView } from "./usePagesView";
+import { PagesViewIcon } from "./icons";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import type { HeaderFooterField } from "./HeaderFooterFields";
@@ -128,6 +131,7 @@ export function DocumentEditor({
   const headerFooter = useHeaderFooter(ydoc);
   const [sheet, setSheet] = useState<HTMLElement | null>(null);
   const marks = usePageLayout(editor, sheet, pageSetup);
+  const pagesView = usePagesView(editor, sheet, marks, coveredTop);
   // Plan (T2.9) : fermé par défaut, choix retenu sur cet ordinateur (critère 1).
   const [outlineOpen, setOutlineOpen] = useState(loadOutlineOpen);
   const showOutline = (open: boolean) => {
@@ -230,6 +234,16 @@ export function DocumentEditor({
             <span className="nano-page-counter">
               {pageCounterText(marks.current, marks.layout.pageCount)}
             </span>
+            {/* Vue des pages (PL6, critère 12) : à côté du compteur, toutes les feuilles en miniatures. */}
+            <button
+              type="button"
+              className="nano-pages-view-button"
+              aria-label="Vue des pages"
+              title="Vue des pages : toutes les pages en miniatures"
+              onClick={pagesView.show}
+            >
+              <PagesViewIcon />
+            </button>
             <WordCounter count={words} pages={marks.layout.pageCount} />
           </>,
           counter,
@@ -243,6 +257,16 @@ export function DocumentEditor({
           outline={outline}
           coveredTop={coveredTop}
           onClose={() => showOutline(false)}
+        />
+      )}
+      {pagesView.open && sheet && (
+        <PageThumbnails
+          sheets={marks.sheets}
+          current={pagesView.current}
+          pile={sheet}
+          editorElement={editor.view.dom}
+          onGo={pagesView.goTo}
+          onClose={pagesView.close}
         />
       )}
       <main className={outlineOpen ? "nano-workspace nano-outline-open" : "nano-workspace"}>
