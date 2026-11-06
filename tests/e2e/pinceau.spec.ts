@@ -286,6 +286,8 @@ test("critère 8 : un titre garde son niveau ; une image est ignorée", async ({
   await page.keyboard.press("Enter");
   const image = await makeImage(page, "photo.png", { width: 40, height: 30, type: "image/png" });
   await insertWithButton(page, [image]);
+  // L'image est préparée sans attendre (réduction, empreinte) : la laisser arriver avant d'utiliser le pinceau.
+  await expect(page.locator(".nano-editor img")).toBeVisible();
   await makeBold(page, "source");
   const before = await topBlocks(page);
 
