@@ -1,4 +1,4 @@
-/* Repères de page et saut de page manuel (T2.8), sur la feuille du document. Découpés de layout.css
+/* Feuilles séparées (PL6), saut de page manuel (T2.8), en-tête et pied de page de chaque feuille (T2.16). Découpés de layout.css
    (décision du PO du 2026-10-24). Le compteur « Page 3 sur 7 » est dans le pied de page (layout.css). */
 /* Saut de page manuel (T2.8, critère 7) : une ligne discrète « Saut de page », centrée dans la feuille.
    Le libellé vient d'ici, pas du document : il n'est ni enregistré, ni copié, ni imprimé (print.css). */
@@ -24,45 +24,51 @@
   outline-offset: 2px;
 }
 
-/* Repères de page (T2.8, critères 1 et 2) : posés sur la feuille, ils ne décalent rien et ne reçoivent
-   pas les clics. Le trait traverse la feuille de bord à bord ; le numéro de la page suivante est dans la
-   marge de droite, juste sous le trait. */
-.nano-page-marks {
+/* Feuilles séparées (PL6, critère 1) : sous le texte, une feuille blanche par page, avec l'ombre et le rayon de la
+   page, et entre deux feuilles une bande du gris de l'application, qui couvre aussi l'ombre de la pile (.nano-page).
+   Les espaces entre feuilles du texte (src/editor/sheetGaps.ts) poussent le texte de chaque page en haut de sa
+   feuille ; ils ne reçoivent pas les clics, et disparaissent pendant la mesure du texte. */
+.nano-sheets {
   position: absolute;
   inset: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  z-index: 0;
   pointer-events: none;
   user-select: none;
 }
 
-.nano-page-mark {
+.nano-sheets-backdrop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -96px;
+  right: -96px;
+  background: var(--nano-app-bg);
+}
+
+.nano-sheet {
   position: absolute;
   left: 0;
   right: 0;
-  height: 0;
-  border-top: 1px dashed var(--nano-separator-strong);
-  transform: translateY(-0.5px);
+  border-radius: var(--nano-radius-page);
+  background: var(--nano-surface);
+  box-shadow: var(--nano-shadow-page);
 }
 
-.nano-page-number {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  width: var(--page-margin-right, 2.5cm);
-  text-align: center;
-  font-family: var(--nano-font-mono);
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--nano-text-quiet);
+.nano-editor-host {
+  position: relative;
+  z-index: 1;
 }
 
-/* Écran étroit (moins de 600 px) : le numéro tient dans la marge réduite de la page (layout.css). */
-@media (max-width: 600px) {
-  .nano-page-number {
-    width: 20px;
-  }
+.nano-editor .nano-sheet-gap {
+  display: block;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nano-sheets-measuring .nano-editor .nano-sheet-gap {
+  display: none;
 }
 
 /* En-tête et pied de page à l'écran (T2.16, critère 3) : en gris clair, dans la largeur du texte, en haut de
@@ -71,7 +77,16 @@
 .nano-margin-texts {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
+}
+
+/* Marges d'une feuille (PL6, critère 5) : l'en-tête au milieu de la marge du haut, le pied de page et le numéro au
+   milieu de la marge du bas. */
+.nano-sheet-margins {
+  position: absolute;
+  left: 0;
+  right: 0;
 }
 
 .nano-margin-text {
@@ -93,29 +108,14 @@
   cursor: default;
 }
 
-.nano-margin-text-first {
+.nano-margin-top {
   top: calc(var(--page-margin-top, 2.5cm) / 2);
   transform: translateY(-50%);
 }
 
-.nano-margin-text-last {
+.nano-margin-bottom {
   bottom: calc(var(--page-margin-bottom, 2.5cm) / 2);
   transform: translateY(50%);
-}
-
-/* Près d'un repère, le texte est plus petit, pour tenir dans l'espace entre deux paragraphes. */
-.nano-margin-text-above,
-.nano-margin-text-below {
-  font-size: 10px;
-  line-height: 12px;
-}
-
-.nano-margin-text-above {
-  transform: translateY(calc(-100% - 1px));
-}
-
-.nano-margin-text-below {
-  transform: translateY(1px);
 }
 
 /* Écran étroit (moins de 600 px) : la page a des marges réduites (layout.css). */
@@ -125,11 +125,11 @@
     right: 20px;
   }
 
-  .nano-margin-text-first {
+  .nano-margin-top {
     top: 16px;
   }
 
-  .nano-margin-text-last {
+  .nano-margin-bottom {
     bottom: 16px;
   }
 }

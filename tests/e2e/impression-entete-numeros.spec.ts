@@ -216,7 +216,8 @@ test.describe("B3 : impression de l'en-tête, du pied de page et des numéros", 
     await expect(first).toBeVisible();
     await expect(first).toHaveText(`${HEADER} 😊`);
     await expect(page.locator(".nano-margin-text-last")).toHaveText(FOOTER);
-    const marks = await page.locator(".nano-page-mark").count();
+    // Une feuille par page après la première (PL6, critère 7 : feuilles au lieu des repères).
+    const marks = await page.locator('.nano-sheet:not([data-page="1"])').count();
     expect(marks).toBeGreaterThanOrEqual(2);
     await expect(page.locator(".nano-margin-text-below")).toHaveCount(marks);
     const gray = await first.evaluate((node) => getComputedStyle(node).color);

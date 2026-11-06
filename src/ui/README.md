@@ -33,7 +33,6 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `HeaderFooterFields.tsx` : parties « Numéros de page » (T2.15) et « En-tête et pied de page » (T2.16) de la boîte « Mise en page »
 - `usePageSetupDialog.ts` : ouverture de la boîte « Mise en page », au besoin sur le champ de l'en-tête ou du pied de page (T2.16), application au Y.Doc affiché en une étape d'annulation, retour du focus (T2.5)
 - `usePageSetup.ts` : mise en page (T2.5), numéros, en-tête et pied de page (T2.15, T2.16) du document affiché, relus à chaque changement et à chaque annulation
-- `HeaderFooterLayer.tsx` : en-tête et pied de page à l'écran, en gris clair dans les marges et près des repères de page, double clic pour les modifier (T2.16)
 - `shortcuts.ts` : libellés des raccourcis (Cmd ou Ctrl, ⌘S ou Ctrl+S, raccourcis des titres, ⌘/ ou Ctrl+/ de l'aide)
 - `icons.tsx` : icônes SVG au trait (Annuler, Rétablir) (U1a), icônes des messages et de la boîte de dialogue (U1b), listes (T1.2), alignement (T1.3), surlignage (T1.7), images (T1.9), recherche (T2.1), barré (T2.3), souligné (T2.10), mise en page (T2.5), interligne (M1), saut de page (T2.8), retrait (T2.14), lien (T2.12), encadré (T2.19), schéma (T2.20), pinceau (PL4)
 - `formatPainterCursor.svg` : pointeur en pinceau au-dessus du document pendant le pinceau (PL4)
@@ -53,11 +52,11 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `TableButtons.tsx` : « Insérer un tableau » et sa grille de 8 × 8 cases, groupe « Tableau » quand le curseur est dans un tableau (T1.8)
 - `ImageButtons.tsx` : « Insérer une image » et son sélecteur de fichiers, groupe « Image » et « Texte de remplacement » quand une image est sélectionnée (T1.9)
 - `tableIcons.tsx` : icônes au trait des tableaux (T1.8)
-- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6) avec les numéros, l'en-tête et le pied de page (T2.15, T2.16), repères de page et compteur « Page 3 sur 7 » (T2.8), compteur de mots (T2.11), bulle des liens (T2.12), panneau « Plan » (T2.9)
+- `DocumentEditor.tsx` : barre de mise en forme et barre de recherche (T2.1), affichées dans la partie figée de `App.tsx` (M1), et éditeur d'un document, relié à un Y.Doc, sur une page centrée à la largeur A4 et aux marges du document (T2.5), règle `@page` de l'impression (T2.6) avec les numéros, l'en-tête et le pied de page (T2.15, T2.16), feuilles séparées (PL6) et compteur « Page 3 sur 7 » (T2.8), compteur de mots (T2.11), bulle des liens (T2.12), panneau « Plan » (T2.9)
 - `useWordCount.ts` : statistiques du document affiché et mots sélectionnés, recalculées au plus une fois par image (T2.11)
 - `WordCounter.tsx` : compteur de mots du pied de page, à côté de « Page 3 sur 7 », et fenêtre des statistiques au clic (T2.11)
-- `usePageLayout.ts` : repères de page du document affiché (T2.8) : coupures recalculées au plus une fois par image affichée, page visible au milieu de la fenêtre
-- `PageMarksLayer.tsx` : calque des repères de page (T2.8) : trait en pointillé de bord à bord et numéro de la page suivante dans la marge de droite, hors du document
+- `usePageLayout.ts` : feuilles séparées du document affiché (T2.8, PL6) : coupures recalculées au plus une fois par image affichée, espaces entre feuilles posés et corrigés, feuilles placées, page visible au milieu de la fenêtre
+- `SheetsLayer.tsx` : feuilles séparées (PL6) : fond gris et feuilles blanches sous le texte, en-tête, pied de page et numéro dans les marges de chaque feuille, double clic pour les modifier (T2.16)
 - `OutlinePanel.tsx` : panneau « Plan » à gauche de la page (T2.9) : titres en retrait, sauts de page, numéros de page, titre actif, clic pour y aller, glisser-déposer d'une partie avec un trait de dépôt, Alt+Shift+Flèche, « Insérer un sommaire » (T2.17) ; par-dessus la page à petite largeur
 - `useOutline.ts` : plan du document affiché (T2.9) : lignes relues au plus une fois par image, titre actif, numéros de page d'après les repères de T2.8, Alt+Shift+Flèche dans un titre du document
 - `SearchBar.tsx` : barre « Rechercher et remplacer » sous la barre de mise en forme, à droite (T2.1)

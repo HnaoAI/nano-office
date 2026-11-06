@@ -205,9 +205,10 @@ test.describe("T2.9 : plan du document", () => {
       Number(await item(page, name).locator(".nano-outline-page").textContent());
     expect(await pageOf("Le vent")).toBe(1);
     expect(await pageOf("Conclusion")).toBeGreaterThan(await pageOf("En Chine"));
-    // Même numéro que les repères de page de T2.8 : un de plus que le nombre de repères au-dessus du titre.
+    // Même numéro que les feuilles (PL6, qui remplacent les repères de T2.8) : un de plus que le nombre de débuts de
+    // feuille au-dessus du titre.
     const marks = await page
-      .locator(".nano-page-mark")
+      .locator('.nano-sheet:not([data-page="1"])')
       .evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().top));
     expect(marks.length).toBeGreaterThan(0);
     for (const name of ["Le vent", "Histoire", "Conclusion"]) {
