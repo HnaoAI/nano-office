@@ -13,12 +13,14 @@ import { BlockIdGenerator } from "./blockIds";
 import { CleanClipboard } from "./clipboard";
 import type { ImageRejectedHandler } from "./imageInsert";
 import { createImageExtensions } from "./images";
+import { FormatPainter } from "./formatPainter";
 import { FormatShortcuts } from "./keyboardShortcuts";
 import { LinkClick } from "./links";
 import { CalloutKeys } from "./callout";
 import { PageBreaks } from "./pageBreak";
 import { createPageSetupHistory } from "./pageSetup";
 import { Search } from "./search";
+import { SheetGaps } from "./sheetGaps";
 import { Suggestions } from "./suggestions";
 import { TableNavigation } from "./tables";
 import { TableOfContentsEditorNode } from "./toc";
@@ -46,6 +48,8 @@ import { TableOfContentsEditorNode } from "./toc";
  *   le nœud du schéma est remplacé par sa version avec sa vue, à la même place.
  * - Un schéma s'affiche en dessin SVG et s'ouvre en modification au double clic, avec l'éditeur de formes
  *   fourni par l'interface (`createDiagramNode`, T2.20).
+ * - Le pinceau copie la mise en forme du curseur vers une sélection faite à la souris (`FormatPainter`, PL4).
+ * - Les espaces entre feuilles séparées sont des décorations, hors du document (`SheetGaps`, PL6).
  * - Un lien s'ouvre par Ctrl/Cmd+clic ; un clic simple place le curseur (`LinkClick`, T2.12).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
@@ -82,6 +86,8 @@ export function createEditorOptions(
       PageBreaks,
       Search,
       Suggestions,
+      FormatPainter,
+      SheetGaps,
       Collaboration.configure({
         document: ydoc,
         field: YJS_FRAGMENT_NAME,

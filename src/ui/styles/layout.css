@@ -182,6 +182,8 @@ button:focus-visible {
   display: flex;
   justify-content: center;
   padding: 24px 20px 40px;
+  /* Les bandes grises entre feuilles débordent de la page pour couvrir son ombre (PL6) : jamais de défilement. */
+  overflow-x: clip;
 }
 
 /* Mise en page (T2.5) : largeur d'une feuille A4 et marges du document, à l'échelle (1 cm du CSS).
@@ -190,7 +192,8 @@ button:focus-visible {
   position: relative;
   width: 100%;
   max-width: var(--page-width, 21cm);
-  min-height: var(--page-height, 29.7cm);
+  /* Pile des feuilles séparées (PL6), au moins une feuille. */
+  min-height: var(--sheets-height, var(--page-height, 29.7cm));
   display: flex;
   flex-direction: column;
   padding: var(--page-margin-top, 2.5cm) var(--page-margin-right, 2.5cm)
@@ -305,7 +308,7 @@ button:focus-visible {
   }
 
   .nano-page {
-    min-height: 70vh;
+    min-height: var(--sheets-height, 70vh);
     padding: 32px 20px;
   }
 

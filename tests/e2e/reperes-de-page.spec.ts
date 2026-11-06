@@ -95,8 +95,12 @@ const THREE_PAGES: DocumentJson[] = [
   ...Array.from({ length: 4 }, (_, index) => para(`c-${index}`, 3)),
 ];
 
+/**
+ * Débuts de page : une feuille par page après la première. Depuis PL6, les feuilles séparées remplacent les traits en
+ * pointillé de T2.8 (PL6, critère 7) : les tests qui comptaient les traits comptent les feuilles, avec l'accord du PO.
+ */
 function marks(page: Page) {
-  return page.locator(".nano-page-mark");
+  return page.locator('.nano-sheet:not([data-page="1"])');
 }
 
 function counter(page: Page) {
@@ -120,46 +124,24 @@ async function shownPageCount(page: Page): Promise<number> {
 }
 
 test.describe("T2.8 : repères de page", () => {
-  test("critères 1 et 2 : un document de 3 pages a deux repères en pointillé, numérotés 2 et 3", async ({
+  // Adapté aux feuilles séparées (PL6, critère 7) : plus de trait en pointillé ni de numéro dans la marge, mais une
+  // feuille par page, numérotée, séparée de la suivante par un espace gris.
+  test("critères 1 et 2 : un document de 3 pages a trois feuilles, numérotées 1 à 3, sans trait en pointillé", async ({
     page,
   }) => {
     await start(page);
     await openDocument(page, THREE_PAGES);
     await expect(marks(page)).toHaveCount(2);
-    await expect(page.locator(".nano-page-number")).toHaveText(["2", "3"]);
-    const style = await marks(page)
-      .first()
-      .evaluate((mark) => {
-        const line = getComputedStyle(mark);
-        const number = getComputedStyle(mark.querySelector(".nano-page-number") as Element);
-        const sheet = (mark.closest(".nano-page") as Element).getBoundingClientRect();
-        const box = mark.getBoundingClientRect();
-        const numberBox = (
-          mark.querySelector(".nano-page-number") as Element
-        ).getBoundingClientRect();
-        const text = (document.querySelector(".nano-editor") as Element).getBoundingClientRect();
-        return {
-          border: `${line.borderTopWidth} ${line.borderTopStyle} ${line.borderTopColor}`,
-          pointer: line.pointerEvents,
-          edgeToEdge: Math.abs(box.left - sheet.left) < 1 && Math.abs(box.right - sheet.right) < 1,
-          font: `${number.fontFamily.split(",")[0]?.replace(/"/g, "")} ${number.fontSize}`,
-          color: number.color,
-          inRightMargin: numberBox.left >= text.right,
-          belowLine: numberBox.top >= box.top,
-        };
-      });
-    expect(style).toEqual({
-      border: "1px dashed rgb(212, 212, 209)",
-      pointer: "none",
-      edgeToEdge: true,
-      font: "IBM Plex Mono 12px",
-      color: "rgb(95, 95, 92)",
-      inRightMargin: true,
-      belowLine: true,
-    });
+    await expect(page.locator(".nano-page-mark")).toHaveCount(0);
+    const pagesShown = await page
+      .locator(".nano-sheet")
+      .evaluateAll((sheets) => sheets.map((sheet) => (sheet as HTMLElement).dataset.page));
+    expect(pagesShown).toEqual(["1", "2", "3"]);
   });
 
-  test("critère 1 : le repère est entre deux lignes, ne cache aucun caractère et ne reçoit pas les clics", async ({
+  // Adapté aux feuilles séparées (PL6, critère 7) : chaque caractère est dans la zone de texte d'une feuille, jamais
+  // dans l'espace gris ni dans une marge, et l'espace gris ne reçoit pas les clics.
+  test("critère 1 : chaque caractère est dans la zone de texte d'une feuille, et l'espace gris ne reçoit pas les clics", async ({
     page,
   }) => {
     await start(page);
@@ -167,39 +149,50 @@ test.describe("T2.8 : repères de page", () => {
     await expect(marks(page)).toHaveCount(2);
     const result = await page.evaluate(() => {
       const editorElement = document.querySelector(".nano-editor") as HTMLElement;
-      return Array.from(document.querySelectorAll(".nano-page-mark")).map((mark) => {
-        mark.scrollIntoView({ block: "center" });
-        // Rectangles des caractères : ceux de chaque nœud de texte, pas ceux des éléments.
-        const glyphs: DOMRect[] = [];
-        const walker = document.createTreeWalker(editorElement, NodeFilter.SHOW_TEXT);
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          glyphs.push(...Array.from(range.getClientRects()).filter((rect) => rect.height > 0));
-        }
-        const y = mark.getBoundingClientRect().top;
-        const crossing = glyphs
-          .filter((rect) => rect.top + 1 < y && rect.bottom - 1 > y)
-          .map((rect) => `${String(rect.top)}-${String(rect.bottom)} @${String(y)}`);
-        const editorBox = editorElement.getBoundingClientRect();
-        const hit = document.elementFromPoint(editorBox.left + 40, y);
-        return { crossing, hitInEditor: editorElement.contains(hit) };
-      });
-    });
-    expect(result).toEqual([
-      { crossing: [], hitInEditor: true },
-      { crossing: [], hitInEditor: true },
-    ]);
-    // Les repères ne décalent rien : la hauteur de l'éditeur est celle de son contenu.
-    const heights = await page.evaluate(() => {
-      const editorElement = document.querySelector(".nano-editor") as HTMLElement;
-      const last = editorElement.lastElementChild as HTMLElement;
+      const pile = document.querySelector(".nano-page") as HTMLElement;
+      const style = getComputedStyle(pile);
+      const top = Number.parseFloat(style.paddingTop);
+      const bottom = Number.parseFloat(style.paddingBottom);
+      const sheets = Array.from(document.querySelectorAll<HTMLElement>(".nano-sheet")).map(
+        (sheet) => sheet.getBoundingClientRect(),
+      );
+      const glyphs: DOMRect[] = [];
+      const walker = document.createTreeWalker(editorElement, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        glyphs.push(...Array.from(range.getClientRects()).filter((rect) => rect.height > 0));
+      }
+      const outside = glyphs
+        .filter(
+          (rect) =>
+            !sheets.some(
+              (sheet) =>
+                rect.top >= sheet.top + top - 8 && rect.bottom <= sheet.bottom - bottom + 8,
+            ),
+        )
+        .map((rect) => `${String(rect.top)}-${String(rect.bottom)}`);
+      const [before, after] = sheets;
+      if (!before || !after) throw new Error("moins de deux feuilles");
+      window.scrollBy(0, (before.bottom + after.top) / 2 - window.innerHeight / 2);
+      const [first, second] = Array.from(document.querySelectorAll(".nano-sheet")).map((sheet) =>
+        sheet.getBoundingClientRect(),
+      );
+      if (!first || !second) throw new Error("moins de deux feuilles");
+      // Un clic au milieu de l'espace gris atteint le document, jamais l'espace lui-même.
+      const hit = document.elementFromPoint(
+        editorElement.getBoundingClientRect().left + 40,
+        (first.bottom + second.top) / 2,
+      );
       return {
-        editor: editorElement.getBoundingClientRect().bottom,
-        last: last.getBoundingClientRect().bottom,
+        outside,
+        gapHeight: Math.round(second.top - first.bottom),
+        gapHit: hit?.classList.contains("nano-sheet-gap") ?? true,
       };
     });
-    expect(heights.editor - heights.last).toBeLessThan(40);
+    expect(result.outside).toEqual([]);
+    expect(result.gapHeight).toBe(24);
+    expect(result.gapHit).toBe(false);
   });
 
   test("critère 4 : les repères suivent la frappe, sans attendre", async ({ page }) => {
@@ -264,7 +257,7 @@ test.describe("T2.8 : compteur de pages", () => {
     await expect(counter(page)).toBeInViewport();
     const scrollToMark = async (index: number) => {
       await page.evaluate((markIndex) => {
-        const mark = document.querySelectorAll(".nano-page-mark")[markIndex] as HTMLElement;
+        const mark = document.querySelectorAll(".nano-sheet")[markIndex + 1] as HTMLElement;
         const y = mark.getBoundingClientRect().top + window.scrollY;
         window.scrollTo(0, y - window.innerHeight / 2 + 50);
       }, index);
@@ -299,7 +292,7 @@ test.describe("T2.8 : saut de page", () => {
       await expect(marks(page)).toHaveCount(1);
       await expect(counter(page)).toContainText("sur 2");
       const positions = await page.evaluate(() => {
-        const mark = document.querySelector(".nano-page-mark") as HTMLElement;
+        const mark = document.querySelectorAll(".nano-sheet")[1] as HTMLElement;
         const paragraphs = document.querySelectorAll(".nano-editor p");
         return {
           mark: mark.getBoundingClientRect().top,
@@ -350,6 +343,9 @@ test.describe("T2.8 : saut de page", () => {
       };
     });
     expect(look).toEqual({ label: '"Saut de page"', align: "center", text: "" });
+    // Depuis les feuilles séparées (PL6), l'éditeur couvre toutes les feuilles : le clic de `start` au milieu de
+    // l'éditeur peut tomber au même endroit de la fenêtre que le saut de page, et ProseMirror y verrait un double clic.
+    await page.waitForTimeout(500);
     await breaks.first().click();
     await expect(breaks.first()).toHaveClass(/ProseMirror-selectednode/);
     await editor(page).press("Backspace");
@@ -451,7 +447,7 @@ test.describe("T2.8 : discrétion", () => {
       .poll(async () => (await fakeFiles(page)).files["expose.nano"] ?? "")
       .toContain("Exposé sur le vent !");
     const saved = (await fakeFiles(page)).files["expose.nano"] ?? "";
-    for (const forbidden of ["nano-page-mark", "nano-page-number", "Page 1 sur", "Saut de page"]) {
+    for (const forbidden of ["nano-sheet", "nano-page-mark", "Page 1 sur", "Saut de page"]) {
       expect(saved).not.toContain(forbidden);
     }
   });
@@ -465,7 +461,8 @@ test.describe("T2.8 : discrétion", () => {
     await editor(page).pressSequentially("Après");
     await expect(marks(page)).toHaveCount(1);
     await page.emulateMedia({ media: "print" });
-    await expect(page.locator(".nano-page-marks")).toBeHidden();
+    await expect(page.locator(".nano-sheets")).toBeHidden();
+    await expect(page.locator(".nano-editor .nano-sheet-gap")).toBeHidden();
     await expect(counter(page)).toBeHidden();
     const printed = await page.locator(".nano-editor .nano-page-break").evaluate((element) => ({
       label: getComputedStyle(element, "::before").content,
@@ -473,7 +470,8 @@ test.describe("T2.8 : discrétion", () => {
       breakBefore: getComputedStyle(element).breakBefore,
     }));
     expect(printed).toEqual({ label: "none", height: 0, breakBefore: "page" });
-    await page.emulateMedia({ media: "screen" });
+    // Retour au média par défaut : avec « screen », le PDF serait celui de l'écran, feuilles séparées comprises (PL6).
+    await page.emulateMedia({ media: null });
     expect(pdfPageCount(await page.pdf({ preferCSSPageSize: true }))).toBe(2);
   });
 });

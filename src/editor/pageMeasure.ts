@@ -23,12 +23,18 @@ interface PieceToMeasure {
   kind: PageUnitKind;
   node: ProseMirrorNode;
   element: HTMLElement;
+  /** Position du nœud dans le document, ou null pour une ligne d'un sommaire, qui n'en a pas (PL6). */
+  pos: number | null;
 }
 
 /** Page mesurée : morceaux dans l'ordre du document, et lignes d'un paragraphe à la demande. */
 export interface MeasuredPage {
   units: PageUnit[];
   linesOf: (index: number) => LineBox[];
+  /** Position de chaque morceau dans le document, ou null (ligne d'un sommaire), pour les feuilles (PL6). */
+  positions: (number | null)[];
+  /** Élément qui affiche chaque morceau (PL6). */
+  elements: HTMLElement[];
 }
 
 /**
@@ -53,7 +59,7 @@ function listPieces(view: EditorView, list: ProseMirrorNode, pos: number, out: P
       const childPos = itemPos + 1 + childOffset;
       if (child.isTextblock) {
         const element = elementAt(view, childPos);
-        if (element) out.push({ kind: "text", node: child, element });
+        if (element) out.push({ kind: "text", node: child, element, pos: childPos });
       } else {
         listPieces(view, child, childPos, out);
       }
@@ -69,7 +75,7 @@ function pieces(view: EditorView): PieceToMeasure[] {
     if (name === "table") {
       node.forEach((row, rowOffset) => {
         const element = elementAt(view, pos + 1 + rowOffset);
-        if (element) out.push({ kind: "keep", node: row, element });
+        if (element) out.push({ kind: "keep", node: row, element, pos: pos + 1 + rowOffset });
       });
       return;
     }
@@ -82,9 +88,9 @@ function pieces(view: EditorView): PieceToMeasure[] {
       // à l'impression (print.css).
       const element = elementAt(view, pos);
       const title = element?.querySelector<HTMLElement>(".nano-toc-title");
-      if (title) out.push({ kind: "heading", node, element: title });
+      if (title) out.push({ kind: "heading", node, element: title, pos });
       for (const line of element?.querySelectorAll<HTMLElement>(".nano-toc-entry") ?? []) {
-        out.push({ kind: "keep", node, element: line });
+        out.push({ kind: "keep", node, element: line, pos: null });
       }
       return;
     }
@@ -99,7 +105,7 @@ function pieces(view: EditorView): PieceToMeasure[] {
     else if (name === CALLOUT_NODE) kind = "keep";
     // Schéma (T2.20, critère 8) : entier, comme une image, s'il tient sur une page.
     else if (name === DIAGRAM_NODE) kind = "keep";
-    out.push({ kind, node, element });
+    out.push({ kind, node, element, pos });
   });
   return out;
 }
@@ -174,7 +180,12 @@ export function measurePage(view: EditorView): MeasuredPage {
     const top = box.top - origin;
     return cached.lines.map((line) => ({ top: top + line.top, bottom: top + line.bottom }));
   };
-  return { units, linesOf };
+  return {
+    units,
+    linesOf,
+    positions: measured.map(({ piece }) => piece.pos),
+    elements: measured.map(({ piece }) => piece.element),
+  };
 }
 
 /**

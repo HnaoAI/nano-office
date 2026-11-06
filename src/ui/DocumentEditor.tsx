@@ -1,6 +1,6 @@
 // Zone d'édition d'un document (T0b) : barre de mise en forme, barre de recherche (T2.1), panneau de
 // l'assistant (T3.1) et éditeur Tiptap relié à un Y.Doc, affiché comme une page blanche centrée (U1a),
-// au format et aux marges du document (T2.5), avec ses repères de page et le compteur « Page 3 sur 7 »
+// au format et aux marges du document (T2.5), avec ses feuilles séparées (PL6) et le compteur « Page 3 sur 7 »
 // du pied de page (T2.8), à côté du compteur de mots (T2.11), et panneau « Plan » à gauche de la page (T2.9).
 // La barre de mise en forme, le panneau de l'assistant et la recherche s'affichent dans la partie
 // figée de App (M1).
@@ -32,7 +32,10 @@ import { loadOutlineOpen, saveOutlineOpen } from "../storage/outlinePreference";
 import { AssistantPanel } from "./AssistantPanel";
 import { MistakesDialog } from "./MistakesDialog";
 import { OutlinePanel } from "./OutlinePanel";
-import { PageMarksLayer } from "./PageMarksLayer";
+import { SheetMarginsLayer, SheetsBackground } from "./SheetsLayer";
+import { PageThumbnails } from "./PageThumbnails";
+import { usePagesView } from "./usePagesView";
+import { PagesViewIcon } from "./icons";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import type { HeaderFooterField } from "./HeaderFooterFields";
@@ -43,17 +46,18 @@ import { useTableOfContents } from "./useTableOfContents";
 import type { AssistantConfig } from "./useAssistantSettings";
 import { usePageLayout } from "./usePageLayout";
 import { useHeaderFooter, usePageSetup } from "./usePageSetup";
-import { HeaderFooterLayer } from "./HeaderFooterLayer";
 import { useSearchShortcuts } from "./useSearchShortcuts";
 import { useWordCount } from "./useWordCount";
 import { WordCounter } from "./WordCounter";
 import { LinkBubble } from "./LinkBubble";
 
 /** Variables CSS de la page (layout.css) : feuille A4 et marges du document, en centimètres (T2.5). */
-function pageStyle(setup: PageSetup): CSSProperties {
+function pageStyle(setup: PageSetup, sheetsHeight: number): CSSProperties {
   const size = pageSize(setup.orientation);
   const { top, right, bottom, left } = setup.margins;
   return {
+    // Hauteur de la pile des feuilles séparées (PL6), au moins celle de la dernière feuille.
+    ...(sheetsHeight > 0 ? { "--sheets-height": `${String(sheetsHeight)}px` } : {}),
     "--page-width": `${size.width}cm`,
     "--page-height": `${size.height}cm`,
     "--page-margin-top": `${top}cm`,
@@ -127,6 +131,7 @@ export function DocumentEditor({
   const headerFooter = useHeaderFooter(ydoc);
   const [sheet, setSheet] = useState<HTMLElement | null>(null);
   const marks = usePageLayout(editor, sheet, pageSetup);
+  const pagesView = usePagesView(editor, sheet, marks, coveredTop);
   // Plan (T2.9) : fermé par défaut, choix retenu sur cet ordinateur (critère 1).
   const [outlineOpen, setOutlineOpen] = useState(loadOutlineOpen);
   const showOutline = (open: boolean) => {
@@ -229,6 +234,16 @@ export function DocumentEditor({
             <span className="nano-page-counter">
               {pageCounterText(marks.current, marks.layout.pageCount)}
             </span>
+            {/* Vue des pages (PL6, critère 12) : à côté du compteur, toutes les feuilles en miniatures. */}
+            <button
+              type="button"
+              className="nano-pages-view-button"
+              aria-label="Vue des pages"
+              title="Vue des pages : toutes les pages en miniatures"
+              onClick={pagesView.show}
+            >
+              <PagesViewIcon />
+            </button>
             <WordCounter count={words} pages={marks.layout.pageCount} />
           </>,
           counter,
@@ -244,22 +259,27 @@ export function DocumentEditor({
           onClose={() => showOutline(false)}
         />
       )}
+      {pagesView.open && sheet && (
+        <PageThumbnails
+          sheets={marks.sheets}
+          current={pagesView.current}
+          pile={sheet}
+          editorElement={editor.view.dom}
+          onGo={pagesView.goTo}
+          onClose={pagesView.close}
+        />
+      )}
       <main className={outlineOpen ? "nano-workspace nano-outline-open" : "nano-workspace"}>
         <article
           ref={setSheet}
           className="nano-page"
           data-orientation={pageSetup.orientation}
-          style={pageStyle(pageSetup)}
+          style={pageStyle(pageSetup, marks.height)}
         >
+          <SheetsBackground sheets={marks.sheets} />
           <EditorContent editor={editor} className="nano-editor-host" />
           <LinkBubble editor={editor} />
-          <PageMarksLayer starts={marks.layout.starts} offset={marks.offset} />
-          <HeaderFooterLayer
-            settings={headerFooter}
-            starts={marks.layout.starts}
-            offset={marks.offset}
-            onEdit={onPageSetup}
-          />
+          <SheetMarginsLayer sheets={marks.sheets} settings={headerFooter} onEdit={onPageSetup} />
         </article>
       </main>
     </>

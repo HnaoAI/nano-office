@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T2.19 encadré, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T2.19 encadré, T3.1 assistant, M1 interligne, T2.9 plan, PL4 pinceau, PL6 vue des pages), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -308,6 +308,29 @@ export function PageSetupIcon({ size = 18 }: { size?: number }) {
     <Icon size={size}>
       <rect x="5" y="3" width="14" height="18" rx="1.5" />
       <path d="M8 7h8M8 11h8M8 15h5" />
+    </Icon>
+  );
+}
+
+/** « Reproduire la mise en forme » (PL4, critère 1) : un pinceau à rouleau, au trait. */
+export function FormatPainterIcon() {
+  return (
+    <Icon>
+      <rect x="4" y="3" width="13" height="6" rx="1.5" />
+      <path d="M17 6h3v5h-8v3" />
+      <rect x="10.5" y="14" width="3" height="7" rx="1" />
+    </Icon>
+  );
+}
+
+/** « Vue des pages » (PL6, critère 12) : une grille de quatre feuilles, au trait. */
+export function PagesViewIcon({ size = 16 }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <rect x="4" y="3.5" width="6.5" height="7.5" rx="1" />
+      <rect x="13.5" y="3.5" width="6.5" height="7.5" rx="1" />
+      <rect x="4" y="13" width="6.5" height="7.5" rx="1" />
+      <rect x="13.5" y="13" width="6.5" height="7.5" rx="1" />
     </Icon>
   );
 }

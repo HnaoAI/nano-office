@@ -107,13 +107,15 @@ test.describe("T2.16 : en-tête et pied de page", () => {
     expect(pdfPagesText(plain).join("")).not.toContain(PRINT_FOOTER);
   });
 
-  test("critère 3 : à l'écran, en gris clair, en haut de la première page, en bas de la dernière et près des repères", async ({
+  // Adapté aux feuilles séparées (PL6, critères 5 et 7) : l'en-tête et le pied de page de chaque feuille sont dans ses
+  // marges, au lieu d'être près des repères en pointillé.
+  test("critère 3 : à l'écran, en gris clair, en haut de la première page, en bas de la dernière et dans les marges de chaque feuille", async ({
     page,
   }) => {
     await start(page);
     await openDocument(page, pages(3), BOTH);
     await settleLayout(page);
-    const marks = await page.locator(".nano-page-mark").count();
+    const marks = await page.locator('.nano-sheet:not([data-page="1"])').count();
     expect(marks).toBeGreaterThanOrEqual(2);
     const first = page.locator(".nano-margin-text-first");
     const last = page.locator(".nano-margin-text-last");
@@ -140,20 +142,29 @@ test.describe("T2.16 : en-tête et pied de page", () => {
       return box.top >= text.bottom && box.bottom <= sheet.bottom;
     });
     expect(lastBox).toBe(true);
-    // Près de chaque repère : le pied de page juste au-dessus du trait, l'en-tête juste dessous.
+    // Sur chaque feuille : l'en-tête dans la marge du haut, le pied de page dans la marge du bas.
     const near = await page.evaluate(() => {
-      const lines = Array.from(document.querySelectorAll(".nano-page-mark")).map(
-        (mark) => mark.getBoundingClientRect().top,
-      );
-      const above = Array.from(document.querySelectorAll(".nano-margin-text-above")).map(
-        (node) => node.getBoundingClientRect().bottom,
-      );
-      const below = Array.from(document.querySelectorAll(".nano-margin-text-below")).map(
-        (node) => node.getBoundingClientRect().top,
-      );
-      return lines.every(
-        (line, index) =>
-          Math.abs((above[index] ?? 0) - line) <= 6 && Math.abs((below[index] ?? 0) - line) <= 6,
+      const pile = getComputedStyle(document.querySelector(".nano-page") as Element);
+      const top = Number.parseFloat(pile.paddingTop);
+      const bottom = Number.parseFloat(pile.paddingBottom);
+      return Array.from(document.querySelectorAll<HTMLElement>(".nano-sheet-margins")).every(
+        (margins) => {
+          const sheet = document
+            .querySelector(`.nano-sheet[data-page="${margins.dataset.page ?? ""}"]`)
+            ?.getBoundingClientRect();
+          if (!sheet) return false;
+          const inTop = Array.from(margins.querySelectorAll(".nano-margin-top")).every((node) => {
+            const box = node.getBoundingClientRect();
+            return box.top >= sheet.top && box.bottom <= sheet.top + top;
+          });
+          const inBottom = Array.from(margins.querySelectorAll(".nano-margin-bottom")).every(
+            (node) => {
+              const box = node.getBoundingClientRect();
+              return box.top >= sheet.bottom - bottom && box.bottom <= sheet.bottom;
+            },
+          );
+          return inTop && inBottom && margins.querySelectorAll(".nano-margin-text").length === 2;
+        },
       );
     });
     expect(near).toBe(true);
@@ -198,9 +209,9 @@ test.describe("T2.16 : en-tête et pied de page", () => {
       expect(text).toContain(PRINT_HEADER);
       expect(text).toContain(PRINT_FOOTER);
     }
-    // À l'écran : plus d'en-tête en haut de la page 1, ni de pied de page au premier repère.
+    // À l'écran : plus d'en-tête en haut de la page 1, ni de pied de page en bas de la page 1 (PL6 : feuilles).
     await expect(page.locator(".nano-margin-text-first")).toHaveCount(0);
-    const marks = await page.locator(".nano-page-mark").count();
+    const marks = await page.locator('.nano-sheet:not([data-page="1"])').count();
     await expect(page.locator(".nano-margin-text-above")).toHaveCount(marks - 1);
     await expect(page.locator(".nano-margin-text-below")).toHaveCount(marks);
   });

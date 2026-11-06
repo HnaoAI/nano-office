@@ -1,4 +1,4 @@
-// Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir |
+// Barre de mise en forme flottante (T0b, style U1a), dans l'ordre de la maquette : Annuler, Rétablir, pinceau (PL4) |
 // style du paragraphe (T1.1), police et taille (T1.4) | Gras, Italique, Souligné (T2.10), Barré (T2.3), couleur du texte et surlignage
 // (T1.7), majuscules et minuscules (T2.4) | alignement (T1.3), interligne (T2.2) | listes (T1.2) | lien (T2.12), tableau (T1.8), image (T1.9),
 // saut de page (T2.8), retrait après les listes (T2.14), puis encadré (T2.19) | mise en page (T2.5), plan (T2.9) | groupe « Assistant », seulement quand l'assistant est en marche (T3.1).
@@ -21,6 +21,12 @@ import { insertDiagram } from "../editor/diagram";
 import { headerRowActive, isInTable, tableDeletions } from "../editor/tables";
 import { currentHighlight, currentTextColor } from "../editor/textColor";
 import {
+  formatPainterActive,
+  startFormatPainter,
+  stopFormatPainter,
+} from "../editor/formatPainter";
+import {
+  FormatPainterIcon,
   OutlineIcon,
   PageBreakIcon,
   DiagramIcon,
@@ -90,6 +96,7 @@ export function Toolbar({
         : current.isActive("subscript")
           ? ("subscript" as const)
           : null,
+      painting: formatPainterActive(current.state),
       canUndo: current.can().undo(),
       canRedo: current.can().redo(),
       blockStyle: currentBlockStyle(current.state),
@@ -139,6 +146,27 @@ export function Toolbar({
         onClick={() => editor.chain().focus().redo().run()}
       >
         <RedoIcon />
+      </button>
+      {/* Un clic : une seule application ; double clic : jusqu'à Échap (PL4, critère 6). Le second clic d'un double
+          clic (detail 2) est laissé au double clic, qui rallume le pinceau en mode continu. */}
+      <button
+        type="button"
+        aria-label="Reproduire la mise en forme"
+        aria-pressed={state.painting}
+        title="Reproduire la mise en forme : un clic pour une fois, un double clic pour plusieurs (Échap pour arrêter)"
+        onMouseDown={keepFocus}
+        onClick={(event) => {
+          if (event.detail > 1) return;
+          editor.commands.focus();
+          if (state.painting) stopFormatPainter(editor.view);
+          else startFormatPainter(editor, false);
+        }}
+        onDoubleClick={() => {
+          editor.commands.focus();
+          startFormatPainter(editor, true);
+        }}
+      >
+        <FormatPainterIcon />
       </button>
       <div className="nano-separator" role="separator" aria-orientation="vertical" />
       <ParagraphStyleSelect editor={editor} value={state.blockStyle} />

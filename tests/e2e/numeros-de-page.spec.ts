@@ -108,7 +108,8 @@ test.describe("T2.15 : numéros de page imprimés", () => {
     expect(word.document).toContain("w:footerReference");
   });
 
-  test("critère 4 : à l'écran, rien de plus que les repères ; le réglage est enregistré avec le document", async ({
+  // Adapté aux feuilles séparées (PL6, critère 5) : le numéro s'affiche maintenant dans la marge de chaque feuille.
+  test("critère 4 : à l'écran, le numéro dans la marge du bas de la feuille, rien d'autre ; le réglage est enregistré avec le document", async ({
     page,
   }) => {
     await start(page);
@@ -116,8 +117,9 @@ test.describe("T2.15 : numéros de page imprimés", () => {
     const box = await openPageDialog(page);
     await box.getByRole("checkbox", { name: "Numéroter les pages" }).check();
     await box.getByRole("button", { name: "Appliquer" }).click();
-    await expect(page.locator(".nano-margin-texts")).toHaveCount(0);
-    await expect(page.locator(".nano-page")).not.toContainText("1");
+    await expect(page.locator(".nano-margin-text")).toHaveCount(1);
+    await expect(page.locator(".nano-margin-text-number")).toHaveText("1");
+    await expect(page.locator(".nano-editor")).not.toContainText("1");
     await saveAndReopen(page);
     const saved = JSON.parse((await fakeFiles(page)).files["document.nano"] ?? "{}") as {
       content: { attrs?: unknown };
