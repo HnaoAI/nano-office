@@ -73,6 +73,7 @@ interface FoundStart {
  * poser l'espace : avant un bloc, ou avant la première lettre d'une ligne d'un paragraphe coupé.
  * Un bloc plus haut qu'une page (image, tableau d'une seule ligne) est coupé sans espace : il passe d'une feuille à
  * l'autre, comme le ferait l'impression.
+ * TODO(PL6) : critère 2 partiel, soumis au PO : un tel bloc traverse la coupure sans espace gris à l'écran.
  */
 function findStarts(view: EditorView, layout: PageLayout, shown: MeasuredPage): FoundStart[] {
   const origin = view.dom.getBoundingClientRect().top;

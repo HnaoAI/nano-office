@@ -2,6 +2,7 @@
    (décision du PO du 2026-10-24). Le compteur « Page 3 sur 7 » est dans le pied de page (layout.css). */
 /* Saut de page manuel (T2.8, critère 7) : une ligne discrète « Saut de page », centrée dans la feuille.
    Le libellé vient d'ici, pas du document : il n'est ni enregistré, ni copié, ni imprimé (print.css). */
+/* TODO(PL6) : critère 6 partiel, soumis au PO : la ligne « Saut de page » suit le texte, pas le bas de la feuille. */
 .nano-editor .nano-page-break {
   margin: 0 0 16px;
   padding: 2px 0;

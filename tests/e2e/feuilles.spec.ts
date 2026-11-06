@@ -280,6 +280,75 @@ test.describe("PL6 : feuilles séparées", () => {
     await expect(page.locator(".nano-page-counter")).toHaveText(/^Page 2 sur \d+$/);
   });
 
+  test("critère 8 : sur 100 pages, chaque caractère tapé s'affiche vite, au plus un calcul des feuilles par image", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await start(page);
+    await openDocument(page, pages(100));
+    await expect.poll(() => counted(page)).toBeGreaterThanOrEqual(100);
+    await settleLayout(page);
+    expect(await sheets(page).count()).toBe(await counted(page));
+    await editor(page).press("ControlOrMeta+Home");
+    await settleSelection(page);
+    // Délai de chaque caractère : de la saisie (`beforeinput`, aussi pour les accents et les emojis, tapés sans
+    // touche par Playwright) à la deuxième image affichée ensuite, mesuré dans la page.
+    await page.evaluate(() => {
+      const delays: number[] = [];
+      (window as unknown as { keyDelays: number[] }).keyDelays = delays;
+      document.addEventListener(
+        "beforeinput",
+        () => {
+          const pressed = performance.now();
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => delays.push(performance.now() - pressed)),
+          );
+        },
+        true,
+      );
+      performance.clearMeasures("nano-page-layout");
+    });
+    const text = "Bonjour Zoé, le cerf-volant s'élève 🌾 ";
+    await editor(page).pressSequentially(text, { delay: 20 });
+    await expect(editor(page)).toContainText(text.trim());
+    await settleLayout(page);
+    const { delays, layouts } = await page.evaluate(() => ({
+      delays: (window as unknown as { keyDelays: number[] }).keyDelays,
+      layouts: performance.getEntriesByName("nano-page-layout").map((entry) => entry.duration),
+    }));
+    const typed = [...text].length;
+    expect(delays.length).toBe(typed);
+    // Délai borné : la médiane reste sous 60 ms (deux images comprises) et aucune touche ne dépasse 150 ms.
+    const sorted = [...delays].sort((first, second) => first - second);
+    expect(sorted[Math.floor(sorted.length / 2)] ?? 0).toBeLessThan(60);
+    expect(Math.max(...delays)).toBeLessThan(150);
+    // Au plus un calcul par caractère (une fois par image affichée), plus 3 corrections des espaces, chacun court.
+    expect(layouts.length).toBeLessThanOrEqual(typed + 3);
+    expect(Math.max(...layouts)).toBeLessThan(100);
+  });
+
+  test("critère 8 : sur 100 pages, les feuilles suivent les lignes ajoutées et retirées", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await start(page);
+    await openDocument(page, pages(100));
+    await expect.poll(() => counted(page)).toBeGreaterThanOrEqual(100);
+    await settleLayout(page);
+    const before = await counted(page);
+    await editor(page).press("ControlOrMeta+Home");
+    await settleSelection(page);
+    for (let index = 0; index < 40; index++) await editor(page).press("Enter");
+    // 40 lignes vides en haut font au moins une page de plus, avec une feuille par page.
+    await expect.poll(() => counted(page)).toBeGreaterThan(before);
+    await expect
+      .poll(async () => (await sheets(page).count()) === (await counted(page)))
+      .toBe(true);
+    for (let index = 0; index < 40; index++) await editor(page).press("Backspace");
+    await expect.poll(() => counted(page)).toBe(before);
+    await expect.poll(() => sheets(page).count()).toBe(before);
+  });
+
   test("critère 10 : la recherche amène le texte trouvé dans une feuille, jamais dans l'espace gris ni sous la barre", async ({
     page,
   }) => {
