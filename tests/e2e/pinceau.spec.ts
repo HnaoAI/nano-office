@@ -357,3 +357,93 @@ test("critère 11 : l'aide explique le pinceau, avec le simple et le double clic
   await expect(help).toContainText("Un clic sur le pinceau sert une seule fois");
   await expect(help).toContainText("Un double clic le garde actif");
 });
+
+test.describe("copier-coller pendant le pinceau", () => {
+  test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
+  const clipboardText = (page: Page) => page.evaluate(() => navigator.clipboard.readText());
+  const fillClipboard = (page: Page, text: string) =>
+    page.evaluate((value) => navigator.clipboard.writeText(value), text);
+
+  /** Coche la copie automatique (T2.21) dans les Réglages. */
+  async function turnOnAutoCopy(page: Page) {
+    await button(page, "Réglages").click();
+    const settings = page.getByRole("dialog", { name: "Réglages" });
+    await settings.getByRole("checkbox", { name: "Copier automatiquement la sélection" }).check();
+    await settings.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(settings).toHaveCount(0);
+    await editor(page).click();
+  }
+
+  test("critère 12 : pinceau actif, Ctrl/Cmd+C, X, V et Ctrl/Cmd+Shift+V fonctionnent comme d'habitude", async ({
+    page,
+  }) => {
+    await start(page);
+    await writeLines(page, ["alpha", "beta"]);
+    await makeBold(page, "alpha");
+    await pickFormat(page, "alpha", true);
+    await expect(button(page, PAINTER)).toHaveAttribute("aria-pressed", "true");
+    await editor(page).focus();
+    // Sélection au clavier : elle ne peint pas, et se copie.
+    await page.keyboard.press("ControlOrMeta+Home");
+    await page.keyboard.press("Shift+End");
+    await settleSelection(page);
+    await page.keyboard.press("ControlOrMeta+c");
+    await expect.poll(() => clipboardText(page)).toBe("alpha");
+    await page.keyboard.press("ControlOrMeta+End");
+    await settleSelection(page);
+    await page.keyboard.press("ControlOrMeta+v");
+    await expect(editor(page).locator("p").nth(1)).toHaveText("betaalpha");
+    await waitUndoGroup(page);
+    await page.keyboard.press("ControlOrMeta+Shift+v");
+    await expect(editor(page).locator("p").nth(1)).toHaveText("betaalphaalpha");
+    await page.keyboard.press("Shift+Home");
+    await settleSelection(page);
+    await page.keyboard.press("ControlOrMeta+x");
+    await expect(editor(page).locator("p").nth(1)).toHaveText("");
+    await expect.poll(() => clipboardText(page)).toBe("betaalphaalpha");
+    // Le pinceau est toujours là, jusqu'à Échap.
+    await expect(button(page, PAINTER)).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("Escape");
+    await expect(button(page, PAINTER)).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("critère 13 : pinceau actif, la copie automatique est suspendue, puis reprend quand il s'éteint", async ({
+    page,
+  }) => {
+    await start(page);
+    await turnOnAutoCopy(page);
+    await writeLines(page, ["source", "cible", "autre", "encore", "dernier"]);
+    await makeBold(page, "source");
+
+    // Une fois : la sélection peinte n'est pas copiée, puis le pinceau s'éteint et la copie reprend.
+    await pickFormat(page, "source");
+    await fillClipboard(page, "copié ailleurs");
+    await dragOver(page, "cible");
+    await expect.poll(async () => marksIn(await ydocJson(page), "cible")).toEqual(["bold"]);
+    await expect(button(page, PAINTER)).toHaveAttribute("aria-pressed", "false");
+    await page.waitForTimeout(300);
+    expect(await clipboardText(page)).toBe("copié ailleurs");
+    await dragOver(page, "autre");
+    await expect.poll(() => clipboardText(page)).toBe("autre");
+
+    // Jusqu'à Échap : rien n'est copié pendant, la copie reprend après Échap.
+    await pickFormat(page, "source", true);
+    await fillClipboard(page, "copié ailleurs");
+    await dragOver(page, "encore");
+    await expect.poll(async () => marksIn(await ydocJson(page), "encore")).toEqual(["bold"]);
+    await page.waitForTimeout(300);
+    expect(await clipboardText(page)).toBe("copié ailleurs");
+    await page.keyboard.press("Escape");
+    await dragOver(page, "dernier");
+    await expect.poll(() => clipboardText(page)).toBe("dernier");
+
+    // Éteint par un clic sur le bouton : la copie reprend aussi.
+    await fillClipboard(page, "copié ailleurs");
+    await pickFormat(page, "source");
+    await button(page, PAINTER).click();
+    await expect(button(page, PAINTER)).toHaveAttribute("aria-pressed", "false");
+    await dragOver(page, "cible");
+    await expect.poll(() => clipboardText(page)).toBe("cible");
+  });
+});

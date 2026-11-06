@@ -3,8 +3,10 @@
 // (événement `copy` de ProseMirror et sérialiseur de clipboard.ts). Sans React.
 // INVARIANT : la copie ne crée aucune transaction : le document, l'historique d'annulation et
 // l'indicateur « Modifié » ne bougent pas (critère 5). Rien ne part sur le réseau (critère 8).
+// Pinceau actif (PL4, critère 13), rien n'est copié : la sélection sert à peindre.
 import { NodeSelection, type EditorState } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
+import { formatPainterActive } from "./formatPainter";
 
 /** Champs où l'on tape du texte : un clic dedans ne copie jamais rien (critère 4). */
 const FIELD_SELECTOR = "input, textarea, select, [contenteditable='true']";
@@ -68,7 +70,7 @@ function copySelection(view: EditorView, retries = SELECTION_RETRIES): void {
     setTimeout(() => copySelection(view, retries - 1), 30);
     return;
   }
-  if (!shouldAutoCopy(view.state)) return;
+  if (!shouldAutoCopy(view.state) || formatPainterActive(view.state)) return;
   if (document.activeElement !== view.dom) return;
   try {
     // Même chemin que Ctrl/Cmd+C : l'événement `copy` est traité par ProseMirror (critère 2).
@@ -82,14 +84,16 @@ function copySelection(view: EditorView, retries = SELECTION_RETRIES): void {
 /**
  * Installe la copie automatique sur un éditeur. Seul un clic gauche commencé dans le texte du
  * document compte : une sélection au clavier (Shift+flèches, Ctrl/Cmd+A) n'est pas copiée
- * (critère 3), ni un clic dans un champ (critère 4). Le bouton peut être lâché hors de la page.
+ * (critère 3), ni un clic dans un champ (critère 4), ni un clic qui peint (PL4, critère 13 : le pinceau s'éteint
+ * au mouseup ou 0,4 s plus tard, donc il est lu au mousedown). Le bouton peut être lâché hors de la page.
  * @returns la fonction qui retire la copie automatique (réglage décoché, éditeur détruit)
  */
 export function attachAutoCopy(view: EditorView): () => void {
   let pressed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const onMouseDown = (event: MouseEvent) => {
-    pressed = event.button === 0 && !inField(view, event.target);
+    pressed =
+      event.button === 0 && !inField(view, event.target) && !formatPainterActive(view.state);
   };
   const onMouseUp = (event: MouseEvent) => {
     if (!pressed || event.button !== 0) return;
