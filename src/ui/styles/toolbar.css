@@ -108,3 +108,11 @@
     padding: 4px 12px 0;
   }
 }
+
+/* Pinceau actif (PL4, critère 9) : pointeur en pinceau au-dessus du texte du document, curseur texte à défaut. */
+.nano-editor.nano-format-painting,
+.nano-editor.nano-format-painting * {
+  cursor:
+    url("../formatPainterCursor.svg") 6 12,
+    text;
+}

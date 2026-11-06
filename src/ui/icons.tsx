@@ -1,4 +1,4 @@
-// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T2.19 encadré, T3.1 assistant, M1 interligne, T2.9 plan), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
+// Icônes au trait de l'interface (U1a, U1b, T1.9 images, T2.1 recherche, T2.3 barré, T2.10 souligné, T2.14 retrait, T2.12 liens, T2.19 encadré, T3.1 assistant, M1 interligne, T2.9 plan, PL4 pinceau), en SVG en ligne : 18 px, trait de 1,75 px, couleur du texte.
 // Elles sont décoratives (`aria-hidden`) : le bouton qui les porte a son propre nom accessible.
 import type { ReactNode } from "react";
 
@@ -308,6 +308,17 @@ export function PageSetupIcon({ size = 18 }: { size?: number }) {
     <Icon size={size}>
       <rect x="5" y="3" width="14" height="18" rx="1.5" />
       <path d="M8 7h8M8 11h8M8 15h5" />
+    </Icon>
+  );
+}
+
+/** « Reproduire la mise en forme » (PL4, critère 1) : un pinceau à rouleau, au trait. */
+export function FormatPainterIcon() {
+  return (
+    <Icon>
+      <rect x="4" y="3" width="13" height="6" rx="1.5" />
+      <path d="M17 6h3v5h-8v3" />
+      <rect x="10.5" y="14" width="3" height="7" rx="1" />
     </Icon>
   );
 }

@@ -208,6 +208,14 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        text: "Reproduire la mise en forme : placez le curseur dans un texte bien mis en forme, puis cliquez sur le pinceau, juste après « Rétablir ». Sélectionnez ensuite à la souris le texte à changer, ou cliquez dans un mot. Il prend la police, la taille, la couleur, le gras et l'alignement du modèle.",
+      },
+      {
+        kind: "text",
+        text: "Un clic sur le pinceau sert une seule fois. Un double clic le garde actif pour plusieurs textes : appuyez sur Échap, ou cliquez à nouveau sur le pinceau, pour l'arrêter. Le niveau de titre et les listes ne changent pas. Ctrl+Z (Cmd+Z sur Mac) annule chaque application.",
+      },
+      {
+        kind: "text",
         text: "Liens : sélectionnez le texte, puis « Lien » (ou le raccourci indiqué dans « Raccourcis clavier »), et tapez l'adresse d'une page web ou une adresse e-mail. Un clic sur un lien place le curseur, comme ailleurs ; pour l'ouvrir, cliquez en tenant Ctrl (Cmd sur Mac), ou utilisez « Ouvrir » dans la petite bulle qui apparaît sur le lien.",
       },
       {

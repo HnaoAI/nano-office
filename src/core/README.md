@@ -7,6 +7,7 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `textStyle.ts` : polices intégrées et tailles proposées, attributs `fontFamily` et `fontSize` avec police de secours (T1.4), attribut `color` (T1.7)
 - `lineHeight.ts` : interligne (T2.2) : valeurs proposées, hauteur de ligne CSS équivalente à Word (`cssLineHeight`), attribut de bloc `lineHeight`
 - `indent.ts` : retrait de paragraphe (T2.14) : 5 niveaux de 1,25 cm, attribut de bloc `indent` des paragraphes et titres, valeur venue d'un fichier ramenée dans les bornes (`indentLevel`, `IndentAttribute`)
+- `formatPainter.ts` : pinceau (PL4) : marques et attributs de paragraphe copiés au curseur, appliqués en remplaçant ceux de la cible en une transaction, mot cliqué (`captureFormat`, `applyFormat`, `wordRangeAt`)
 - `links.ts` : liens (T2.12) : adresses acceptées (http, https, mailto), adresse tapée complétée par `https://` ou `mailto:`, texte affiché, marque `link` sans mise en forme à la frappe (`isAllowedLinkUrl`, `normalizeLinkInput`, `linkLabel`, `DocumentLink`)
 - `search.ts` : recherche d'un texte dans un paragraphe, majuscules ignorées ou non, textes « 3 sur 12 » et « 12 remplacements » (`findInText`, `searchStatus`, T2.1)
 - `textCase.ts` : majuscules et minuscules selon les règles du français, phrase et mot pris dans leur paragraphe (`convertCase`, `CASE_MODES`, T2.4)
