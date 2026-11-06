@@ -37,6 +37,11 @@ afin de ne pas refaire à la main police, taille, couleur et gras.
 9. Pendant que le pinceau est actif, le pointeur de la souris montre un pinceau au-dessus du texte du document.
 10. Rien n'est enregistré dans le fichier en dehors de la mise en forme appliquée ; le format `.nano` ne change pas.
 11. L'aide (A1) explique le pinceau, avec le simple et le double clic.
+12. Pinceau actif, Ctrl/Cmd+C, Ctrl/Cmd+X, Ctrl/Cmd+V et Ctrl/Cmd+Shift+V fonctionnent comme d'habitude (décision du PO
+    du 2026-11-06).
+13. Pinceau actif, la **copie automatique de la sélection** (T2.21) est suspendue : une sélection faite pour peindre
+    n'est jamais copiée. Elle reprend dès que le pinceau s'éteint (après une application, Échap ou un clic sur le
+    bouton), si sa case est cochée dans les Réglages (décision du PO du 2026-11-06).
 
 ## Tests attendus
 
