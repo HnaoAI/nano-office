@@ -7,7 +7,9 @@ import {
   buildRequest,
   correctionChanges,
   failureMessage,
+  parseCorrections,
   parseParagraphs,
+  withMistakeTypes,
   type AssistantFailureDetails,
   type AssistantFailureKind,
   type AssistantTask,
@@ -201,7 +203,8 @@ export function useAssistant(editor: Editor, config: AssistantConfig | null) {
           ...(ranges[sent.length + index] ?? {}),
           block: ranges[index] ?? paragraph.block,
         }));
-        const changes = correctionChanges(current, parsed);
+        // Type de chaque faute, annoncé dans la même réponse (T2.23, critère 2) ; « Autre » sinon.
+        const changes = withMistakeTypes(correctionChanges(current, parsed), parseCorrections(raw));
         if (changes.length === 0) {
           setStatus({
             kind: "message",

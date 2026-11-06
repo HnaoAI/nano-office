@@ -1,5 +1,6 @@
 // Groupe « Assistant » de la barre de mise en forme (T3.1, critère 5) : « Corriger » et « Traduire
-// en anglais ». Affiché seulement quand l'assistant est en marche (critère 4).
+// en anglais », puis « Mes fautes » (T2.23, critère 9). Affiché seulement quand l'assistant est en
+// marche (critère 4) : éteint, « Mes fautes » disparaît aussi (T2.23, critère 8).
 import type { AssistantTask } from "../core/assistant";
 
 /**
@@ -8,17 +9,20 @@ import type { AssistantTask } from "../core/assistant";
  * @param online vrai si le navigateur est en ligne
  * @param pending vrai pendant une demande ; Échap l'annule
  * @param onRun lance une demande, sur un clic seulement (critère 13)
+ * @param onMistakes ouvre la fenêtre « Mes fautes » (T2.23), toujours possible : rien n'est envoyé
  */
 export function AssistantButtons({
   hasSelection,
   online,
   pending,
   onRun,
+  onMistakes,
 }: {
   hasSelection: boolean;
   online: boolean;
   pending: boolean;
   onRun: (task: AssistantTask) => void;
+  onMistakes: () => void;
 }) {
   const disabled = !hasSelection || !online || pending;
   const reason = pending
@@ -50,6 +54,15 @@ export function AssistantButtons({
         onClick={() => onRun("translate")}
       >
         Traduire en anglais
+      </button>
+      <button
+        type="button"
+        className="nano-text-button"
+        title="Voir les fautes que vous faites le plus souvent"
+        onMouseDown={keepFocus}
+        onClick={onMistakes}
+      >
+        Mes fautes
       </button>
     </div>
   );

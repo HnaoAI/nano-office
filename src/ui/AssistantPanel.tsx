@@ -7,6 +7,7 @@ import { useEditorState } from "@tiptap/react";
 import { useState } from "react";
 import { insertParagraphsAfter, replaceWithParagraphs } from "../editor/assistantEdits";
 import { acceptSuggestions, goToSuggestion, rejectSuggestions } from "../editor/suggestionCommands";
+import { recordAcceptedSuggestions } from "./useMistakeStats";
 import { suggestionState } from "../editor/suggestions";
 import { ChevronDownIcon, ChevronUpIcon, CloseIcon, SuggestionIcon, WarningIcon } from "./icons";
 import { SuggestionActions } from "./SuggestionActions";
@@ -128,7 +129,7 @@ export function AssistantPanel({
           type="button"
           className="nano-message-action"
           onMouseDown={keepFocus}
-          onClick={() => acceptSuggestions(editor, "all")}
+          onClick={() => acceptSuggestions(editor, "all", recordAcceptedSuggestions)}
         >
           Tout accepter
         </button>

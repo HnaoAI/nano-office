@@ -268,6 +268,11 @@ export const HELP_SECTIONS: HelpSection[] = [
       },
       {
         kind: "text",
+        icon: "settings",
+        text: "Copier automatiquement la sélection : si vous cochez cette case dans les « Réglages », le texte que vous sélectionnez à la souris (en glissant, ou d'un double clic) est copié tout seul, comme avec Ctrl+C (Cmd+C sur Mac). Il ne reste qu'à le coller. Une sélection faite au clavier n'est pas copiée. La case est décochée au départ : sinon, sélectionner un mot pour le remplacer par Ctrl+V remplacerait ce que vous aviez copié avant.",
+      },
+      {
+        kind: "text",
         text: "Annuler : « Annuler » (Ctrl+Z, Cmd+Z sur Mac) défait la dernière action, et « Rétablir » la refait.",
       },
       {
@@ -360,8 +365,10 @@ export const HELP_SECTIONS: HelpSection[] = [
         items: [
           "Dans « Réglages », cochez « Activer l'assistant », choisissez Claude ou Gemini, et collez votre clé. Un abonnement à Claude ou à Gemini ne suffit pas : la clé se crée sur l'espace développeurs du site du fournisseur.",
           "Les boutons « Corriger » et « Traduire en anglais » apparaissent alors au bout de la barre. Sélectionnez un texte, puis cliquez sur l'un d'eux.",
-          "« Corriger » montre chaque modification proposée dans le texte. Cliquez sur « Accepter » ou « Refuser » pour chacune, ou sur « Tout accepter » ou « Tout refuser ».",
+          "« Corriger » montre chaque modification proposée dans le texte. Les fautes sont en rouge, barrées, et les corrections proposées en vert, soulignées. Cliquez sur « Accepter » ou « Refuser » pour chacune, ou sur « Tout accepter » ou « Tout refuser ».",
           "« Traduire en anglais » affiche la traduction à part. Choisissez « Remplacer la sélection », « Insérer après » ou « Copier ».",
+          "« Mes fautes », à côté de « Corriger », montre les fautes que vous faites le plus souvent, de la plus fréquente à la plus rare, avec la règle à retenir et vos derniers exemples. Seules les corrections acceptées comptent.",
+          "Ces statistiques restent sur cet ordinateur : elles ne vont ni dans vos documents ni sur Internet. « Remettre à zéro » les efface.",
         ],
       },
     ],

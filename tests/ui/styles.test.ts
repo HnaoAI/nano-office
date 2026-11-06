@@ -64,6 +64,17 @@ const U1A_VARIABLES = [
   "--nano-focus-ring",
 ];
 
+/**
+ * Seules variables ajoutées depuis U1a : les marques des corrections de l'assistant, en rouge et en
+ * vert (T2.22, critère 4), exception à l'interface monochrome décidée par le PO le 2026-11-05.
+ */
+const T2_22_VARIABLES = [
+  "--nano-suggest-removed",
+  "--nano-suggest-removed-bg",
+  "--nano-suggest-inserted",
+  "--nano-suggest-inserted-bg",
+];
+
 /** Contenu du bloc `:root { … }`, seul endroit où les valeurs de la charte sont écrites. */
 function rootBlock(): string {
   const match = /:root\s*\{([^}]*)\}/.exec(css);
@@ -94,9 +105,9 @@ describe("styles.css (U1a)", () => {
     expect(used.filter((name) => !defined.has(name))).toEqual([]);
   });
 
-  it("U1b, critère 9 : aucune nouvelle couleur, aucun nouveau rayon ni aucune nouvelle ombre après U1a", () => {
+  it("U1b, critère 9 : aucune nouvelle couleur, aucun nouveau rayon ni aucune nouvelle ombre après U1a (sauf T2.22)", () => {
     const names = [...rootBlock().matchAll(/(--nano-[\w-]+)\s*:/g)].map((match) => match[1]);
-    expect(names.sort()).toEqual([...U1A_VARIABLES].sort());
+    expect(names.sort()).toEqual([...U1A_VARIABLES, ...T2_22_VARIABLES].sort());
   });
 
   it("critère 6 : aucune police n'est chargée depuis un autre site", () => {

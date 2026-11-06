@@ -1,6 +1,7 @@
 /* Assistant facultatif (T3.1) : bouton « Réglages » de l'en-tête et sa boîte, groupe « Assistant » de
    la barre, panneau au style des messages, marques de suggestion dans le texte, boutons d'une
-   modification. Monochrome : aucune couleur vive, seulement les variables de la charte. */
+   modification. Monochrome, seulement les variables de la charte, sauf les marques de suggestion en
+   rouge et en vert (T2.22). */
 
 /* Bouton « Réglages » au bout de l'en-tête, à la hauteur du groupe Fichier. */
 .nano-settings-button {
@@ -43,6 +44,14 @@
   height: 18px;
   margin: 0;
   accent-color: var(--nano-ink);
+}
+
+/* Phrase discrète sous une case des Réglages (T2.21, critère 1). */
+.nano-settings .nano-settings-hint {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 13px;
+  color: var(--nano-text-quiet);
 }
 
 .nano-settings-field {
@@ -170,17 +179,25 @@
   color: var(--nano-text-quiet);
 }
 
-/* Marques de suggestion dans le texte (critère 7) : retrait barré en gris, ajout souligné sur le gris
-   clair des surfaces atténuées. Lisibles en monochrome ; la couleur du document est remplacée. */
+/* Marques de suggestion dans le texte (T3.1, critère 7 ; couleurs de T2.22) : retrait en rouge barré
+   sur fond rouge très clair, ajout en vert souligné sur fond vert très clair. Seule exception à
+   l'interface monochrome, visible seulement pendant une correction. Le barré et le souligné restent
+   pour qui distingue mal le rouge du vert (critère 3) ; la couleur du document est remplacée pendant
+   la correction (critère 7) et revient une fois la modification acceptée ou refusée. */
 .nano-editor .nano-suggest-removed,
 .nano-editor .nano-suggest-removed * {
-  color: var(--nano-text-quiet);
+  color: var(--nano-suggest-removed);
   text-decoration: line-through;
   cursor: pointer;
 }
 
+.nano-editor .nano-suggest-removed {
+  background: var(--nano-suggest-removed-bg);
+}
+
 .nano-editor .nano-suggest-inserted {
-  background: var(--nano-surface-muted);
+  color: var(--nano-suggest-inserted);
+  background: var(--nano-suggest-inserted-bg);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -225,9 +242,153 @@
   color: var(--nano-on-ink);
 }
 
+/* Type de la faute, en texte discret après les boutons (T2.23, critère 4). */
+.nano-suggestion-type {
+  align-self: center;
+  padding: 0 8px 0 4px;
+  font-size: 12px;
+  color: var(--nano-text-quiet);
+}
+
 .nano-suggestion-actions button:focus-visible {
   outline: none;
   box-shadow: var(--nano-focus-ring);
+}
+
+/* Fenêtre « Mes fautes » (T2.23) : même boîte que « Réglages », plus large pour le graphique. Pareto
+   monochrome : barres noires pour les premiers 80 %, grises pour les autres, courbe du cumul à l'encre. */
+.nano-mistakes {
+  width: 600px;
+}
+
+.nano-mistakes-chart {
+  margin: 0;
+}
+
+.nano-pareto {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--nano-font-sans);
+}
+
+.nano-pareto-axis {
+  stroke: var(--nano-separator-strong);
+  stroke-width: 1;
+}
+
+.nano-pareto-threshold {
+  stroke: var(--nano-text-quiet);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.nano-pareto-vital .nano-pareto-bar {
+  fill: var(--nano-ink);
+}
+
+.nano-pareto-other .nano-pareto-bar {
+  fill: var(--nano-text-disabled);
+}
+
+.nano-pareto-count {
+  font-size: 12px;
+  fill: var(--nano-ink);
+}
+
+.nano-pareto-label {
+  font-size: 11px;
+  fill: var(--nano-text-secondary);
+}
+
+.nano-pareto-other .nano-pareto-label,
+.nano-pareto-other .nano-pareto-count {
+  fill: var(--nano-text-quiet);
+}
+
+.nano-pareto-scale {
+  font-family: var(--nano-font-mono);
+  font-size: 10px;
+  fill: var(--nano-text-quiet);
+}
+
+.nano-pareto-curve {
+  fill: none;
+  stroke: var(--nano-ink);
+  stroke-width: 1.5;
+}
+
+.nano-pareto-point {
+  fill: var(--nano-surface);
+  stroke: var(--nano-ink);
+  stroke-width: 1.5;
+}
+
+.nano-mistakes-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nano-mistakes-rules h3 {
+  margin: 0;
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--nano-text-quiet);
+}
+
+.nano-mistakes-rules section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--nano-radius-button);
+  background: var(--nano-surface-muted);
+}
+
+.nano-mistakes-rules h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.nano-mistakes-rules h4 small {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--nano-text-quiet);
+}
+
+.nano-mistakes-rules p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nano-text-secondary);
+}
+
+.nano-mistakes-examples {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--nano-text-quiet);
+}
+
+.nano-mistakes-confirm {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Lu par les lecteurs d'écran, invisible à l'écran : équivalent en tableau du graphique (critère 15). */
+.nano-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Les propositions ne s'impriment pas : le document s'imprime tel qu'il est enregistré. */
@@ -240,6 +401,7 @@
      leur décoration, que `inherit` aurait effacée. */
   .nano-editor .nano-suggest-removed {
     color: inherit;
+    background: none;
     text-decoration: none;
   }
 

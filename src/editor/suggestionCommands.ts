@@ -32,11 +32,17 @@ export function suggestionsFor(
   paragraphs: SelectedParagraph[],
   changes: ParagraphChange[],
 ): Omit<Suggestion, "id">[] {
-  return changes.flatMap(({ paragraph, from, to, removed, insert }) => {
+  return changes.flatMap(({ paragraph, from, to, removed, insert, mistake }) => {
     const sent = paragraphs[paragraph];
-    return sent
-      ? [{ from: sent.from + from, to: sent.from + to, removed, insert, block: sent.block }]
-      : [];
+    if (!sent) return [];
+    const suggestion = {
+      from: sent.from + from,
+      to: sent.from + to,
+      removed,
+      insert,
+      block: sent.block,
+    };
+    return [mistake ? { ...suggestion, mistake } : suggestion];
   });
 }
 
@@ -75,9 +81,14 @@ function marksFor(tr: Transaction, suggestion: Suggestion): readonly Mark[] {
  * toutes ensemble (critère 9). Le texte qui ne change pas garde sa mise en forme ; un texte remplacé
  * prend la mise en forme du premier caractère qu'il remplace.
  * @param ids propositions à accepter ; `all` pour toutes
+ * @param onAccepted reçoit les propositions appliquées, une fois le document modifié (« Mes fautes », T2.23)
  * @returns le nombre de propositions appliquées
  */
-export function acceptSuggestions(editor: Editor, ids: number[] | "all"): number {
+export function acceptSuggestions(
+  editor: Editor,
+  ids: number[] | "all",
+  onAccepted?: (accepted: Suggestion[]) => void,
+): number {
   const { suggestions } = suggestionState(editor);
   const chosen = suggestions.filter((suggestion) => ids === "all" || ids.includes(suggestion.id));
   if (chosen.length === 0) return 0;
@@ -96,6 +107,7 @@ export function acceptSuggestions(editor: Editor, ids: number[] | "all"): number
     ids: chosen.map((suggestion) => suggestion.id),
   } satisfies SuggestionMeta);
   dispatchAsOneStep(editor, tr);
+  onAccepted?.(chosen);
   return chosen.length;
 }
 

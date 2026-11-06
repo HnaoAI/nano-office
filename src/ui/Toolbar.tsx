@@ -52,6 +52,8 @@ export interface ToolbarAssistant {
   online: boolean;
   pending: boolean;
   onRun: (task: AssistantTask) => void;
+  /** Ouvre la fenêtre « Mes fautes » (T2.23, critère 9). */
+  onMistakes: () => void;
 }
 
 /**

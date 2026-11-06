@@ -7,9 +7,17 @@
 // La configuration vient de src/editor/ ; ce composant ne fait que l'afficher.
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { EditorEvents } from "@tiptap/core";
-import { useEffect, useEffectEvent, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { createPortal } from "react-dom";
 import type * as Y from "yjs";
+import { attachAutoCopy } from "../editor/autoCopy";
 import { exposeDocumentForTests } from "../editor/devTestHook";
 import { focusEditor } from "../editor/focus";
 import { createEditorOptions } from "../editor/editorOptions";
@@ -22,12 +30,14 @@ import { pageSize, printPageRule, type PageSetup } from "../core/pageSetup";
 import { printMarginRules } from "../core/headerFooter";
 import { loadOutlineOpen, saveOutlineOpen } from "../storage/outlinePreference";
 import { AssistantPanel } from "./AssistantPanel";
+import { MistakesDialog } from "./MistakesDialog";
 import { OutlinePanel } from "./OutlinePanel";
 import { PageMarksLayer } from "./PageMarksLayer";
 import { SearchBar, type SearchRequest } from "./SearchBar";
 import { Toolbar } from "./Toolbar";
 import type { HeaderFooterField } from "./HeaderFooterFields";
 import { useAssistant } from "./useAssistant";
+import { refreshMistakeStats, resetMistakeStats, useMistakeStats } from "./useMistakeStats";
 import { useOutline } from "./useOutline";
 import { useTableOfContents } from "./useTableOfContents";
 import type { AssistantConfig } from "./useAssistantSettings";
@@ -64,6 +74,7 @@ function pageStyle(setup: PageSetup): CSSProperties {
  *   page après un double clic sur l'un d'eux (T2.16, critère 3)
  * @param assistant fournisseur, modèle et clé de l'assistant (T3.1) ; null quand il est éteint : ni
  *   bouton, ni panneau, ni requête (critère 4)
+ * @param autoCopySelection copier tout seul la sélection faite à la souris (T2.21), réglage de cet ordinateur
  * @param tools emplacement de la barre de mise en forme, du panneau de l'assistant et de la recherche, dans la partie figée en
  *   haut de la fenêtre (M1) ; null avant son affichage
  * @param coveredTop hauteur cachée par la partie figée, pour que le curseur n'y passe jamais (M1,
@@ -78,6 +89,7 @@ export function DocumentEditor({
   onImageRejected,
   onPageSetup,
   assistant,
+  autoCopySelection,
   tools,
   coveredTop,
   coveredBottom,
@@ -88,6 +100,7 @@ export function DocumentEditor({
   onImageRejected: (reasons: ImageRejection[]) => void;
   onPageSetup: (field?: HeaderFooterField) => void;
   assistant: AssistantConfig | null;
+  autoCopySelection: boolean;
   tools: HTMLElement | null;
   coveredTop: () => number;
   coveredBottom: () => number;
@@ -134,6 +147,12 @@ export function DocumentEditor({
     };
   }, [editor]);
 
+  // Copie automatique de la sélection (T2.21) : installée seulement quand le réglage est coché.
+  useEffect(() => {
+    if (!autoCopySelection) return;
+    return attachAutoCopy(editor.view);
+  }, [editor, autoCopySelection]);
+
   useEffect(() => {
     exposeDocumentForTests(ydoc);
   }, [ydoc]);
@@ -148,6 +167,19 @@ export function DocumentEditor({
   });
 
   const helper = useAssistant(editor, assistant);
+  // « Mes fautes » (T2.23) : statistiques de cet ordinateur ; la fenêtre se ferme avec l'assistant.
+  const mistakeStats = useMistakeStats();
+  const [mistakesOpen, setMistakesOpen] = useState(false);
+  // Assistant éteint : la fenêtre se ferme, et ne revient pas d'elle-même quand on le rallume.
+  const [mistakesFor, setMistakesFor] = useState(assistant);
+  if (mistakesFor !== assistant) {
+    setMistakesFor(assistant);
+    if (!assistant) setMistakesOpen(false);
+  }
+  const closeMistakes = useCallback(() => {
+    setMistakesOpen(false);
+    focusEditor(editor);
+  }, [editor]);
 
   const toolbar = (
     <>
@@ -162,6 +194,10 @@ export function DocumentEditor({
                   online: helper.online,
                   pending: helper.status.kind === "pending",
                   onRun: (task) => void helper.run(task),
+                  onMistakes: () => {
+                    refreshMistakeStats();
+                    setMistakesOpen(true);
+                  },
                 }
               : null
           }
@@ -184,6 +220,9 @@ export function DocumentEditor({
   return (
     <>
       {tools && createPortal(toolbar, tools)}
+      {assistant && mistakesOpen && (
+        <MistakesDialog stats={mistakeStats} onReset={resetMistakeStats} onClose={closeMistakes} />
+      )}
       {counter &&
         createPortal(
           <>

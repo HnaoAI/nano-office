@@ -1,6 +1,7 @@
 // Boîte « Réglages » (T3.1, critères 1 à 3), au style de la boîte « Mise en page » (dialog.css) :
-// section « Assistant IA », avec interrupteur, fournisseur, clé d'API masquée, modèle et texte
-// sur les données envoyées. Rien n'est enregistré avant « Enregistrer », sauf « Oublier la clé ».
+// section « Copier-coller » (T2.21, copie automatique de la sélection), puis section « Assistant IA »,
+// avec interrupteur, fournisseur, clé d'API masquée, modèle et texte sur les données envoyées.
+// Rien n'est enregistré avant « Enregistrer », sauf « Oublier la clé ».
 import { useEffect, useId, useState } from "react";
 import {
   DEFAULT_MODELS,
@@ -8,6 +9,7 @@ import {
   type AssistantProviderId,
   type AssistantSettings,
 } from "../core/assistant";
+import type { EditorPreferences } from "../core/preferences";
 import type { AssistantKeys } from "../storage/assistantSettingsStore";
 import { GearIcon } from "./icons";
 
@@ -16,24 +18,35 @@ export const GEMINI_TERMS_URL = "https://ai.google.dev/gemini-api/terms#unpaid-s
 
 const PROVIDERS: AssistantProviderId[] = ["anthropic", "gemini"];
 
+/** Phrase sous la case de la copie automatique (T2.21, critère 1), reprise par l'aide. */
+export const AUTO_COPY_HINT =
+  "Le texte sélectionné à la souris est copié, comme avec Ctrl+C (Cmd+C sur Mac).";
+
 /**
  * Boîte « Réglages ».
  * @param settings réglages enregistrés
  * @param keys clés d'API enregistrées
- * @param onSave enregistre les réglages et les clés, puis ferme la boîte
+ * @param preferences réglages de l'éditeur enregistrés (T2.21)
+ * @param onSave enregistre les réglages, les clés et les réglages de l'éditeur, puis ferme la boîte
  * @param onForgetKeys efface tout de suite les clés de cet ordinateur (critère 3)
  * @param onCancel ferme la boîte sans rien changer (Annuler, Échap, clic à côté)
  */
 export function SettingsDialog({
   settings,
   keys,
+  preferences,
   onSave,
   onForgetKeys,
   onCancel,
 }: {
   settings: AssistantSettings;
   keys: AssistantKeys;
-  onSave: (settings: AssistantSettings, keys: AssistantKeys) => void;
+  preferences: EditorPreferences;
+  onSave: (
+    settings: AssistantSettings,
+    keys: AssistantKeys,
+    preferences: EditorPreferences,
+  ) => void;
   onForgetKeys: () => void;
   onCancel: () => void;
 }) {
@@ -42,6 +55,7 @@ export function SettingsDialog({
   const [provider, setProvider] = useState(settings.provider);
   const [models, setModels] = useState(settings.models);
   const [draftKeys, setDraftKeys] = useState<AssistantKeys>(keys);
+  const [autoCopy, setAutoCopy] = useState(preferences.autoCopySelection);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -73,7 +87,9 @@ export function SettingsDialog({
           event.preventDefault();
           if (!valid) return;
           const trimmed = { ...models, [provider]: model.trim() || DEFAULT_MODELS[provider] };
-          onSave({ enabled, provider, models: trimmed }, draftKeys);
+          onSave({ enabled, provider, models: trimmed }, draftKeys, {
+            autoCopySelection: autoCopy,
+          });
         }}
       >
         <span className="nano-dialog-icon" aria-hidden="true">
@@ -83,6 +99,21 @@ export function SettingsDialog({
           <h2 id={`${id}-title`}>Réglages</h2>
           <p>Ces réglages restent sur cet ordinateur.</p>
         </div>
+        <fieldset className="nano-page-setup-group">
+          <legend>Copier-coller</legend>
+          <label className="nano-settings-switch">
+            <input
+              type="checkbox"
+              checked={autoCopy}
+              aria-describedby={`${id}-auto-copy`}
+              onChange={(event) => setAutoCopy(event.target.checked)}
+            />
+            <span>Copier automatiquement la sélection</span>
+          </label>
+          <p id={`${id}-auto-copy`} className="nano-settings-hint">
+            {AUTO_COPY_HINT}
+          </p>
+        </fieldset>
         <fieldset className="nano-page-setup-group">
           <legend>Assistant IA</legend>
           <label className="nano-settings-switch">

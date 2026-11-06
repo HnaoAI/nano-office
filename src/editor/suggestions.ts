@@ -6,6 +6,7 @@
 import { Extension, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey, type EditorState, type Transaction } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import type { MistakeType } from "../core/mistakes";
 import { mapRanges, type DocRange } from "./assistantEdits";
 
 /** Une modification proposée : remplacer `[from, to)` (texte `removed`) par `insert`. */
@@ -15,6 +16,8 @@ export interface Suggestion extends DocRange {
   insert: string;
   /** Bloc qui contient la modification : le modifier fait disparaître les propositions (critère 10). */
   block: DocRange;
+  /** Type de faute (T2.23), compté dans « Mes fautes » si la modification est acceptée. */
+  mistake?: MistakeType;
 }
 
 /** État des propositions d'un éditeur. */

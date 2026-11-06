@@ -353,6 +353,18 @@ export function GearIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+/** Histogramme de « Mes fautes » (T2.23). */
+export function ChartIcon({ size = 18 }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <path d="M4 20h16" />
+      <path d="M7 16v-9" />
+      <path d="M12 16v-6" />
+      <path d="M17 16v-3" />
+    </Icon>
+  );
+}
+
 /** Coche « Accepter » d'une modification proposée (T3.1, critère 8). */
 export function CheckIcon() {
   return (
