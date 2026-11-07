@@ -480,6 +480,7 @@ test.describe("T2.9 : plan du document", () => {
     await expect(number).toHaveText("1");
     await editor(page).getByText(SENTENCE.trim().slice(0, 20)).click();
     await page.keyboard.press("End");
+    await settleSelection(page);
     for (let index = 0; index < 40; index += 1) await page.keyboard.press("Enter");
     await expect(number).toHaveText("2");
   });

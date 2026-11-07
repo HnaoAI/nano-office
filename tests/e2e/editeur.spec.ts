@@ -3,6 +3,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { documentSchema } from "../../src/core/schema";
 import type { DocumentJson } from "../../src/core/types";
+import { settleSelection } from "./formatHelpers";
 
 /** Ouvre l'application et place le curseur dans l'éditeur vide. */
 async function openEditor(page: Page) {
@@ -172,8 +173,10 @@ test("critère 6 : chaque paragraphe porte un identifiant, un paragraphe créé 
   for (let i = 0; i < 5; i++) {
     await page.keyboard.press("ArrowLeft");
   }
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await page.keyboard.press("Home");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
 
   const ids = await paragraphIds(page);

@@ -4,6 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   MAC_USER_AGENT,
   saveAndReopen,
+  settleSelection,
   start,
   topBlocks,
   waitUndoGroup,
@@ -65,6 +66,7 @@ test("critère 3 : la liste déroulante affiche le niveau du paragraphe du curse
   await page.keyboard.type("Titre");
   await styleSelect(page).selectOption({ label: "Titre 1" });
   await page.keyboard.press("End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await page.keyboard.type("Texte");
   await expect(styleSelect(page)).toHaveValue("0");
@@ -144,6 +146,7 @@ test("critère 6 : Entrée à la fin d'un titre crée un paragraphe de texte nor
   await page.keyboard.type("Titre");
   await styleSelect(page).selectOption({ label: "Titre 1" });
   await page.keyboard.press("End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await page.keyboard.type("Corps du texte");
   await expect(editor.locator("h1")).toHaveText("Titre");

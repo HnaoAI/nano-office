@@ -283,6 +283,7 @@ test("critère 8 : un titre garde son niveau ; une image est ignorée", async ({
   await writeLines(page, ["source", "Mon titre"]);
   await page.getByRole("combobox", { name: "Style du paragraphe" }).selectOption("2");
   await page.keyboard.press("End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   const image = await makeImage(page, "photo.png", { width: 40, height: 30, type: "image/png" });
   await insertWithButton(page, [image]);
