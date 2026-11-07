@@ -7,6 +7,7 @@ import {
   MAC_USER_AGENT,
   pasteFromOtherApp,
   selectText,
+  settleSelection,
   start,
   waitUndoGroup,
   WINDOWS_USER_AGENT,
@@ -78,6 +79,7 @@ test("critère 1 : Échap ferme la barre et rend le focus au document, à l'endr
   await start(page);
   await page.keyboard.type("un mot, puis un autre mot");
   await page.keyboard.press("ControlOrMeta+Home");
+  await settleSelection(page);
   await page.keyboard.press("ControlOrMeta+f");
   await page.keyboard.type("mot");
   await page.keyboard.press("Enter");
@@ -97,6 +99,7 @@ test("critère 2 : surligne pendant la frappe, « 3 sur 12 », Entrée, Shift+En
   await start(page);
   await page.keyboard.type("pomme ".repeat(12) + "poire");
   await page.keyboard.press("ControlOrMeta+Home");
+  await settleSelection(page);
   await page.keyboard.press("ControlOrMeta+f");
   await page.keyboard.type("pom");
   await expect(matches(page)).toHaveCount(12);
@@ -167,6 +170,7 @@ test("critère 4 : « Remplacer… » déplie un second champ ; Remplacer change
   await start(page);
   await page.keyboard.type("chat, chat et chat");
   await page.keyboard.press("ControlOrMeta+Home");
+  await settleSelection(page);
   await page.keyboard.press("ControlOrMeta+f");
   await page.keyboard.type("chat");
   const toggle = bar(page).getByRole("button", { name: "Remplacer…" });

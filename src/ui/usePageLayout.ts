@@ -16,7 +16,7 @@ import {
 } from "../core/pageBreaks";
 import type { PageSetup } from "../core/pageSetup";
 import { planSheets, screenLayout, SHEET_GAP, type ContentStart, type Sheet } from "../core/sheets";
-import { measurePage, withTextWidth, type MeasuredPage } from "../editor/pageMeasure";
+import { lineStartPos, measurePage, withTextWidth, type MeasuredPage } from "../editor/pageMeasure";
 import {
   createSheetGapElement,
   setSheetGapHeights,
@@ -92,11 +92,10 @@ function findStarts(view: EditorView, layout: PageLayout, shown: MeasuredPage): 
     }
     let gap: SheetGap | null = null;
     if (unit?.kind === "text" && element && pos !== null && pos !== undefined) {
-      const left = element.getBoundingClientRect().left + 1;
-      const found = view.posAtCoords({ left, top: origin + y + 2 });
+      const found = lineStartPos(view, element, pos, origin + y);
       const node = view.state.doc.nodeAt(pos);
-      if (found && node && found.pos > pos && found.pos < pos + node.nodeSize - 1) {
-        gap = { page, pos: found.pos };
+      if (found !== null && node && found > pos && found < pos + node.nodeSize - 1) {
+        gap = { page, pos: found };
       }
     }
     return { start: { page, top: y, previousBottom: y }, gap, manual: null };
@@ -186,6 +185,8 @@ export function usePageLayout(
       let found: FoundStart[];
       let layout: PageLayout;
       let contentBottom: number;
+      let offset: number;
+      let marginBottom: number;
       try {
         const shown = measurePage(view);
         if (Math.abs(view.dom.getBoundingClientRect().width - printWidth) <= 1) {
@@ -204,12 +205,14 @@ export function usePageLayout(
         }
         found = findStarts(view, layout, shown);
         contentBottom = shown.units.at(-1)?.bottom ?? 0;
+        // Lus avant de remontrer les espaces, qui ne déplacent pas le haut de la zone de texte : les lire après
+        // forcerait le navigateur à refaire la mise en page de tout le document (P1, critère 8).
+        offset = view.dom.getBoundingClientRect().top - sheet.getBoundingClientRect().top;
+        marginBottom = Number.parseFloat(getComputedStyle(sheet).paddingBottom) || 0;
       } finally {
         sheet.classList.remove(SHEETS_MEASURING_CLASS);
       }
 
-      const offset = view.dom.getBoundingClientRect().top - sheet.getBoundingClientRect().top;
-      const marginBottom = Number.parseFloat(getComputedStyle(sheet).paddingBottom) || 0;
       const plan = planSheets(
         found.map(({ start }) => start),
         contentBottom,

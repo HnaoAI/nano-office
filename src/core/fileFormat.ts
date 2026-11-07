@@ -34,14 +34,35 @@ export function createDocumentId(): string {
 }
 
 /**
+ * Fragment Yjs du document au format JSON de Tiptap, tel que l'écrivait @tiptap/y-tiptap 3.0.10 : chaque marque
+ * porte `attrs`, même vide (`{ "type": "bold", "attrs": {} }`).
+ * INVARIANT (P1, critère 7) : depuis 3.1.0, y-tiptap omet `attrs` vide sur une marque. Sans ce retour à l'ancienne
+ * forme, le `content` des fichiers changerait, et un fichier enregistré avant la mise à jour ne serait plus reconnu
+ * identique à son propre `ydoc` à l'ouverture (`isSameJson`) : son historique Yjs serait remplacé.
+ * @param fragment fragment du document dans le Y.Doc
+ */
+export function fragmentJson(fragment: Y.XmlFragment): DocumentJson {
+  return withMarkAttrs(yXmlFragmentToProsemirrorJSON(fragment) as DocumentJson);
+}
+
+/** Copie du nœud où chaque marque a son `attrs`, vide s'il manque. */
+function withMarkAttrs(node: DocumentJson): DocumentJson {
+  const marks = node.marks?.map((mark) => (mark.attrs ? mark : { ...mark, attrs: {} }));
+  const content = node.content?.map(withMarkAttrs);
+  return {
+    ...node,
+    ...(marks ? { marks } : {}),
+    ...(content ? { content } : {}),
+  };
+}
+
+/**
  * Contenu d'un Y.Doc au format JSON de Tiptap (celui écrit dans `content`) : le fragment du document,
  * avec la mise en page en attributs du nœud `doc` quand elle est réglée (T2.5, critère 6), ainsi que les
  * numéros de page, l'en-tête et le pied de page (T2.15, T2.16).
  */
 export function contentOf(ydoc: Y.Doc): DocumentJson {
-  const fragment = yXmlFragmentToProsemirrorJSON(
-    ydoc.getXmlFragment(YJS_FRAGMENT_NAME),
-  ) as DocumentJson;
+  const fragment = fragmentJson(ydoc.getXmlFragment(YJS_FRAGMENT_NAME));
   return withHeaderFooterAttrs(withPageSetupAttrs(fragment, ydoc), ydoc);
 }
 

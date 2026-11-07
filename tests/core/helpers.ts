@@ -1,6 +1,7 @@
 // Outils communs aux tests de src/core : construire un Y.Doc à partir d'un JSON et le relire.
 import type * as Y from "yjs";
-import { prosemirrorJSONToYDoc, yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
+import { prosemirrorJSONToYDoc } from "@tiptap/y-tiptap";
+import { fragmentJson } from "../../src/core/fileFormat";
 import { documentSchema, YJS_FRAGMENT_NAME } from "../../src/core/schema";
 import type { DocumentJson } from "../../src/core/types";
 
@@ -9,9 +10,12 @@ export function ydocFromJson(json: DocumentJson): Y.Doc {
   return prosemirrorJSONToYDoc(documentSchema, json, YJS_FRAGMENT_NAME);
 }
 
-/** Relit le contenu du fragment du document d'un Y.Doc, au format JSON de Tiptap. */
+/**
+ * Relit le contenu du fragment du document d'un Y.Doc, au format JSON de Tiptap, comme l'application l'écrit dans
+ * `content` (`fragmentJson`, marques avec `attrs` même vide, P1).
+ */
 export function jsonFromYdoc(ydoc: Y.Doc): DocumentJson {
-  return yXmlFragmentToProsemirrorJSON(ydoc.getXmlFragment(YJS_FRAGMENT_NAME)) as DocumentJson;
+  return fragmentJson(ydoc.getXmlFragment(YJS_FRAGMENT_NAME));
 }
 
 /** Paragraphe avec identifiant, composé de morceaux de texte éventuellement mis en forme. */

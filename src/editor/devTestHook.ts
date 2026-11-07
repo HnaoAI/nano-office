@@ -1,7 +1,7 @@
 // Accès en lecture au Y.Doc pour les tests Playwright (T0b, critère 5), en développement seulement.
 // Vite retire ce code de la version publiée (`import.meta.env.DEV` vaut false au build).
-import { yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import type * as Y from "yjs";
+import { fragmentJson } from "../core/fileFormat";
 import { YJS_FRAGMENT_NAME } from "../core/schema";
 import type { DocumentJson } from "../core/types";
 
@@ -26,7 +26,6 @@ export function exposeDocumentForTests(ydoc: Y.Doc): void {
     return;
   }
   window.__nanoTest = {
-    documentJson: () =>
-      yXmlFragmentToProsemirrorJSON(ydoc.getXmlFragment(YJS_FRAGMENT_NAME)) as DocumentJson,
+    documentJson: () => fragmentJson(ydoc.getXmlFragment(YJS_FRAGMENT_NAME)),
   };
 }

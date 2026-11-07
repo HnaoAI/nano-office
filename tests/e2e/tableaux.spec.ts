@@ -219,6 +219,7 @@ test("critère 3 : dans une liste d'une cellule, Tab décale l'élément, puis p
   expect((await tableText(page))[0]).toEqual(["lait", "Prix"]);
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await page.keyboard.type("œufs");
   await page.keyboard.press("Tab");

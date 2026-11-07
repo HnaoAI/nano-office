@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { serializeDocument } from "../../src/core/fileFormat";
 import { ydocFromJson } from "../core/helpers";
 import { fakeFiles, setFakeFiles } from "./fakeFileStore";
-import { button, editor, start, waitEditorFocus, ydocJson } from "./formatHelpers";
+import { button, editor, settleSelection, start, waitEditorFocus, ydocJson } from "./formatHelpers";
 import { insertWithButton, makeImage } from "./imageHelpers";
 import { suspiciousTraffic, watchNetwork } from "./networkWatch";
 
@@ -207,6 +207,7 @@ test("critère 3 et 4 : titres, mise en forme, images et polices embarquées dan
   await fakeExportPicker(page);
   await openLetter(page);
   await page.keyboard.press("ControlOrMeta+End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await insertWithButton(page, [
     await makeImage(page, "photo.webp", { width: 800, height: 400, type: "image/webp" }),

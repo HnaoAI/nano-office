@@ -168,6 +168,7 @@ test("critère 6 : la numérotation se met à jour quand on supprime ou ajoute u
   // Aucun numéro écrit en dur : le navigateur numérote 1, 2, 3, 4 à partir de la position.
   await expect(editor.locator("ol[start], li[value]")).toHaveCount(0);
   await page.keyboard.press("End");
+  await settleSelection(page);
   await page.keyboard.press("Enter");
   await page.keyboard.type("deux bis");
   await expect(editor.locator("ol > li")).toHaveText(["un", "deux bis", "trois", "quatre", "cinq"]);
@@ -253,6 +254,9 @@ test("critère 11 : Ctrl/Cmd+Z annule une création de liste ou un décalage en 
   await waitUndoGroup(page);
   await page.keyboard.press("End");
   await page.keyboard.press("ControlOrMeta+End");
+  // Ctrl/Cmd+Fin est fait par le navigateur : ProseMirror ne l'apprend que par « selectionchange ». Sans cette
+  // attente, Tab peut partir de l'ancienne sélection (les deux lignes) et ne rien décaler (P2).
+  await settleSelection(page);
   await page.keyboard.press("Tab");
   expect(await listOutline(page)).toEqual(["ul1 un", "ul2 deux"]);
 
