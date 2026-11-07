@@ -185,6 +185,8 @@ export function usePageLayout(
       let found: FoundStart[];
       let layout: PageLayout;
       let contentBottom: number;
+      let offset: number;
+      let marginBottom: number;
       try {
         const shown = measurePage(view);
         if (Math.abs(view.dom.getBoundingClientRect().width - printWidth) <= 1) {
@@ -203,12 +205,14 @@ export function usePageLayout(
         }
         found = findStarts(view, layout, shown);
         contentBottom = shown.units.at(-1)?.bottom ?? 0;
+        // Lus avant de remontrer les espaces, qui ne déplacent pas le haut de la zone de texte : les lire après
+        // forcerait le navigateur à refaire la mise en page de tout le document (P1, critère 8).
+        offset = view.dom.getBoundingClientRect().top - sheet.getBoundingClientRect().top;
+        marginBottom = Number.parseFloat(getComputedStyle(sheet).paddingBottom) || 0;
       } finally {
         sheet.classList.remove(SHEETS_MEASURING_CLASS);
       }
 
-      const offset = view.dom.getBoundingClientRect().top - sheet.getBoundingClientRect().top;
-      const marginBottom = Number.parseFloat(getComputedStyle(sheet).paddingBottom) || 0;
       const plan = planSheets(
         found.map(({ start }) => start),
         contentBottom,
