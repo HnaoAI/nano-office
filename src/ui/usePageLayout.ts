@@ -16,7 +16,7 @@ import {
 } from "../core/pageBreaks";
 import type { PageSetup } from "../core/pageSetup";
 import { planSheets, screenLayout, SHEET_GAP, type ContentStart, type Sheet } from "../core/sheets";
-import { measurePage, withTextWidth, type MeasuredPage } from "../editor/pageMeasure";
+import { lineStartPos, measurePage, withTextWidth, type MeasuredPage } from "../editor/pageMeasure";
 import {
   createSheetGapElement,
   setSheetGapHeights,
@@ -92,11 +92,10 @@ function findStarts(view: EditorView, layout: PageLayout, shown: MeasuredPage): 
     }
     let gap: SheetGap | null = null;
     if (unit?.kind === "text" && element && pos !== null && pos !== undefined) {
-      const left = element.getBoundingClientRect().left + 1;
-      const found = view.posAtCoords({ left, top: origin + y + 2 });
+      const found = lineStartPos(view, element, origin + y);
       const node = view.state.doc.nodeAt(pos);
-      if (found && node && found.pos > pos && found.pos < pos + node.nodeSize - 1) {
-        gap = { page, pos: found.pos };
+      if (found !== null && node && found > pos && found < pos + node.nodeSize - 1) {
+        gap = { page, pos: found };
       }
     }
     return { start: { page, top: y, previousBottom: y }, gap, manual: null };

@@ -188,6 +188,78 @@ export function measurePage(view: EditorView): MeasuredPage {
   };
 }
 
+/** Vrai si l'unité de code UTF-16 est la seconde moitié d'un caractère hors du plan de base (emoji). */
+function isLowSurrogate(code: number): boolean {
+  return code >= 0xdc00 && code <= 0xdfff;
+}
+
+/**
+ * Position du document du premier caractère d'un paragraphe affiché placé sous la hauteur `y` (coordonnées de la
+ * fenêtre), ou null s'il n'y en a pas. Sert à poser l'espace entre deux feuilles avant la première lettre d'une
+ * ligne (PL6).
+ * Recherche par dichotomie sur les caractères, dont le haut ne fait que descendre d'une ligne à l'autre : une
+ * dizaine de mesures par paragraphe coupé, au lieu de `posAtCoords`, qui mesure chaque caractère jusqu'au bon et
+ * prenait la moitié du calcul des feuilles à chaque Entrée dans un long document (P1).
+ * @param view vue ProseMirror de l'éditeur
+ * @param element élément qui affiche le paragraphe
+ * @param y hauteur du début de la ligne, dans la fenêtre : le milieu de l'espace entre deux lignes
+ */
+export function lineStartPos(view: EditorView, element: HTMLElement, y: number): number | null {
+  const doc = element.ownerDocument;
+  // Texte du paragraphe seulement : pas celui d'un élément inerte posé dedans (espace entre feuilles, widget).
+  const texts: Text[] = [];
+  const walker = doc.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) =>
+      node.parentElement?.closest("[contenteditable='false']")
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+  });
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node instanceof Text && node.length > 0) texts.push(node);
+  }
+  const total = texts.reduce((sum, text) => sum + text.length, 0);
+  if (total === 0) return null;
+  /** Nœud de texte et décalage du caractère d'indice `index` dans tout le paragraphe. */
+  const locate = (index: number): [Text, number] => {
+    let rest = index;
+    for (const text of texts) {
+      if (rest < text.length) return [text, rest];
+      rest -= text.length;
+    }
+    const last = texts[texts.length - 1] as Text;
+    return [last, last.length];
+  };
+  const range = doc.createRange();
+  /** Vrai si le caractère d'indice `index` est affiché sous `y` (son milieu, pour ignorer les interlignes). */
+  const below = (index: number): boolean => {
+    const [text, offset] = locate(index);
+    const start = isLowSurrogate(text.data.charCodeAt(offset)) ? offset - 1 : offset;
+    const end = Math.min(
+      text.length,
+      start + (isLowSurrogate(text.data.charCodeAt(start + 1)) ? 2 : 1),
+    );
+    range.setStart(text, start);
+    range.setEnd(text, end);
+    const rect = Array.from(range.getClientRects()).find((box) => box.height > 0);
+    return rect ? (rect.top + rect.bottom) / 2 > y : false;
+  };
+  if (!below(total - 1)) return null;
+  let low = 0;
+  let high = total - 1;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (below(middle)) high = middle;
+    else low = middle + 1;
+  }
+  const [text, offset] = locate(low);
+  const start = isLowSurrogate(text.data.charCodeAt(offset)) ? offset - 1 : offset;
+  try {
+    return view.posAtDOM(text, start);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Lance `measure` pendant que la zone de texte a la largeur de la feuille imprimée, puis lui rend sa
  * largeur. Dans une fenêtre plus étroite que la feuille, le texte passe à la ligne ailleurs qu'à

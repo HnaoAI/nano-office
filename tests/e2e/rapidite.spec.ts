@@ -186,8 +186,9 @@ test.describe("P1 : Entrée rapide dans un long document", () => {
     await expectFast(page, "Ctrl/Cmd+Entrée");
     const breaks = (await topBlocks(page)).filter((block) => block.type === "pageBreak");
     expect(breaks).toHaveLength(TRIES);
-    // Chaque saut de page ajoute une page (critère 5 : le compteur suit).
-    await expect.poll(() => counted(page)).toBe(before + TRIES);
+    // Le compteur suit (critère 5) : chaque saut de page ajoute une page, sauf le premier, tout en haut du
+    // document, qui ne laisse pas de page vide, comme à l'impression.
+    await expect.poll(() => counted(page)).toBe(before + TRIES - 1);
   });
 
   test("critères 4 et 5 : après des Entrée, chaque bloc garde un identifiant unique et stable, gardé à la réouverture, et Ctrl/Cmd+Z défait une Entrée à la fois", async ({

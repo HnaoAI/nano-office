@@ -41,7 +41,7 @@ Logique pure, sans React ni accès au navigateur. N'importe que des bibliothèqu
 - `woff.ts` : police WOFF convertie en TrueType, pour l'embarquer dans un fichier Word (`woffToSfnt`, T2.7)
 - `imageSize.ts` : largeur et hauteur d'une image PNG, GIF, JPEG ou WebP, lues dans son en-tête (`imageSize`, T2.7)
 - `documentColors.ts` : palettes fixes de la couleur du texte et du surlignage (`TEXT_COLORS`, `HIGHLIGHT_COLORS`, T1.7)
-- `fileFormat.ts` : format `.nano` version 2 (`createDocumentId`, `serializeDocument`, `parseDocument`) : images rangées une fois dans `images`, triées par empreinte, en fin de fichier, `ydoc` enregistré sans elles (T1.9) ; mise en page en attributs du nœud `doc` de `content` (T2.5), avec les numéros, l'en-tête et le pied de page (T2.15, T2.16)
+- `fileFormat.ts` : format `.nano` version 2 (`createDocumentId`, `serializeDocument`, `parseDocument`) : images rangées une fois dans `images`, triées par empreinte, en fin de fichier, `ydoc` enregistré sans elles (T1.9) ; mise en page en attributs du nœud `doc` de `content` (T2.5), avec les numéros, l'en-tête et le pied de page (T2.15, T2.16) ; `content` lu par `fragmentJson`, sous la forme de y-tiptap 3.0.10 (marques avec `attrs` même vide, P1)
 - `migrations.ts` : migrations du format, de la version 1 à la version 2 (`migrateV1ToV2`, `migrateToCurrent`, T1.9)
 - `images.ts` : images (T1.9) : format reconnu aux premiers octets, empreinte SHA-256, règles de réduction, `Y.Map` « images » du Y.Doc, texte de remplacement par défaut
 - `imageSchema.ts` : nœud image du schéma, dans son propre groupe : jamais dans une liste ni un tableau (`ImageNode`, T1.9)
