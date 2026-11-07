@@ -18,12 +18,17 @@ import { openDocument, pages, settleLayout } from "./pageHelpers";
 /** Essais par touche (critère 2 : médiane sur 20 essais). */
 const TRIES = 20;
 
-/** Paragraphes courts en haut du document, à joindre par Retour arrière ou Suppr (critère 3). */
-function shortLines(count: number): DocumentJson[] {
-  return Array.from({ length: count + 1 }, (_, index) => ({
+/**
+ * Lettres des paragraphes courts en haut du document, à joindre par Retour arrière ou Suppr (critère 3). Une lettre
+ * chacun : une fois joints, ils tiennent sur une ligne, et Début et Fin vont au bout du paragraphe.
+ */
+const LETTERS = [..."éabcdefghijklmnopqrst"];
+
+function shortLines(): DocumentJson[] {
+  return LETTERS.map((letter, index) => ({
     type: "paragraph",
     attrs: { id: `court-${String(index)}` },
-    content: [{ type: "text", text: `L${String(index)}é` }],
+    content: [{ type: "text", text: letter }],
   }));
 }
 
@@ -138,10 +143,11 @@ test.describe("P1 : Entrée rapide dans un long document", () => {
   test("critère 3 : Retour arrière au début d'un paragraphe, qui le joint au précédent, bloque l'éditeur moins de 100 ms", async ({
     page,
   }) => {
-    await openLong(page, [...shortLines(TRIES), ...pages(100)]);
+    await openLong(page, [...shortLines(), ...pages(100)]);
     await watchKey(page, "Backspace");
     for (let index = 1; index <= TRIES; index++) {
       await page.keyboard.press("ArrowDown");
+      await settleSelection(page);
       await page.keyboard.press("Home");
       await settleSelection(page);
       await measuredPress(page, "Backspace", index);
@@ -149,15 +155,13 @@ test.describe("P1 : Entrée rapide dans un long document", () => {
     await expectFast(page, "Retour arrière");
     const first = (await topBlocks(page))[0];
     expect(first?.attrs?.id).toBe("court-0");
-    expect(first?.content?.[0]?.text).toBe(
-      Array.from({ length: TRIES + 1 }, (_, index) => `L${String(index)}é`).join(""),
-    );
+    expect(first?.content?.[0]?.text).toBe(LETTERS.join(""));
   });
 
   test("critère 3 : Suppr à la fin d'un paragraphe, qui lui joint le suivant, bloque l'éditeur moins de 100 ms", async ({
     page,
   }) => {
-    await openLong(page, [...shortLines(TRIES), ...pages(100)]);
+    await openLong(page, [...shortLines(), ...pages(100)]);
     await watchKey(page, "Delete");
     for (let index = 1; index <= TRIES; index++) {
       await page.keyboard.press("End");
@@ -167,9 +171,7 @@ test.describe("P1 : Entrée rapide dans un long document", () => {
     await expectFast(page, "Suppr");
     const first = (await topBlocks(page))[0];
     expect(first?.attrs?.id).toBe("court-0");
-    expect(first?.content?.[0]?.text).toBe(
-      Array.from({ length: TRIES + 1 }, (_, index) => `L${String(index)}é`).join(""),
-    );
+    expect(first?.content?.[0]?.text).toBe(LETTERS.join(""));
   });
 
   test("critère 3 : Ctrl/Cmd+Entrée (saut de page) en haut de 100 pages bloque l'éditeur moins de 100 ms", async ({
