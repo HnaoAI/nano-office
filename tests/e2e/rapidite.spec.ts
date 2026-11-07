@@ -219,6 +219,11 @@ test.describe("P1 : Entrée rapide dans un long document", () => {
     // Les blocs d'origine gardent leur identifiant, dans le même ordre ; seuls les 3 nouveaux en ont un neuf.
     expect(ids.filter((id) => original.includes(id))).toEqual(original);
     expect(after.slice(1, 4).map((block) => block.content?.length ?? 0)).toEqual([0, 0, 0]);
+    // Les blocs qui suivent gardent leur identifiant, à leur place. Entrée au début d'un paragraphe laisse
+    // aujourd'hui son identifiant à la ligne vide du dessus, et le texte en reçoit un neuf : comportement connu
+    // depuis T0b, à changer par le ticket PL2 (« l'identifiant suit le texte »), hors du périmètre de P1.
+    expect(after[4]?.content?.[0]?.text).toContain("Le cerf-volant de Zoé");
+    expect(after.slice(5).map((block) => block.attrs?.id)).toEqual(original.slice(2));
     // Le plan suit : le titre est toujours là, au-dessus des lignes vides.
     await button(page, "Plan").click();
     await expect(page.locator(".nano-outline .nano-outline-item").first()).toHaveText(/Été 🌾/);

@@ -92,7 +92,7 @@ function findStarts(view: EditorView, layout: PageLayout, shown: MeasuredPage): 
     }
     let gap: SheetGap | null = null;
     if (unit?.kind === "text" && element && pos !== null && pos !== undefined) {
-      const found = lineStartPos(view, element, origin + y);
+      const found = lineStartPos(view, element, pos, origin + y);
       const node = view.state.doc.nodeAt(pos);
       if (found !== null && node && found > pos && found < pos + node.nodeSize - 1) {
         gap = { page, pos: found };

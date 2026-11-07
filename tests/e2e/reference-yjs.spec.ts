@@ -42,7 +42,9 @@ test.describe("P1 : fichier et copie de secours faits avec y-tiptap 3.0.10", () 
     await expect.poll(async () => (await fakeFiles(page)).calls.includes("save")).toBe(true);
     const saved = (await fakeFiles(page)).files["reference.nano"] ?? "";
     expect((JSON.parse(saved) as { content: DocumentJson }).content).toEqual(file.content);
-    // L'éditeur n'a rien écrit dans l'état Yjs en affichant le document.
+    // L'éditeur n'a rien ajouté à l'état Yjs en affichant le document : même contenu, mêmes modifications de chaque
+    // auteur. Seules les notes internes de y-tiptap 3.0.10 (`__tiptap_position_migrations`), sans texte, sont vidées
+    // par 3.2.0 à l'ouverture.
     expect(stateVector(saved)).toEqual(stateVector(REFERENCE));
   });
 

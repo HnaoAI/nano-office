@@ -25,6 +25,11 @@ import { Suggestions } from "./suggestions";
 import { TableNavigation } from "./tables";
 import { TableOfContentsEditorNode } from "./toc";
 
+/** Signale dans la console un contenu du Y.Doc que le schéma ne connaît pas, gardé tel quel (P1). */
+function reportInvalidContent(error: Error): void {
+  console.warn("Contenu inconnu de cette version, gardé sans modification :", error.message);
+}
+
 /**
  * Options de l'éditeur pour un document donné.
  *
@@ -51,6 +56,7 @@ import { TableOfContentsEditorNode } from "./toc";
  * - Le pinceau copie la mise en forme du curseur vers une sélection faite à la souris (`FormatPainter`, PL4).
  * - Les espaces entre feuilles séparées sont des décorations, hors du document (`SheetGaps`, PL6).
  * - Un lien s'ouvre par Ctrl/Cmd+clic ; un clic simple place le curseur (`LinkClick`, T2.12).
+ * - Un contenu du Y.Doc inconnu du schéma n'est jamais effacé (`onInvalidContent`, P1).
  * - Le correcteur orthographique du navigateur est activé (critère 7).
  *
  * @param ydoc document Yjs qui contient le texte ; il doit être neuf ou déjà rempli par Yjs,
@@ -92,6 +98,11 @@ export function createEditorOptions(
         document: ydoc,
         field: YJS_FRAGMENT_NAME,
         yUndoOptions: { trackedOrigins: [PAGE_SETUP_ORIGIN] },
+        // INVARIANT (P1, règle produit 3) : un contenu du Y.Doc que le schéma ne connaît pas (copie de secours
+        // faite par une version plus récente) n'est jamais effacé. Sans ce rappel, @tiptap/y-tiptap 3.1.0 et
+        // suivantes le suppriment du Y.Doc, donc de la copie de secours. Avec lui, comme en 3.0.10, il reste dans
+        // le Y.Doc et l'éditeur refuse les modifications tant qu'il est là.
+        ySyncOptions: { onInvalidContent: reportInvalidContent },
       }),
       createPageSetupHistory(ydoc),
     ],

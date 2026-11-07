@@ -194,9 +194,7 @@ function isLowSurrogate(code: number): boolean {
 }
 
 /**
- * Position du document du premier caractère d'un paragraphe affiché placé sous la hauteur `y` (coordonnées de la
- * fenêtre), ou null s'il n'y en a pas. Sert à poser l'espace entre deux feuilles avant la première lettre d'une
- * ligne (PL6).
+ * Cherche le début de ligne de `lineStartPos`, sans cache.
  * Recherche par dichotomie sur les caractères, dont le haut ne fait que descendre d'une ligne à l'autre : une
  * dizaine de mesures par paragraphe coupé, au lieu de `posAtCoords`, qui mesure chaque caractère jusqu'au bon et
  * prenait la moitié du calcul des feuilles à chaque Entrée dans un long document (P1).
@@ -204,15 +202,16 @@ function isLowSurrogate(code: number): boolean {
  * @param element élément qui affiche le paragraphe
  * @param y hauteur du début de la ligne, dans la fenêtre : le milieu de l'espace entre deux lignes
  */
-export function lineStartPos(view: EditorView, element: HTMLElement, y: number): number | null {
+function searchLineStart(view: EditorView, element: HTMLElement, y: number): number | null {
   const doc = element.ownerDocument;
   // Texte du paragraphe seulement : pas celui d'un élément inerte posé dedans (espace entre feuilles, widget).
   const texts: Text[] = [];
   const walker = doc.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node) =>
-      node.parentElement?.closest("[contenteditable='false']")
-        ? NodeFilter.FILTER_REJECT
-        : NodeFilter.FILTER_ACCEPT,
+    acceptNode: (node) => {
+      // Cherché dans le paragraphe seulement : un paragraphe placé dans une vue inerte garde son texte.
+      const inert = node.parentElement?.closest("[contenteditable='false']");
+      return inert && element.contains(inert) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+    },
   });
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (node instanceof Text && node.length > 0) texts.push(node);
@@ -233,7 +232,7 @@ export function lineStartPos(view: EditorView, element: HTMLElement, y: number):
   /** Vrai si le caractère d'indice `index` est affiché sous `y` (son milieu, pour ignorer les interlignes). */
   const below = (index: number): boolean => {
     const [text, offset] = locate(index);
-    const start = isLowSurrogate(text.data.charCodeAt(offset)) ? offset - 1 : offset;
+    const start = isLowSurrogate(text.data.charCodeAt(offset)) ? Math.max(0, offset - 1) : offset;
     const end = Math.min(
       text.length,
       start + (isLowSurrogate(text.data.charCodeAt(start + 1)) ? 2 : 1),
@@ -252,12 +251,57 @@ export function lineStartPos(view: EditorView, element: HTMLElement, y: number):
     else low = middle + 1;
   }
   const [text, offset] = locate(low);
-  const start = isLowSurrogate(text.data.charCodeAt(offset)) ? offset - 1 : offset;
+  const start = isLowSurrogate(text.data.charCodeAt(offset)) ? Math.max(0, offset - 1) : offset;
   try {
     return view.posAtDOM(text, start);
   } catch {
     return null;
   }
+}
+
+/** Débuts de ligne déjà trouvés, par nœud : hauteur dans le paragraphe et décalage depuis le début du nœud. */
+interface CachedLineStarts {
+  width: number;
+  height: number;
+  starts: { top: number; offset: number | null }[];
+}
+
+/**
+ * Débuts de ligne déjà trouvés, par nœud du document. Comme `lineCache` : un nœud ne change jamais, et sa place
+ * dans le paragraphe ne dépend que de sa taille. Une Entrée en haut d'un long document déplace toutes les coupures
+ * d'une ligne, mais chaque paragraphe coupé a souvent déjà été mesuré à cette ligne (P1, critère 8).
+ */
+const lineStartCache = new WeakMap<ProseMirrorNode, CachedLineStarts>();
+
+/**
+ * Position du document du premier caractère d'un paragraphe affiché placé sous la hauteur `y` (coordonnées de la
+ * fenêtre), ou null s'il n'y en a pas. Sert à poser l'espace entre deux feuilles avant la première lettre d'une
+ * ligne (PL6).
+ * @param view vue ProseMirror de l'éditeur
+ * @param element élément qui affiche le paragraphe
+ * @param pos position du paragraphe dans le document
+ * @param y hauteur du début de la ligne, dans la fenêtre : le milieu de l'espace entre deux lignes
+ */
+export function lineStartPos(
+  view: EditorView,
+  element: HTMLElement,
+  pos: number,
+  y: number,
+): number | null {
+  const node = view.state.doc.nodeAt(pos);
+  if (!node) return null;
+  const box = element.getBoundingClientRect();
+  const top = y - box.top;
+  let cached = lineStartCache.get(node);
+  if (!cached || cached.width !== box.width || cached.height !== box.height) {
+    cached = { width: box.width, height: box.height, starts: [] };
+    lineStartCache.set(node, cached);
+  }
+  const known = cached.starts.find((start) => Math.abs(start.top - top) < 1);
+  if (known) return known.offset === null ? null : pos + known.offset;
+  const found = searchLineStart(view, element, y);
+  cached.starts.push({ top, offset: found === null ? null : found - pos });
+  return found;
 }
 
 /**
