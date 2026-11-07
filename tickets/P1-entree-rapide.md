@@ -18,6 +18,24 @@ calcul des pages (3 ms) et celui des feuilles (18 ms) n'y sont pour rien. Les le
 Une piste à vérifier en premier : une extension qui parcourt tout le document à chaque nouveau bloc (identifiants de
 bloc, règle produit 5 ; Yjs ; plan ; sommaire ; repères de page).
 
+## Cause trouvée par le relecteur (2026-11-07)
+
+Profil de Chromium, 5 Entrée en haut d'un document de 100 pages (`main`, environ 800 ms par Entrée) :
+
+1. **Environ 80 % du temps est dans `@tiptap/y-tiptap` 3.0.10**, le pont entre Tiptap et Yjs. À chaque modification qui
+   n'est pas une simple frappe de texte (Entrée, Retour arrière entre deux paragraphes, liste, saut de page…), sa
+   « migration des positions » (`mapPositionMigration`, puis `applyPositionMigration` dans `_prosemirrorChanged`)
+   reparcourt **tous les caractères du document**. Une lettre tapée prend un raccourci (`isTextReplacement`).
+   Les versions **3.1.0 et 3.2.0** (MIT, 5 novembre 2026) ont retiré ce mécanisme. Essai en local avec 3.2.0 :
+   Entrée passe d'environ 800 ms à environ 300 ms, dont 30 ms seulement pour la touche elle-même.
+2. **Le reste est dans Nano Buro** : le calcul des feuilles (`compute` de `src/ui/usePageLayout.ts`) prend environ
+   185 ms par Entrée. La moitié vient de `findStarts`, qui demande à ProseMirror la position de chaque début de page par
+   `posAtCoords` (lent, il lit la géométrie du navigateur). Les positions des morceaux sont déjà connues par
+   `measurePage` (« position et élément de chaque morceau », PL6) et peuvent servir à la place.
+
+Travail attendu : passer à `@tiptap/y-tiptap` 3.2.0 (ou plus récent), en vérifiant toute la suite de tests, en
+particulier l'annulation, la copie de secours et la réouverture ; puis alléger `findStarts`.
+
 ## Critères d'acceptation
 
 1. La **cause** est trouvée par une mesure (profil du navigateur ou chronométrage par extension), et décrite dans la PR
@@ -32,6 +50,9 @@ bloc, règle produit 5 ; Yjs ; plan ; sommaire ; repères de page).
 5. Annuler (Ctrl/Cmd+Z) défait l'Entrée en une étape, comme aujourd'hui. Le plan, le sommaire, les feuilles et le
    compteur de pages suivent toujours.
 6. Aucun test existant n'est affaibli. Le format `.nano` ne change pas.
+7. La mise à jour de `@tiptap/y-tiptap` ne change ni l'état Yjs enregistré ni la copie de secours : un fichier et une
+   copie de secours faits avec 3.0.10 se rouvrent à l'identique (test avec un fichier de référence).
+8. Le calcul des feuilles reste sous 30 ms par Entrée sur 100 pages (mesure `nano-page-layout`).
 
 ## Tests attendus
 
