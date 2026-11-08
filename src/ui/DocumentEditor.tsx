@@ -86,6 +86,7 @@ function pageStyle(setup: PageSetup, sheetsHeight: number): CSSProperties {
  * @param coveredBottom hauteur cachée par le pied de page figé (T2.8) ; fonction stable
  * @param counter emplacement du compteur « Page 3 sur 7 » dans le pied de page (T2.8, critère 5) ; null
  *   avant son affichage
+ * @param blocked vrai pendant l'écran de lancement (H4, H3) : la page est inerte, le focus attend
  */
 export function DocumentEditor({
   ydoc,
@@ -98,6 +99,7 @@ export function DocumentEditor({
   coveredTop,
   coveredBottom,
   counter,
+  blocked,
 }: {
   ydoc: Y.Doc;
   onEdit: () => void;
@@ -109,6 +111,7 @@ export function DocumentEditor({
   coveredTop: () => number;
   coveredBottom: () => number;
   counter: HTMLElement | null;
+  blocked: boolean;
 }) {
   // Une seule configuration par Y.Doc : elle porte la bibliothèque d'images du document (T1.9).
   // `onImageRejected`, `coveredTop` et `coveredBottom` sont stables, ils ne recréent pas la configuration.
@@ -127,6 +130,11 @@ export function DocumentEditor({
     { ...options, onCreate: ({ editor: created }) => focusEditor(created) },
     [ydoc],
   );
+  // H4, critère 3 : une page inerte ne prend pas le focus ; l'écran de lancement fermé, le curseur
+  // revient dans le document, à sa place.
+  useEffect(() => {
+    if (!blocked && editor) focusEditor(editor);
+  }, [blocked, editor]);
   const pageSetup = usePageSetup(ydoc);
   const headerFooter = useHeaderFooter(ydoc);
   const [sheet, setSheet] = useState<HTMLElement | null>(null);

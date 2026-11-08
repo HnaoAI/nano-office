@@ -4,7 +4,8 @@
 // sous ce sous-dossier, comme sur GitHub Pages (H1).
 import { defineConfig, devices } from "@playwright/test";
 
-const PWA_TESTS = "hors-ligne.spec.ts";
+// H4 : l'accueil réel (service worker, durées de la version publiée) est vérifié sur la version construite.
+const PWA_TESTS = ["hors-ligne.spec.ts", "accueil-version-construite.spec.ts"];
 const PAGES_TESTS = "publication.spec.ts";
 const PAGES_ENV = { BASE_PATH: "/nano-office/" };
 
@@ -13,7 +14,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: [PWA_TESTS, PAGES_TESTS],
+      testIgnore: [...PWA_TESTS, PAGES_TESTS],
       use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:5173" },
     },
     {

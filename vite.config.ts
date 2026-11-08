@@ -22,64 +22,71 @@ function buildCommit(): string {
   }
 }
 
-export default defineConfig(({ command }) => ({
-  // Sous-dossier de publication (H1, critère 3) : `BASE_PATH=/nano-office/` pour GitHub Pages.
-  // Sans la variable, l'application reste à la racine (`npm run dev`, `npm run build`, tests).
-  base: process.env.BASE_PATH ?? "/",
-  define: {
-    // Version affichée sous le nom de l'application (H1, critères 10 à 12), lue par src/ui/appVersion.ts.
-    __APP_VERSION__: JSON.stringify(
-      command === "serve" ? DEV_VERSION : formatVersion(new Date(), buildCommit()),
-    ),
-  },
-  // L'export Word (T2.7) charge `docx` à la demande : sans cette ligne, le serveur de développement
-  // découvrirait la bibliothèque au premier export et rechargerait la page en pleine édition.
-  optimizeDeps: { include: ["docx"] },
-  plugins: [
-    react(),
-    // Application installable et hors ligne (T0e) : manifeste et service worker, générés au build
-    // seulement. Le service worker ne met en cache que les fichiers de l'application ; les documents
-    // ne passent jamais par le réseau.
-    VitePWA({
-      // « prompt » sans message : une nouvelle version n'est appliquée au lancement que si
-      // l'utilisateur n'a pas commencé à travailler (H1), sinon au lancement suivant. « autoUpdate »
-      // rechargerait la page en pleine édition. L'enregistrement du service worker est fait par
-      // src/ui/useAppUpdate.ts, qui prend cette décision.
-      registerType: "prompt",
-      injectRegister: false,
-      manifest: {
-        name: "Nano Buro",
-        short_name: "Nano Buro",
-        description: "Traitement de texte sobre, qui fonctionne sans connexion internet.",
-        lang: "fr",
-        display: "standalone",
-        // Chemins relatifs au manifeste : l'application s'installe aussi sous /nano-office/ (H1, critère 3).
-        start_url: "./",
-        scope: "./",
-        background_color: "#ffffff",
-        theme_color: "#2b5797",
-        // Icônes provisoires : les icônes définitives sont hors périmètre de T0e.
-        icons: [
-          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
-          { src: "icons/icon.svg", sizes: "any", type: "image/svg+xml" },
-        ],
+export default defineConfig(({ command }) => {
+  // Version affichée sous le nom de l'application (H1, critères 10 à 12), lue par src/ui/appVersion.ts,
+  // et sur l'écran d'accueil écrit dans index.html (H4, critère 2).
+  const appVersion = command === "serve" ? DEV_VERSION : formatVersion(new Date(), buildCommit());
+  return {
+    // Sous-dossier de publication (H1, critère 3) : `BASE_PATH=/nano-office/` pour GitHub Pages.
+    // Sans la variable, l'application reste à la racine (`npm run dev`, `npm run build`, tests).
+    base: process.env.BASE_PATH ?? "/",
+    define: {
+      __APP_VERSION__: JSON.stringify(appVersion),
+    },
+    // L'export Word (T2.7) charge `docx` à la demande : sans cette ligne, le serveur de développement
+    // découvrirait la bibliothèque au premier export et rechargerait la page en pleine édition.
+    optimizeDeps: { include: ["docx"] },
+    plugins: [
+      react(),
+      {
+        // H4 : la version de l'écran d'accueil, écrite dans index.html avant tout JavaScript.
+        name: "nano-launch-version",
+        transformIndexHtml: (html: string) => html.replace("__APP_VERSION__", appVersion),
       },
-      workbox: {
-        // woff2 : les polices intégrées (U1a) s'affichent hors ligne. Des .woff de Fontsource, seuls
-        // ceux des polices du document en normal, gras et italique (400 et 700) sont mis en cache : l'export
-        // Word les convertit pour les embarquer (T2.7, src/ui/wordAssets.ts), même hors ligne.
-        globPatterns: [
-          "**/*.{js,css,html,svg,png,webmanifest,woff2}",
-          "**/*-latin-{400,700}-{normal,italic}-*.woff",
-        ],
-      },
-    }),
-  ],
-  test: {
-    // Les tests de logique tournent dans Node, sans DOM (ticket T0a).
-    environment: "node",
-    include: ["tests/**/*.test.ts"],
-    exclude: ["tests/e2e/**"],
-  },
-}));
+      // Application installable et hors ligne (T0e) : manifeste et service worker, générés au build
+      // seulement. Le service worker ne met en cache que les fichiers de l'application ; les documents
+      // ne passent jamais par le réseau.
+      VitePWA({
+        // « prompt » sans message : une nouvelle version n'est appliquée au lancement que si
+        // l'utilisateur n'a pas commencé à travailler (H1), sinon au lancement suivant. « autoUpdate »
+        // rechargerait la page en pleine édition. L'enregistrement du service worker est fait par
+        // src/ui/useAppUpdate.ts, qui prend cette décision.
+        registerType: "prompt",
+        injectRegister: false,
+        manifest: {
+          name: "Nano Buro",
+          short_name: "Nano Buro",
+          description: "Traitement de texte sobre, qui fonctionne sans connexion internet.",
+          lang: "fr",
+          display: "standalone",
+          // Chemins relatifs au manifeste : l'application s'installe aussi sous /nano-office/ (H1, critère 3).
+          start_url: "./",
+          scope: "./",
+          background_color: "#ffffff",
+          theme_color: "#2b5797",
+          // Icônes provisoires : les icônes définitives sont hors périmètre de T0e.
+          icons: [
+            { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
+            { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
+            { src: "icons/icon.svg", sizes: "any", type: "image/svg+xml" },
+          ],
+        },
+        workbox: {
+          // woff2 : les polices intégrées (U1a) s'affichent hors ligne. Des .woff de Fontsource, seuls
+          // ceux des polices du document en normal, gras et italique (400 et 700) sont mis en cache : l'export
+          // Word les convertit pour les embarquer (T2.7, src/ui/wordAssets.ts), même hors ligne.
+          globPatterns: [
+            "**/*.{js,css,html,svg,png,webmanifest,woff2}",
+            "**/*-latin-{400,700}-{normal,italic}-*.woff",
+          ],
+        },
+      }),
+    ],
+    test: {
+      // Les tests de logique tournent dans Node, sans DOM (ticket T0a).
+      environment: "node",
+      include: ["tests/**/*.test.ts"],
+      exclude: ["tests/e2e/**"],
+    },
+  };
+});

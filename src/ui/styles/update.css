@@ -54,3 +54,36 @@
     opacity: 0.45;
   }
 }
+
+/* Écran de lancement (H4) : écrit dans index.html, chargé avant le JavaScript (launch.css). Tant que
+   l'application n'est pas là, le fond est celui de l'application ; ensuite, la page estompée. */
+html,
+body {
+  margin: 0;
+  background: var(--nano-app-bg);
+}
+
+/* Comme layout.css, pas encore chargé : mêmes dimensions avant et après le JavaScript. */
+#nano-launch,
+#nano-launch * {
+  box-sizing: border-box;
+}
+
+.nano-update {
+  font-family: var(--nano-font-sans);
+  color: var(--nano-ink);
+}
+
+/* Un seul des deux textes à la fois : accueil (critère 2) ou mise à jour (critère 4, H3). */
+#nano-launch[data-mode="welcome"] .nano-launch-updating,
+#nano-launch[data-mode="updating"] .nano-launch-welcome {
+  display: none;
+}
+
+/* La version en petit, comme sous le nom dans l'en-tête (H1, critère 9). */
+.nano-dialog .nano-launch-version {
+  font-family: var(--nano-font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--nano-text-quiet);
+}

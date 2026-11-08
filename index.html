@@ -4,8 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nano Buro</title>
+    <!-- Écran d'accueil au N (H4, critère 1) : ses styles bloquent le premier affichage, pour qu'il
+         apparaisse avant le JavaScript, déjà aux polices et aux variables de la charte. -->
+    <link rel="stylesheet" href="/src/ui/styles/launch.css" />
   </head>
   <body>
+    <!-- Écran de lancement (H4) : accueil « Nano Buro » puis, s'il y a une mise à jour, « Nano Buro se met
+         à jour… » (H3), dans le même écran. L'application le reprend (src/ui/LaunchScreen.tsx) et le retire.
+         Les textes sont ceux de src/ui/updateTexts.ts (vérifié par tests/ui/launchScreenHtml.test.ts). -->
+    <div id="nano-launch" class="nano-dialog-layer nano-update-layer" data-mode="welcome">
+      <div class="nano-dialog-backdrop" aria-hidden="true"></div>
+      <section
+        class="nano-dialog nano-update"
+        role="status"
+        aria-busy="true"
+        aria-labelledby="nano-launch-name"
+        aria-describedby="nano-launch-version"
+        tabindex="-1"
+      >
+        <div class="nano-update-mark" aria-hidden="true"><span class="nano-update-n">N</span></div>
+        <div class="nano-dialog-text nano-launch-welcome">
+          <h2 id="nano-launch-name">Nano Buro</h2>
+          <p id="nano-launch-version" class="nano-launch-version">__APP_VERSION__</p>
+        </div>
+        <div class="nano-dialog-text nano-launch-updating">
+          <h2 id="nano-update-title">Nano Buro se met à jour…</h2>
+          <p id="nano-update-text">
+            Vos documents ne sont pas touchés. Cela prend quelques secondes.
+          </p>
+        </div>
+      </section>
+    </div>
+    <script>
+      // H4 : heure d'apparition de l'écran, pour compter les 1,5 s ; après un rechargement de mise à jour
+      // (souvenir de src/storage/launchMarker.ts), l'écran s'ouvre directement sur « se met à jour » (H3).
+      (function () {
+        var screen = document.getElementById("nano-launch");
+        screen.setAttribute("data-shown-at", String(performance.now()));
+        try {
+          if (sessionStorage.getItem("nano-office-update-notice") !== null) {
+            screen.setAttribute("data-mode", "updating");
+          }
+        } catch (error) {
+          // Stockage bloqué : l'écran reste sur l'accueil.
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

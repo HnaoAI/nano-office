@@ -1,0 +1,9 @@
+/* Feuille de l'écran de lancement (H4, critère 1), chargée par index.html avant le JavaScript : variables
+   et polices de la charte, boîte de dialogue et écran au N. Les mêmes fichiers sont aussi importés par
+   App.tsx ; les règles en double sont identiques. Les règles propres à l'écran sont dans update.css. */
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "./tokens.css";
+@import "./dialog.css";
+@import "./update.css";

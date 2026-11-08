@@ -27,6 +27,7 @@ Même arborescence que `src/`.
   - `wordDiff.test.ts`, `assistant.test.ts` : comparaison au mot, compte des mots, demande et réponse de l'assistant, repli au paragraphe, messages d'erreur (T3.1)
   - `appUpdate.test.ts`, `appVersion.test.ts` : décision de mise à jour au démarrage et numéro de version (H1)
   - `updateWindow.test.ts` : fenêtre « Nano Buro se met à jour » et son délai de 20 s, horloge simulée (H3)
+  - `launchScreen.test.ts` : écran d'accueil : 1,5 s, 3 s, 20 s, passage à « se met à jour », aucune mise à jour après l'accueil (H4)
 - `storage/` : tests Vitest de `FileStore` avec de faux sélecteurs (`fakeHandles.ts`) ; réglages et clés de l'assistant (`assistantSettingsStore.test.ts`, T3.1) ; fichier retenu entre deux lancements (`fileMemory.test.ts`, PL3) ; fichier modifié ailleurs, non écrasé par la sauvegarde automatique (`changedOnDisk.test.ts`, T1.6) ; plan ouvert ou fermé retenu (`outlinePreference.test.ts`, T2.9) ; fichier exporté, enregistré, téléchargé, annulé ou en échec (`exportStore.test.ts`, T2.7) ; fichier Word lu en octets, jamais fichier courant (`wordOpen.test.ts`, T2.18)
 - `fixtures/yTiptap/` : fichier `.nano` et copie de secours (mises à jour Yjs en base64) faits par l'application avec @tiptap/y-tiptap 3.0.10, avant la mise à jour de P1 ; aucun document de la famille
 - `fixtures/word/` : fichiers Word d'exemple de T2.18 (faits par python-docx à partir du modèle de Word, par LibreOffice, et par l'export de Nano Buro), refaits par `make_fixtures.py` ; aucun document de la famille
@@ -41,7 +42,9 @@ Même arborescence que `src/`.
   - `hors-ligne.spec.ts` : version construite installable et hors ligne, polices du document hors ligne (T0e, T1.4, projet Playwright « pwa », après `npm run build`)
   - `mise-a-jour.spec.ts` : numéro de version « dev », signes de travail commencé avant une mise à jour (H1), mise à jour simulée malgré un document restauré, qui revient à l'identique (H2)
   - `aide.spec.ts` : aide intégrée : ouverture (bouton, Ctrl/Cmd+/), fermeture (Échap), hors ligne, sommaire, raccourcis du Mac et du PC, messages identiques, ni imprimée ni enregistrée, version et adresse (A1)
-  - `fenetre-mise-a-jour.spec.ts` : fenêtre « Nano Buro se met à jour » : affichage, blocage, message « mis à jour », déblocage au bout de 20 s, moins d'animations (H3)
+  - `fenetre-mise-a-jour.spec.ts` : fenêtre « Nano Buro se met à jour » : affichage, blocage, message « mis à jour », déblocage au bout de 20 s, moins d'animations (H3) ; trouvée pendant l'accueil, retenu par `holdWelcome` (H4)
+  - `accueil.spec.ts` : écran d'accueil au N : écrit dans index.html, 1,5 s, réseau lent, mise à jour pendant l'accueil, blocage, moins d'animations, jamais pendant le travail (H4)
+  - `accueil-version-construite.spec.ts` : accueil sur la version construite, avec le service worker : 1,5 s en ligne et hors ligne (H4, projet « pwa »)
   - `publication.spec.ts` : version construite sous /nano-office/, installable, hors ligne, numéro de version (H1, projet Playwright « pages »)
   - `interface.spec.ts` : structure de l'interface et polices intégrées (U1a)
   - `titres.spec.ts` : titres, raccourcis Mac et Windows, AltGr, Entrée, `# `, annulation (T1.1)
@@ -86,6 +89,8 @@ Même arborescence que `src/`.
   - `sauvegarde-auto.spec.ts` : sauvegarde automatique, indicateur, document sans fichier, échec, Ctrl/Cmd+S, Safari et Firefox, alerte avant fermeture, fichier modifié ailleurs (T1.6)
   - `fichier-retenu.spec.ts` : fichier retrouvé au redémarrage, autorisation à redonner, fichier déplacé, mémoire des fichiers (PL3)
   - `backupHelpers.ts` : attendre la fin des écritures de la copie de secours
+  - `launchHelpers.ts` : retenir l'accueil jusqu'à une mise à jour simulée, ou lui rendre ses vraies durées (H4)
+  - `launchTimes.ts` : relevé dans la page des moments de l'écran de lancement (H4)
   - `relaunchHelpers.ts` : relancer avec un document restauré et son fichier retrouvé, fichier modifié sur l'autre ordinateur (PL3, H2)
   - `networkWatch.ts` : journal des requêtes et messages envoyés par la page
   - `fakeFileStore.ts` : fausse implémentation de `FileStore`, installée avant le chargement de la page ; peut retenir les écritures ou faire échouer un enregistrement (U1b), garder ses fichiers au rechargement et simuler l'autorisation à redonner (PL3)

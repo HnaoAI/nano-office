@@ -4,7 +4,9 @@
 // Indique aussi à l'alerte avant fermeture (useBackup.ts) que la page se recharge pour une mise à jour (H2).
 // H3 : fenêtre « Nano Buro se met à jour » qui bloque l'application du choix de recharger jusqu'à
 // l'affichage de la nouvelle version, et au moins 5 s en tout (ou 20 s au plus), puis message « mis à jour ».
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+// H4 : écran d'accueil à chaque ouverture, 1,5 s, en attendant la vérification de mise à jour 3 s au plus ;
+// une mise à jour n'est appliquée que pendant l'accueil, qui devient alors la fenêtre de H3.
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import { registerSW } from "virtual:pwa-register";
 import {
   decideUpdate,
@@ -13,6 +15,13 @@ import {
   updateWindowRemainingMs,
   type LaunchActivity,
 } from "../core/appUpdate";
+import {
+  launchScreenMode,
+  nextWelcomeDeadlineMs,
+  WELCOME_TIMING,
+  welcomeOver,
+  type WelcomeTiming,
+} from "../core/launchScreen";
 import {
   clearUpdateNotice,
   hasReloadedForUpdate,
@@ -37,8 +46,47 @@ declare global {
       simulateUpdate: (options?: { holdControl?: boolean }) => void;
       /** Prise de main retenue par `simulateUpdate({ holdControl: true })`, ou null. */
       takeControl: (() => void) | null;
+      /** Termine sans mise à jour une vérification retenue par `__nanoWelcome.holdUpdateCheck` (H4). */
+      finishUpdateCheck: () => void;
     };
+    /**
+     * Réglage de l'accueil pour les tests Playwright (H4, critère 9), lu au chargement, en développement
+     * seulement. Sans lui, l'accueil se ferme dès que le document est affiché, pour ne pas ralentir
+     * chaque test de 1,5 s. `real` : les vraies durées (1,5 s, 3 s). `holdUpdateCheck` : la vérification
+     * de mise à jour attend `simulateUpdate` ou `finishUpdateCheck`, sans limite si `real` est absent.
+     */
+    __nanoWelcome?: { real?: boolean; holdUpdateCheck?: boolean };
   }
+}
+
+/** Réglage de l'accueil des tests (critère 9), jamais lu dans la version construite. */
+const WELCOME_OPTIONS =
+  import.meta.env.DEV && typeof window !== "undefined" ? (window.__nanoWelcome ?? {}) : {};
+const HOLD_UPDATE_CHECK = WELCOME_OPTIONS.holdUpdateCheck === true;
+
+/** Durées de l'accueil : celles de H4 dans la version construite, raccourcies pour les tests (critère 9). */
+const TIMING: WelcomeTiming =
+  !import.meta.env.DEV || WELCOME_OPTIONS.real
+    ? WELCOME_TIMING
+    : { minMs: 0, checkTimeoutMs: HOLD_UPDATE_CHECK ? Infinity : 0 };
+
+/**
+ * Cherche une nouvelle version sur le serveur (H4, critère 3).
+ * @returns vrai si une nouvelle version est prête ou en cours de téléchargement : `onNeedRefresh` suivra ;
+ *   faux s'il n'y en a pas, au premier lancement (rien à remplacer) ou sans réseau (critère 6)
+ */
+async function findUpdate(registration: ServiceWorkerRegistration | undefined): Promise<boolean> {
+  if (!registration) return false;
+  if (registration.waiting) return true;
+  try {
+    await registration.update();
+  } catch {
+    return false;
+  }
+  return (
+    registration.waiting !== null ||
+    (registration.installing !== null && registration.active !== null)
+  );
 }
 
 /**
@@ -74,7 +122,18 @@ export function cancelReloadForUpdate(): void {
  */
 const UPDATE_SHOWN_AT = typeof window !== "undefined" ? takeUpdateNotice() : null;
 const RELOADED_FOR_UPDATE = UPDATE_SHOWN_AT !== null;
-setKeyboardLocked(RELOADED_FOR_UPDATE);
+/**
+ * Heure d'apparition de l'écran de lancement (H4), en millisecondes depuis l'ouverture de la page
+ * (`performance.now()`), notée par index.html ; 0, l'ouverture de la page, si elle manque.
+ */
+function launchScreenShownAt(): number {
+  if (typeof document === "undefined") return 0;
+  const shownAt = Number(document.getElementById("nano-launch")?.getAttribute("data-shown-at"));
+  return Number.isFinite(shownAt) ? shownAt : 0;
+}
+const LAUNCH_SHOWN_AT = launchScreenShownAt();
+// H4, critère 5 : bloqué dès le chargement, pendant l'accueil comme pendant la mise à jour (H3).
+setKeyboardLocked(true);
 
 /**
  * Applique une nouvelle version au lancement, tant que l'utilisateur n'a pas commencé à travailler.
@@ -83,8 +142,9 @@ setKeyboardLocked(RELOADED_FOR_UPDATE);
  * @param activity signes de travail commencé depuis le lancement (critère 6)
  * @param documentLoaded faux pendant la lecture de la copie de secours
  * @param reloadKeepsDocument vrai si un rechargement rouvrirait le document affiché (H2)
- * @returns `updating`, vrai tant que la fenêtre « se met à jour » est affichée et l'application bloquée
- *   (H3) ; `notice`, le message « mis à jour » à afficher, ou null ; `dismissNotice`, qui le ferme
+ * @returns `screen`, ce que montre l'écran de lancement (accueil de H4 ou fenêtre « se met à jour » de
+ *   H3), null quand l'application est libre ; `notice`, le message « mis à jour » à afficher, ou null ;
+ *   `dismissNotice`, qui le ferme
  */
 export function useAppUpdate(
   activity: LaunchActivity,
@@ -102,6 +162,16 @@ export function useAppUpdate(
     () => UPDATE_SHOWN_AT === null || updateWindowRemainingMs(UPDATE_SHOWN_AT, Date.now()) === 0,
   );
   const [noticeDismissed, setNoticeDismissed] = useState(false);
+  // H4 : vérification de mise à jour terminée (pas de service worker en développement), et heure
+  // relue à chaque échéance de l'accueil (1,5 s, 3 s, 20 s).
+  const [updateCheckDone, setUpdateCheckDone] = useState(
+    () => !import.meta.env.PROD && !HOLD_UPDATE_CHECK,
+  );
+  const [now, setNow] = useState(() => performance.now());
+  // Après un rechargement de mise à jour, pas d'accueil : la fenêtre de H3 continue.
+  const welcoming =
+    !RELOADED_FOR_UPDATE &&
+    !welcomeOver({ elapsedMs: now - LAUNCH_SHOWN_AT, documentLoaded, updateCheckDone }, TIMING);
 
   const decide = useEffectEvent((ready: boolean) =>
     decideUpdate({
@@ -110,6 +180,7 @@ export function useAppUpdate(
       activity,
       reloadKeepsDocument: reloadKeepsDocument(),
       reloadedThisLaunch: hasReloadedForUpdate(),
+      welcomeOver: !welcoming,
     }),
   );
 
@@ -131,31 +202,58 @@ export function useAppUpdate(
   useEffect(() => {
     if (!import.meta.env.PROD) return;
     applyUpdate.current = registerSW({
+      // H4 : la vérification commence dès le chargement du script, sans attendre la fin de la page.
+      immediate: true,
       onNeedRefresh: () => setUpdateReady(true),
+      onRegisteredSW: (_url, registration) => {
+        void findUpdate(registration).then((found) => {
+          if (!found) setUpdateCheckDone(true);
+        });
+      },
+      onRegisterError: () => setUpdateCheckDone(true),
       // Remplace le rechargement automatique de vite-plugin-pwa, qui ne regarde pas le travail en cours.
       onNeedReload: () => reloadIfAllowed(),
     });
   }, []);
 
   useEffect(() => {
-    if (applying.current || !showsUpdateWindow(decide(updateReady))) return;
+    if (applying.current) return;
+    const decision = decide(updateReady);
     // Le souvenir est écrit avant le rechargement ; s'il ne peut pas l'être, on attend le lancement suivant.
-    if (!markReloadedForUpdate()) return;
+    if (!showsUpdateWindow(decision) || !markReloadedForUpdate()) {
+      // H4 : une nouvelle version qui attend le lancement suivant ne retient pas l'accueil.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (updateReady && decision !== "wait") setUpdateCheckDone(true);
+      return;
+    }
     applying.current = true;
     reloadingForUpdate = true;
     // H3, critères 1 et 3 : la fenêtre s'affiche et bloque tout avant le rechargement. La décision est
     // prise dans cet effet, seul endroit où elle peut l'être : l'état suit donc ici.
     markUpdateNotice();
     setKeyboardLocked(true);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setApplyingWindow(true);
     void applyUpdate.current?.();
-  }, [updateReady, documentLoaded, activity]);
+  }, [updateReady, documentLoaded, activity, welcoming]);
+
+  // H4, critère 3 : à chaque échéance de l'accueil, l'heure est relue pour décider s'il se ferme.
+  useEffect(() => {
+    if (!welcoming) return;
+    const elapsed = performance.now() - LAUNCH_SHOWN_AT;
+    const wait = nextWelcomeDeadlineMs(elapsed, TIMING);
+    if (wait === null) return;
+    // Une minuterie peut se déclencher une fraction de milliseconde avant l'heure mesurée par
+    // `performance.now()` : l'heure retenue est au moins l'échéance, pour ne jamais la manquer.
+    const deadline = LAUNCH_SHOWN_AT + elapsed + wait;
+    const timer = setTimeout(() => setNow(Math.max(performance.now(), deadline)), wait);
+    return () => clearTimeout(timer);
+  }, [welcoming, now]);
 
   // H3, critère 1 : après le rechargement, la fenêtre reste jusqu'à l'affichage du document, et au moins
   // 5 s depuis son apparition. Le délai de 20 s (critère 5) l'emporte toujours.
   const finishing = RELOADED_FOR_UPDATE && (!documentLoaded || !minShown) && !finishTimedOut;
   const updating = applyingWindow || finishing;
+  const screen = launchScreenMode(welcoming, updating);
   // H3, critère 6 : le message « mis à jour » remplace alors la fenêtre.
   const notice =
     RELOADED_FOR_UPDATE && documentLoaded && !finishing && !noticeDismissed
@@ -171,9 +269,11 @@ export function useAppUpdate(
     return () => clearTimeout(timer);
   }, [minShown]);
 
-  useEffect(() => {
-    setKeyboardLocked(updating);
-  }, [updating]);
+  // Avant l'affichage, comme le retrait de l'écran (LaunchScreen.tsx) : jamais une page libre au clavier bloqué.
+  const blocked = screen !== null;
+  useLayoutEffect(() => {
+    setKeyboardLocked(blocked);
+  }, [blocked]);
 
   // H3, critère 5 : jamais bloqué pour toujours. Au bout de 20 s, la fenêtre se ferme avec la version
   // actuelle ; une prise de main tardive ne recharge plus la page, et la mise à jour attend le lancement suivant.
@@ -184,6 +284,9 @@ export function useAppUpdate(
       clearUpdateNotice();
       setKeyboardLocked(false);
       setApplyingWindow(false);
+      // H4 : l'accueil, commencé avant la fenêtre, est fini lui aussi ; l'écran se retire sans revenir à l'accueil.
+      setUpdateCheckDone(true);
+      setNow(performance.now());
     });
   }, [applyingWindow]);
 
@@ -217,8 +320,9 @@ export function useAppUpdate(
       get takeControl() {
         return heldControl.current;
       },
+      finishUpdateCheck: () => setUpdateCheckDone(true),
     };
   }, [activity]);
 
-  return { updating, notice, dismissNotice: () => setNoticeDismissed(true) };
+  return { screen, notice, dismissNotice: () => setNoticeDismissed(true) };
 }
