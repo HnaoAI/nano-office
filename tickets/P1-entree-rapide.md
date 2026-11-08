@@ -56,7 +56,7 @@ particulier l'annulation, la copie de secours et la réouverture ; puis alléger
 
 ## Tests attendus
 
-- Playwright : document de 100 pages, 20 Entrée en haut, délai médian sous 100 ms et maximum sous 250 ms ; même chose
+- Playwright : document de 100 pages, 20 Entrée en haut, délai médian sous 100 ms et deuxième délai le plus long sous 250 ms (un seul appui ralenti par la machine de la CI est toléré, accord du PO du 2026-11-08) ; même chose
   pour Retour arrière, Suppr et Ctrl/Cmd+Entrée.
 - Vitest ou Playwright : après les Entrée, tous les identifiants de bloc sont uniques, ceux des blocs d'origine sont
   inchangés, et ils survivent à l'enregistrement et à la réouverture.

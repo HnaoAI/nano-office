@@ -104,6 +104,12 @@ async function measuredPress(page: Page, press: string, done: number) {
   await settleLayout(page);
 }
 
+/** Deuxième valeur la plus grande (la plus grande si une seule). */
+function secondLongest(values: number[]): number {
+  const sorted = [...values].sort((first, second) => second - first);
+  return sorted[1] ?? sorted[0] ?? 0;
+}
+
 function median(values: number[]): number {
   const sorted = [...values].sort((first, second) => first - second);
   return sorted[Math.floor(sorted.length / 2)] ?? 0;
@@ -117,7 +123,9 @@ async function expectFast(page: Page, label: string) {
   test.info().annotations.push({ type: "mesure", description: summary });
   console.log(summary);
   expect(median(delays)).toBeLessThan(100);
-  expect(Math.max(...delays)).toBeLessThan(250);
+  // Le deuxième délai le plus long, et non le plus long : un seul appui ralenti par la machine de la CI (257 ms
+  // sur 20, CI de main du 2026-11-08) ne doit pas bloquer une publication. Accord du PO du 2026-11-08.
+  expect(secondLongest(delays)).toBeLessThan(250);
   return layouts;
 }
 
