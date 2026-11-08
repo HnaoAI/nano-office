@@ -10,6 +10,7 @@ import type { EditorEvents } from "@tiptap/core";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useEffectEvent,
   useMemo,
   useState,
@@ -131,8 +132,9 @@ export function DocumentEditor({
     [ydoc],
   );
   // H4, critère 3 : une page inerte ne prend pas le focus ; l'écran de lancement fermé, le curseur
-  // revient dans le document, à sa place.
-  useEffect(() => {
+  // revient dans le document, à sa place. Avant l'affichage, comme le déblocage du clavier
+  // (useAppUpdate.ts) : aucune touche ne part ailleurs entre les deux.
+  useLayoutEffect(() => {
     if (!blocked && editor) focusEditor(editor);
   }, [blocked, editor]);
   const pageSetup = usePageSetup(ydoc);

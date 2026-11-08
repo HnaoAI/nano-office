@@ -83,6 +83,8 @@ test("critère 1 et 2 : sans le JavaScript, l'écran est déjà là, au style de
   await page.goto("/", { waitUntil: "commit" });
   const box = page.locator("#nano-launch .nano-update");
   await expect(box).toBeVisible();
+  // Les styles de index.html chargés, un seul des deux textes est visible.
+  await expect(page.getByText(UPDATING)).toBeHidden();
   await expect(box.locator("h2:visible")).toHaveText("Nano Buro");
   await expect(box.locator(".nano-launch-version")).toHaveText("dev");
   await expect(page.getByText(UPDATING)).toBeHidden();
@@ -262,6 +264,7 @@ test("critère 5 : pendant l'écran, ni frappe, ni clic, ni raccourci n'atteigne
   await expect(screen(page)).toHaveCount(0);
   await expect(editor(page)).toHaveText("Brouillon");
   expect(await page.evaluate(() => window.__nanoLaunch?.activity())).toEqual(NOTHING);
+  await expect(editor(page)).toBeFocused();
   await page.keyboard.press("End");
   await page.keyboard.type(" suite");
   await expect(editor(page)).toHaveText("Brouillon suite");
