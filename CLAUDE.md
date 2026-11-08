@@ -137,6 +137,7 @@ Les tickets sont livrés par lots, un lot par PR. La PR contient un `Closes #…
 | **M. Améliorations du PO** | T2.21 copier automatiquement la sélection (réglage), T2.22 corrections de l'assistant en rouge et en vert, T2.23 mes fautes et Pareto | #118, #120, #122 |
 | **N. Comme dans Word** | PL4 pinceau, puis PL6 feuilles séparées et vue des pages en miniatures | #62, #76 |
 | **O. Rapidité** | P1 Entrée rapide dans un long document, P2 test des listes rendu fiable | #130, #132 |
+| **P. Accueil** | H4 écran d'accueil au N dès l'ouverture | #138 |
 
 ### Quand s'arrêter pour demander au product owner
 
@@ -253,3 +254,4 @@ Tout ce qui concerne un ticket y est écrit, pour que la session suivante le ret
 - 2026-11-06 : Lot N livré (PR #128). Deux limites des feuilles séparées acceptées par le PO pour l'instant : un bloc plus haut qu'une page traverse la coupure sans espace gris à l'écran, et la ligne « Saut de page » suit le texte au lieu du bas de la feuille. Pendant le pinceau, la copie automatique est suspendue. Une lenteur plus ancienne de la touche Entrée dans un long document (environ 0,6 s sur 100 pages) devient le ticket P1 (lot O).
 - 2026-11-07 : Le test des listes « Ctrl/Cmd+Z annule une création de liste ou un décalage en une seule fois », instable sur la CI, est rendu fiable dans le lot O (P2), avec l'accord du PO, sans en changer le sens. Si la cause est dans le code, c'est le code qui est corrigé.
 - 2026-11-07 : Lot O (PR #136). `@tiptap/y-tiptap` passe en 3.2.0, ce qui ramène Entrée, Retour arrière, Suppr et Ctrl/Cmd+Entrée à moins de 100 ms sur 100 pages. Le `content` des fichiers garde la forme de 3.0.10 (marques avec `attrs`, `fragmentJson`), et un contenu inconnu du schéma n'est jamais effacé du Y.Doc (`onInvalidContent`), avec l'« ok » du PO. PL2 (identifiant qui suit le texte après Entrée en début de paragraphe) reste pour plus tard, avec la collaboration.
+- 2026-11-08 : Écran d'accueil (H4, lot P), retour du PO : la fenêtre au N s'affiche à chaque ouverture, dès le premier affichage de la page (écrite dans `index.html`), comme une présentation, avec « Nano Buro » et la version. Sans mise à jour, elle dure 1,5 s, et la vérification de mise à jour est attendue 3 s au plus ; avec une mise à jour, elle devient « Nano Buro se met à jour » sans disparaître, et H3 s'applique.
