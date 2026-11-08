@@ -3,9 +3,12 @@
 // simulée par `window.__nanoLaunch.simulateUpdate` (H2), en développement : la prise de main retenue
 // (`holdControl`) laisse voir la fenêtre avant le rechargement. Le délai de 20 s passe par l'horloge
 // simulée de Playwright.
+// Adapté par H4, avec l'accord du PO (critère 9) : la fenêtre n'apparaît plus après coup, mais à la place de
+// l'écran d'accueil, retenu par `holdWelcome` jusqu'à la nouvelle version simulée.
 import { expect, test, type Page } from "@playwright/test";
 import { flushBackups } from "./backupHelpers";
 import { fakeFiles, installFakeFileStore } from "./fakeFileStore";
+import { holdWelcome } from "./launchHelpers";
 
 const TITLE = "Nano Buro se met à jour…";
 const REASSURANCE = "Vos documents ne sont pas touchés. Cela prend quelques secondes.";
@@ -25,13 +28,17 @@ function notice(page: Page) {
   return page.locator(".nano-update-notice");
 }
 
-/** Lance l'application avec un document restauré (lot B), comme à chaque lancement après un premier texte. */
-async function relaunchWithDraft(page: Page, text: string) {
+/**
+ * Lance l'application avec un document restauré (lot B), comme à chaque lancement après un premier texte.
+ * @param welcome `held` : l'accueil du lancement attend la nouvelle version simulée (H4) ; `free` : il se ferme
+ */
+async function relaunchWithDraft(page: Page, text: string, welcome: "held" | "free" = "held") {
   await installFakeFileStore(page);
   await page.goto("/");
   await editor(page).click();
   await page.keyboard.type(text);
   await flushBackups(page);
+  if (welcome === "held") await holdWelcome(page);
   await page.reload();
   await expect(editor(page)).toHaveText(text);
 }
@@ -184,7 +191,8 @@ test("critères 1, 6 et 9 : la nouvelle version s'affiche ensuite, avec le docum
   page,
 }) => {
   await relaunchWithDraft(page, "Brouillon élève 😀");
-  await expect(page.getByRole("status")).toHaveText(RECOVERED_MESSAGE);
+  // H4 : l'accueil, retenu, est lui aussi un « status » ; le message est celui de la page.
+  await expect(page.locator(".nano-app").getByRole("status")).toHaveText(RECOVERED_MESSAGE);
   await simulateHeldUpdate(page);
   await expect(updateWindow(page)).toBeVisible();
   await takeControl(page);
@@ -258,7 +266,8 @@ test("critère 6 : le message « mis à jour » disparaît seul à la première 
 test("critère 4 : pas de fenêtre si une frappe a eu lieu, et rien ne bloque l'utilisateur", async ({
   page,
 }) => {
-  await relaunchWithDraft(page, "Brouillon");
+  // H4 : la frappe n'est possible qu'après l'accueil.
+  await relaunchWithDraft(page, "Brouillon", "free");
   await editor(page).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" suite");

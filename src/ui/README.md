@@ -13,9 +13,9 @@ Composants React, sans logique métier. Aucun accès direct au disque : passer p
 - `useSaveShortcut.ts` : Ctrl/Cmd+S sur toute la page, avant l'éditeur (T0c)
 - `fileMessages.ts` : textes et actions des messages (U1b), message d'un document qui a retrouvé son fichier (PL3), image refusée (T1.9), export en Word (T2.7)
 - `useBackup.ts` : relie le document affiché à sa copie de secours, retient le dernier document modifié, alerte avant fermeture (T0d), indique si la copie est à jour (U1a)
-- `useAppUpdate.ts` : enregistre le service worker et applique une nouvelle version au démarrage si rien n'est commencé (H1), même avec un document restauré, sans alerte avant fermeture (H2), fenêtre « se met à jour » et message après le rechargement (H3)
+- `useAppUpdate.ts` : enregistre le service worker et applique une nouvelle version au démarrage si rien n'est commencé (H1), même avec un document restauré, sans alerte avant fermeture (H2), fenêtre « se met à jour » et message après le rechargement (H3), écran d'accueil de 1,5 s et vérification de mise à jour attendue 3 s au plus (H4)
 - `appVersion.ts` : version injectée par Vite à la construction (H1)
-- `UpdateDialog.tsx` : fenêtre « Nano Buro se met à jour », avec un N qui tourne, sur la page estompée (H3)
+- `LaunchScreen.tsx` : écran de lancement écrit dans `index.html` (H4) : accueil « Nano Buro » et la version, puis fenêtre « Nano Buro se met à jour » (H3), avec un N qui tourne, sur la page estompée ; repris par l'application, puis retiré
 - `UpdateNotice.tsx` : message « Nano Buro a été mis à jour (v…) » après le rechargement, à côté du message du document (H3)
 - `updateTexts.ts` : textes de la fenêtre et du message de mise à jour, repris par l'aide (H3, A1)
 - `updateLock.ts` : blocage du clavier, raccourcis compris, pendant la fenêtre de mise à jour (H3)

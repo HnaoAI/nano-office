@@ -1,6 +1,7 @@
 // Décision « recharger maintenant ou attendre » quand une nouvelle version de l'application est prête
 // (ticket H1, critères 5 à 8 ; H2 : un document restauré ne reporte plus la mise à jour), et fenêtre
-// « Nano Buro se met à jour » avec son délai de 20 s (H3). Logique pure : le service worker et le
+// « Nano Buro se met à jour » avec son délai de 20 s (H3), seulement pendant l'écran d'accueil (H4,
+// src/core/launchScreen.ts). Logique pure : le service worker et le
 // stockage sont dans src/ui/useAppUpdate.ts.
 
 /**
@@ -40,6 +41,11 @@ export interface LaunchState {
   reloadKeepsDocument: boolean;
   /** L'application s'est déjà rechargée pour une mise à jour pendant ce lancement. */
   reloadedThisLaunch: boolean;
+  /**
+   * L'écran d'accueil est terminé (H4, critère 3) : une nouvelle version trouvée ensuite attend le
+   * lancement suivant, sans faire surgir de fenêtre. Absent : l'accueil est encore affiché.
+   */
+  welcomeOver?: boolean;
 }
 
 /**
@@ -61,9 +67,12 @@ export function hasStartedWork(activity: LaunchActivity): boolean {
  * Décide s'il faut recharger l'application pour appliquer une nouvelle version (H1, critères 5 à 7).
  * INVARIANT : jamais de rechargement une fois le travail commencé, ni plus d'un par lancement,
  * ce qui empêche toute boucle de rechargement.
+ * INVARIANT : jamais de rechargement après l'écran d'accueil (H4, critère 3) : la fenêtre « se met à
+ * jour » ne s'affiche qu'à sa place, jamais par-dessus un document déjà rendu à l'utilisateur.
  */
 export function decideUpdate(state: LaunchState): UpdateDecision {
-  if (state.reloadedThisLaunch || hasStartedWork(state.activity)) return "next-launch";
+  if (state.reloadedThisLaunch || state.welcomeOver || hasStartedWork(state.activity))
+    return "next-launch";
   if (!state.updateReady || !state.documentLoaded) return "wait";
   if (!state.reloadKeepsDocument) return "next-launch";
   return "reload";

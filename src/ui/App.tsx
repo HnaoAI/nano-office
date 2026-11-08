@@ -12,7 +12,7 @@ import { useHelpPanel } from "./help/useHelpPanel";
 import { MessageBar } from "./MessageBar";
 import { PageSetupDialog } from "./PageSetupDialog";
 import { SettingsDialog } from "./SettingsDialog";
-import { UpdateDialog } from "./UpdateDialog";
+import { LaunchScreen } from "./LaunchScreen";
 import { UpdateNotice } from "./UpdateNotice";
 import { useAssistantSettings } from "./useAssistantSettings";
 import { usePreferences } from "./usePreferences";
@@ -79,7 +79,7 @@ export function App() {
   } = useDocumentFile();
   // Une nouvelle version s'applique au démarrage si rien n'est commencé (H1), et si le rechargement
   // rouvre le même document (H2).
-  // H3 : pendant la fenêtre « se met à jour », le reste de la page est inerte.
+  // H3 : pendant la fenêtre « se met à jour », le reste de la page est inerte ; H4 : pendant l'accueil aussi.
   const update = useAppUpdate(activity, document !== null, reloadKeepsDocument);
   usePrintShortcut(print);
   const exportWord = useWordExport(document, showMessage, noteFileAction);
@@ -114,7 +114,7 @@ export function App() {
     <>
       <div
         className={help.open && document ? "nano-app nano-help-open" : "nano-app"}
-        inert={update.updating}
+        inert={update.screen !== null}
       >
         <div className="nano-top" ref={topRef}>
           <AppHeader
@@ -162,6 +162,7 @@ export function App() {
                 coveredTop={coveredTop}
                 coveredBottom={coveredBottom}
                 counter={pageCounter}
+                blocked={update.screen !== null}
               />
             )}
             {pageDialog.current && !pending && (
@@ -196,7 +197,7 @@ export function App() {
           </>
         )}
       </div>
-      {update.updating && <UpdateDialog />}
+      <LaunchScreen mode={update.screen} />
     </>
   );
 }

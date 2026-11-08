@@ -3,6 +3,8 @@
 // pas ici : ces tests vérifient le numéro « dev » et les signes de travail commencé (critère 6), lus sur
 // `window.__nanoLaunch` (développement seulement), qui simule aussi une nouvelle version prête (H2).
 // La publication sous /nano-office/ est vérifiée par publication.spec.ts, sur la version construite.
+// Adapté par H4, avec l'accord du PO (critère 9) : une nouvelle version n'est appliquée que si elle est
+// trouvée pendant l'écran d'accueil, retenu par `holdWelcome` jusqu'à la nouvelle version simulée.
 import { expect, test, type Dialog, type Page } from "@playwright/test";
 import type { LaunchActivity } from "../../src/core/appUpdate";
 import { serializeDocument } from "../../src/core/fileFormat";
@@ -11,6 +13,7 @@ import { paragraph, ydocFromJson } from "../core/helpers";
 import { flushBackups } from "./backupHelpers";
 import { fakeFiles, installFakeFileStore, setFakeFiles } from "./fakeFileStore";
 import { waitEditorFocus } from "./formatHelpers";
+import { holdWelcome } from "./launchHelpers";
 import { changeOnOtherComputer, relaunchWithUnsavedChanges } from "./relaunchHelpers";
 
 const QUIET_TEXT = "rgb(95, 95, 92)";
@@ -52,12 +55,16 @@ const NOTHING = {
 const RECOVERED_MESSAGE =
   "Ce document a été récupéré depuis la copie de secours de ce navigateur. Enregistrez-le pour le garder dans un fichier.";
 
-/** Écrit un document jamais enregistré, puis relance l'application, qui le restaure (lot B). */
-async function relaunchWithDraft(page: Page, text: string) {
+/**
+ * Écrit un document jamais enregistré, puis relance l'application, qui le restaure (lot B).
+ * @param welcome `held` : l'accueil du lancement attend la nouvelle version simulée (H4) ; `free` : il se ferme
+ */
+async function relaunchWithDraft(page: Page, text: string, welcome: "held" | "free" = "held") {
   await start(page);
   await editor(page).click();
   await page.keyboard.type(text);
   await flushBackups(page);
+  if (welcome === "held") await holdWelcome(page);
   await page.reload();
   await expect(editor(page)).toHaveText(text);
 }
@@ -218,11 +225,13 @@ test("H2, critère 1 : un document restauré n'empêche pas la mise à jour, et 
 }) => {
   // Remplace le test de H1 « un document restauré compte comme travail commencé » (changement autorisé, H2).
   await relaunchWithDraft(page, "Brouillon élève 😀");
-  await expect(page.getByRole("status")).toHaveText(RECOVERED_MESSAGE);
+  // H4 : l'accueil, retenu, est lui aussi un « status » ; le message est celui de la page.
+  await expect(page.locator(".nano-app").getByRole("status")).toHaveText(RECOVERED_MESSAGE);
   expect(await activity(page)).toEqual(NOTHING);
   const before = await launchView(page);
   // Un clic donne à la page une activation utilisateur : le navigateur afficherait alors l'alerte avant fermeture.
-  await editor(page).click();
+  // H4 : pendant l'accueil, le clic se fait sur l'écran, seul à recevoir les clics.
+  await page.locator("#nano-launch").click();
   const dialogs: string[] = [];
   expect(await updateReloads(page, dialogs)).toBe(true);
   // Critère 4 : même document, même contenu, même message ; pas d'alerte « Quitter le site ? ».
@@ -242,7 +251,8 @@ test("H2, critère 5 : toujours un seul rechargement au plus par lancement", asy
 test("H2, critère 2 : une frappe dans le document restauré reporte toujours la mise à jour, et l'alerte avant fermeture reste", async ({
   page,
 }) => {
-  await relaunchWithDraft(page, "Brouillon");
+  // H4 : la frappe n'est possible qu'après l'accueil.
+  await relaunchWithDraft(page, "Brouillon", "free");
   // « Fin » seulement une fois l'éditeur restauré en possession du focus (Issue #106).
   await waitEditorFocus(page);
   await editor(page).press("End");
@@ -305,7 +315,10 @@ for (const [name, permission, whileClosed, action] of [
   test(`H2, critères 3 et 4 : ${name} n'empêche pas la mise à jour, et revient à l'identique, sans rien écrire`, async ({
     page,
   }) => {
-    await relaunchWithUnsavedChanges(page, permission, whileClosed);
+    await relaunchWithUnsavedChanges(page, permission, async (closed) => {
+      await whileClosed?.(closed);
+      await holdWelcome(closed);
+    });
     await expect(page.locator(".nano-message-action")).toHaveText(action);
     expect(await activity(page)).toEqual(NOTHING);
     const before = await launchView(page);
